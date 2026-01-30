@@ -2,6 +2,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { NavLink } from '@/components/NavLink';
 import { useStory } from '@/context/StoryContext';
 import { useLanguage } from '@/context/LanguageContext';
+import { useSettings } from '@/context/SettingsContext';
 import { cn } from '@/lib/utils';
 import {
   LayoutDashboard,
@@ -30,6 +31,7 @@ export function AppSidebar({ projectId }: AppSidebarProps) {
   const navigate = useNavigate();
   const { currentProject } = useStory();
   const { t } = useLanguage();
+  const { settings } = useSettings();
   const [collapsed, setCollapsed] = useState(false);
   const basePath = `/project/${projectId}`;
 
@@ -60,12 +62,26 @@ export function AppSidebar({ projectId }: AppSidebarProps) {
   return (
     <aside
       className={cn(
-        'h-screen bg-sidebar border-r border-sidebar-border flex flex-col transition-all duration-300 ease-out-expo sticky top-0',
-        collapsed ? 'w-16' : 'w-64'
+        'h-screen flex flex-col transition-all duration-300 ease-out-expo sticky top-0 z-10',
+        collapsed ? 'w-16' : 'w-64',
+        // Glass effect when enabled
+        settings.glassSidebar 
+          ? 'bg-sidebar/70 backdrop-blur-xl border-r border-white/10 shadow-xl' 
+          : 'bg-sidebar border-r border-sidebar-border'
       )}
     >
+      {/* Frosted glass overlay for extra effect */}
+      {settings.glassSidebar && (
+        <div className="absolute inset-0 bg-gradient-to-b from-white/5 via-transparent to-white/5 pointer-events-none" />
+      )}
+      
       {/* Logo / Brand */}
-      <div className="h-16 flex items-center justify-between px-4 border-b border-sidebar-border">
+      <div className={cn(
+        "relative h-16 flex items-center justify-between px-4",
+        settings.glassSidebar 
+          ? "border-b border-white/10" 
+          : "border-b border-sidebar-border"
+      )}>
         {!collapsed ? (
           <ThemedLogo themeId={currentTheme} size="md" />
         ) : (
@@ -74,12 +90,21 @@ export function AppSidebar({ projectId }: AppSidebarProps) {
       </div>
 
       {/* All Projects Button */}
-      <div className="px-2 py-2 border-b border-sidebar-border">
+      <div className={cn(
+        "relative px-2 py-2",
+        settings.glassSidebar 
+          ? "border-b border-white/10" 
+          : "border-b border-sidebar-border"
+      )}>
         <Button
           variant="ghost"
           size="sm"
           onClick={() => navigate('/projects')}
-          className={cn("w-full gap-2", collapsed ? "justify-center px-0" : "justify-start")}
+          className={cn(
+            "w-full gap-2 transition-all",
+            collapsed ? "justify-center px-0" : "justify-start",
+            settings.glassSidebar && "hover:bg-white/10"
+          )}
         >
           <Library className="h-4 w-4" />
           {!collapsed && <span>{t('nav.allProjects')}</span>}
@@ -87,7 +112,7 @@ export function AppSidebar({ projectId }: AppSidebarProps) {
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 py-4 overflow-y-auto no-scrollbar">
+      <nav className="relative flex-1 py-4 overflow-y-auto no-scrollbar">
         <ul className="space-y-1 px-2">
           {navItems.map((item) => (
             <li key={item.titleKey}>
@@ -96,10 +121,17 @@ export function AppSidebar({ projectId }: AppSidebarProps) {
                 end={item.path === ''}
                 className={cn(
                   'flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200',
-                  'text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent',
-                  collapsed && 'justify-center'
+                  collapsed && 'justify-center',
+                  settings.glassSidebar
+                    ? 'text-foreground/70 hover:text-foreground hover:bg-white/10'
+                    : 'text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent'
                 )}
-                activeClassName="bg-gradient-warm border-l-2 border-primary text-sidebar-foreground font-medium"
+                activeClassName={cn(
+                  "font-medium",
+                  settings.glassSidebar
+                    ? "bg-white/15 backdrop-blur-sm text-foreground border-l-2 border-primary"
+                    : "bg-gradient-warm border-l-2 border-primary text-sidebar-foreground"
+                )}
               >
                 <item.icon className={cn('h-5 w-5 shrink-0', isActive(item.path) && 'text-primary')} />
                 {!collapsed && <span>{t(item.titleKey)}</span>}
@@ -110,12 +142,20 @@ export function AppSidebar({ projectId }: AppSidebarProps) {
       </nav>
 
       {/* Collapse Toggle */}
-      <div className="p-3 border-t border-sidebar-border">
+      <div className={cn(
+        "relative p-3",
+        settings.glassSidebar 
+          ? "border-t border-white/10" 
+          : "border-t border-sidebar-border"
+      )}>
         <Button
           variant="ghost"
           size="sm"
           onClick={() => setCollapsed(!collapsed)}
-          className="w-full justify-center"
+          className={cn(
+            "w-full justify-center",
+            settings.glassSidebar && "hover:bg-white/10"
+          )}
         >
           {collapsed ? (
             <ChevronRight className="h-4 w-4" />

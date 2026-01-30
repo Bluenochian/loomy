@@ -114,6 +114,16 @@ export type TranslationKey =
   | 'settings.deleteStory'
   | 'settings.resetAll'
   | 'settings.export'
+  | 'settings.glassSidebar'
+  // Theme names
+  | 'theme.default'
+  | 'theme.fantasy'
+  | 'theme.scifi'
+  | 'theme.thriller'
+  | 'theme.romance'
+  | 'theme.horror'
+  | 'theme.mystery'
+  | 'theme.adventure'
   // Story Map
   | 'map.title'
   | 'map.addNode'
@@ -247,6 +257,16 @@ const translations: Translations = {
     'settings.deleteStory': 'Delete Story',
     'settings.resetAll': 'Reset All Settings',
     'settings.export': 'Export Story',
+    'settings.glassSidebar': 'Glass Sidebar',
+    // Theme names
+    'theme.default': 'Default',
+    'theme.fantasy': 'Fantasy',
+    'theme.scifi': 'Sci-Fi',
+    'theme.thriller': 'Thriller',
+    'theme.romance': 'Romance',
+    'theme.horror': 'Horror',
+    'theme.mystery': 'Mystery',
+    'theme.adventure': 'Adventure',
     // Story Map
     'map.title': 'Story Map',
     'map.addNode': 'Add Node',
@@ -353,6 +373,15 @@ const translations: Translations = {
     'settings.deleteStory': 'Hikayeyi Sil',
     'settings.resetAll': 'Tüm Ayarları Sıfırla',
     'settings.export': 'Hikayeyi Dışa Aktar',
+    'settings.glassSidebar': 'Cam Kenar Çubuğu',
+    'theme.default': 'Varsayılan',
+    'theme.fantasy': 'Fantastik',
+    'theme.scifi': 'Bilim Kurgu',
+    'theme.thriller': 'Gerilim',
+    'theme.romance': 'Romantik',
+    'theme.horror': 'Korku',
+    'theme.mystery': 'Gizem',
+    'theme.adventure': 'Macera',
     'map.title': 'Hikaye Haritası',
     'map.addNode': 'Düğüm Ekle',
     'map.connect': 'Bağla',

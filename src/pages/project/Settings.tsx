@@ -21,14 +21,14 @@ import { cn } from '@/lib/utils';
 import { ExportDialog } from '@/components/export/ExportDialog';
 
 const GENRE_THEMES = [
-  { id: 'default', name: 'Default', description: 'Warm amber with dark cinematic tones', primary: '38 85% 55%', accent: '35 90% 50%', preview: 'from-amber-500/20 to-orange-500/20' },
-  { id: 'fantasy', name: 'Fantasy', description: 'Golden mystical with arcane purple', primary: '45 80% 50%', accent: '280 60% 50%', preview: 'from-yellow-500/20 to-purple-500/20' },
-  { id: 'scifi', name: 'Sci-Fi', description: 'Neon cyan with electric violet', primary: '190 80% 50%', accent: '260 70% 60%', preview: 'from-cyan-500/20 to-violet-500/20' },
-  { id: 'thriller', name: 'Thriller', description: 'High contrast black and crimson', primary: '0 0% 95%', accent: '0 70% 50%', preview: 'from-slate-300/20 to-red-500/20' },
-  { id: 'romance', name: 'Romance', description: 'Soft rose with blush pink', primary: '340 70% 60%', accent: '320 60% 50%', preview: 'from-rose-500/20 to-pink-500/20' },
-  { id: 'horror', name: 'Horror', description: 'Blood red with shadow purple', primary: '0 60% 45%', accent: '270 50% 40%', preview: 'from-red-700/20 to-purple-900/20' },
-  { id: 'mystery', name: 'Mystery', description: 'Deep indigo with shadowy teal', primary: '230 60% 55%', accent: '180 50% 40%', preview: 'from-indigo-500/20 to-teal-700/20' },
-  { id: 'adventure', name: 'Adventure', description: 'Earthy bronze with forest green', primary: '30 60% 50%', accent: '140 50% 40%', preview: 'from-orange-600/20 to-green-700/20' },
+  { id: 'default', nameKey: 'theme.default' as const, description: 'Warm amber with dark cinematic tones', primary: '38 85% 55%', accent: '35 90% 50%', preview: 'from-amber-500/20 to-orange-500/20' },
+  { id: 'fantasy', nameKey: 'theme.fantasy' as const, description: 'Golden mystical with arcane purple', primary: '45 80% 50%', accent: '280 60% 50%', preview: 'from-yellow-500/20 to-purple-500/20' },
+  { id: 'scifi', nameKey: 'theme.scifi' as const, description: 'Neon cyan with electric violet', primary: '190 80% 50%', accent: '260 70% 60%', preview: 'from-cyan-500/20 to-violet-500/20' },
+  { id: 'thriller', nameKey: 'theme.thriller' as const, description: 'High contrast black and crimson', primary: '0 0% 95%', accent: '0 70% 50%', preview: 'from-slate-300/20 to-red-500/20' },
+  { id: 'romance', nameKey: 'theme.romance' as const, description: 'Soft rose with blush pink', primary: '340 70% 60%', accent: '320 60% 50%', preview: 'from-rose-500/20 to-pink-500/20' },
+  { id: 'horror', nameKey: 'theme.horror' as const, description: 'Blood red with shadow purple', primary: '0 60% 45%', accent: '270 50% 40%', preview: 'from-red-700/20 to-purple-900/20' },
+  { id: 'mystery', nameKey: 'theme.mystery' as const, description: 'Deep indigo with shadowy teal', primary: '230 60% 55%', accent: '180 50% 40%', preview: 'from-indigo-500/20 to-teal-700/20' },
+  { id: 'adventure', nameKey: 'theme.adventure' as const, description: 'Earthy bronze with forest green', primary: '30 60% 50%', accent: '140 50% 40%', preview: 'from-orange-600/20 to-green-700/20' },
 ];
 
 const AI_MODELS = [
@@ -81,7 +81,7 @@ export default function SettingsPage() {
     root.style.setProperty('--glow-primary', theme.primary);
     root.setAttribute('data-theme', themeId);
     updateProject({ theme_profile: { ...currentProject.theme_profile, themeId, colorPalette: { primary: theme.primary, accent: theme.accent } } });
-    toast({ title: `${theme.name} theme applied!` });
+    toast({ title: `${t(theme.nameKey)} theme applied!` });
   };
 
   const sections = [
@@ -180,7 +180,7 @@ export default function SettingsPage() {
                     <div className={cn("absolute inset-0 bg-gradient-to-br opacity-50", theme.preview)} />
                     <div className="relative z-10">
                       <div className="flex items-center justify-between mb-2">
-                        <span className="font-medium text-sm">{theme.name}</span>
+                        <span className="font-medium text-sm">{t(theme.nameKey)}</span>
                         {selectedTheme === theme.id && <Check className="h-4 w-4 text-primary" />}
                       </div>
                       <p className="text-xs text-muted-foreground line-clamp-2">{theme.description}</p>
@@ -236,6 +236,17 @@ export default function SettingsPage() {
                     <p className="text-xs text-muted-foreground">Display word counts in editor</p>
                   </div>
                   <Switch checked={settings.showWordCount} onCheckedChange={(v) => updateSetting('showWordCount', v)} />
+                </div>
+                <Separator />
+                <div className="flex items-center justify-between p-3 rounded-lg border border-primary/30 bg-primary/5">
+                  <div>
+                    <Label className="flex items-center gap-2">
+                      <Sparkles className="h-4 w-4 text-primary" />
+                      {t('settings.glassSidebar')}
+                    </Label>
+                    <p className="text-xs text-muted-foreground">Frosted glass effect on navigation</p>
+                  </div>
+                  <Switch checked={settings.glassSidebar} onCheckedChange={(v) => updateSetting('glassSidebar', v)} />
                 </div>
               </div>
             </section>
