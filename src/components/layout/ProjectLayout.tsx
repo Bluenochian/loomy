@@ -17,9 +17,9 @@ export function ProjectLayout({ children, projectId }: ProjectLayoutProps) {
 
   return (
     <div className="flex min-h-screen w-full bg-background">
-      {/* Background effects */}
+      {/* Background effects - always show theme effects */}
+      <ThemeEffects themeId={themeId} />
       {settings.particles && <ParticlesBackground />}
-      {settings.experimentalFeatures && <ThemeEffects themeId={themeId} />}
       
       <AppSidebar projectId={projectId} />
       <main className="flex-1 overflow-y-auto relative">

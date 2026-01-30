@@ -12,12 +12,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Separator } from '@/components/ui/separator';
 import { 
   Settings, Trash2, Palette, Check, Monitor, Sparkles, Shield, Bell, 
-  Wrench, RotateCcw, BookOpen, Eye, Type, Save, Brain, Globe
+  Wrench, RotateCcw, BookOpen, Eye, Type, Save, Brain, Globe, Download
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
+import { ExportDialog } from '@/components/export/ExportDialog';
 
 const GENRE_THEMES = [
   { id: 'default', name: 'Default', description: 'Warm amber with dark cinematic tones', primary: '38 85% 55%', accent: '35 90% 50%', preview: 'from-amber-500/20 to-orange-500/20' },
@@ -57,14 +58,14 @@ export default function SettingsPage() {
   if (!currentProject) return null;
 
   const handleDelete = async () => {
-    if (!confirm('Are you sure you want to delete this story? This cannot be undone.')) return;
+    if (!confirm(t('settings.deleteStory') + '?')) return;
     setIsDeleting(true);
     try {
       await supabase.from('projects').delete().eq('id', currentProject.id);
-      toast({ title: 'Story deleted' });
+      toast({ title: t('settings.deleteStory') });
       navigate('/projects');
     } catch {
-      toast({ title: 'Error deleting story', variant: 'destructive' });
+      toast({ title: 'Error', variant: 'destructive' });
     }
     setIsDeleting(false);
   };
@@ -84,16 +85,16 @@ export default function SettingsPage() {
   };
 
   const sections = [
-    { id: 'story', label: 'Story Details', icon: BookOpen },
-    { id: 'theme', label: 'Theme Colors', icon: Palette },
-    { id: 'display', label: 'Display', icon: Monitor },
-    { id: 'editor', label: 'Editor', icon: Type },
-    { id: 'ai', label: 'AI Settings', icon: Brain },
-    { id: 'language', label: 'Language', icon: Globe },
-    { id: 'notifications', label: 'Notifications', icon: Bell },
-    { id: 'privacy', label: 'Privacy', icon: Shield },
-    { id: 'advanced', label: 'Advanced', icon: Wrench },
-    { id: 'danger', label: 'Danger Zone', icon: Trash2 },
+    { id: 'story', label: t('settings.storyDetails'), icon: BookOpen },
+    { id: 'theme', label: t('settings.themeColors'), icon: Palette },
+    { id: 'display', label: t('settings.display'), icon: Monitor },
+    { id: 'editor', label: t('settings.editor'), icon: Type },
+    { id: 'ai', label: t('settings.ai'), icon: Brain },
+    { id: 'language', label: t('settings.language'), icon: Globe },
+    { id: 'notifications', label: t('settings.notifications'), icon: Bell },
+    { id: 'privacy', label: t('settings.privacy'), icon: Shield },
+    { id: 'advanced', label: t('settings.advanced'), icon: Wrench },
+    { id: 'danger', label: t('settings.dangerZone'), icon: Trash2 },
   ];
 
   return (
@@ -101,7 +102,7 @@ export default function SettingsPage() {
       {/* Sidebar */}
       <div className="w-56 border-r border-border p-4 space-y-1">
         <h1 className="font-display text-xl font-bold mb-4 flex items-center gap-2">
-          <Settings className="h-5 w-5" /> Settings
+          <Settings className="h-5 w-5" /> {t('settings.title')}
         </h1>
         {sections.map(section => (
           <button
@@ -119,7 +120,7 @@ export default function SettingsPage() {
         ))}
         <Separator className="my-4" />
         <Button variant="ghost" size="sm" onClick={resetSettings} className="w-full gap-2">
-          <RotateCcw className="h-4 w-4" /> Reset All Settings
+          <RotateCcw className="h-4 w-4" /> {t('settings.resetAll')}
         </Button>
       </div>
 
@@ -131,23 +132,29 @@ export default function SettingsPage() {
           {activeSection === 'story' && (
             <section>
               <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                <BookOpen className="h-5 w-5 text-primary" /> Story Details
+                <BookOpen className="h-5 w-5 text-primary" /> {t('settings.storyDetails')}
               </h2>
               <div className="space-y-4">
                 <div>
-                  <Label>Story Title</Label>
+                  <Label>{t('settings.storyTitle')}</Label>
                   <Input value={currentProject.title} onChange={(e) => updateProject({ title: e.target.value })} className="mt-2 bg-secondary/30" />
                 </div>
                 <div>
-                  <Label>Story Language</Label>
+                  <Label>{t('settings.storyLanguage')}</Label>
                   <Input value={currentProject.language} onChange={(e) => updateProject({ language: e.target.value })} className="mt-2 bg-secondary/30" placeholder="English" />
                 </div>
                 <div>
-                  <Label>Tone ({currentProject.tone_value < 0.3 ? 'Hopeful' : currentProject.tone_value > 0.7 ? 'Dark' : 'Balanced'})</Label>
+                  <Label>{t('settings.tone')} ({currentProject.tone_value < 0.3 ? 'Hopeful' : currentProject.tone_value > 0.7 ? 'Dark' : 'Balanced'})</Label>
                   <Slider value={[currentProject.tone_value]} onValueChange={([val]) => updateProject({ tone_value: val })} max={1} min={0} step={0.1} className="mt-4" />
                   <div className="flex justify-between text-xs text-muted-foreground mt-1">
                     <span>Hopeful</span><span>Balanced</span><span>Dark</span>
                   </div>
+                </div>
+                <Separator className="my-4" />
+                <div>
+                  <Label>{t('settings.export')}</Label>
+                  <p className="text-xs text-muted-foreground mb-2">Download your story in different formats</p>
+                  <ExportDialog />
                 </div>
               </div>
             </section>
@@ -157,7 +164,7 @@ export default function SettingsPage() {
           {activeSection === 'theme' && (
             <section>
               <h2 className="text-lg font-semibold mb-2 flex items-center gap-2">
-                <Palette className="h-5 w-5 text-primary" /> Theme Colors
+                <Palette className="h-5 w-5 text-primary" /> {t('settings.themeColors')}
               </h2>
               <p className="text-sm text-muted-foreground mb-4">Choose a color theme that matches your story's genre</p>
               <div className="grid grid-cols-2 gap-3">
@@ -192,40 +199,40 @@ export default function SettingsPage() {
           {activeSection === 'display' && (
             <section>
               <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                <Monitor className="h-5 w-5 text-primary" /> Display Settings
+                <Monitor className="h-5 w-5 text-primary" /> {t('settings.display')}
               </h2>
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <Label>Particle Effects</Label>
+                    <Label>{t('settings.particles')}</Label>
                     <p className="text-xs text-muted-foreground">Animated particles in the background</p>
                   </div>
                   <Switch checked={settings.particles} onCheckedChange={(v) => updateSetting('particles', v)} />
                 </div>
                 <div className="flex items-center justify-between">
                   <div>
-                    <Label>Animations</Label>
+                    <Label>{t('settings.animations')}</Label>
                     <p className="text-xs text-muted-foreground">Enable UI animations and transitions</p>
                   </div>
                   <Switch checked={settings.animations} onCheckedChange={(v) => updateSetting('animations', v)} />
                 </div>
                 <div className="flex items-center justify-between">
                   <div>
-                    <Label>Reduced Motion</Label>
+                    <Label>{t('settings.reducedMotion')}</Label>
                     <p className="text-xs text-muted-foreground">Minimize motion for accessibility</p>
                   </div>
                   <Switch checked={settings.reducedMotion} onCheckedChange={(v) => updateSetting('reducedMotion', v)} />
                 </div>
                 <div className="flex items-center justify-between">
                   <div>
-                    <Label>Compact Mode</Label>
+                    <Label>{t('settings.compactMode')}</Label>
                     <p className="text-xs text-muted-foreground">Reduce spacing for more content</p>
                   </div>
                   <Switch checked={settings.compactMode} onCheckedChange={(v) => updateSetting('compactMode', v)} />
                 </div>
                 <div className="flex items-center justify-between">
                   <div>
-                    <Label>Show Word Count</Label>
+                    <Label>{t('settings.wordCount')}</Label>
                     <p className="text-xs text-muted-foreground">Display word counts in editor</p>
                   </div>
                   <Switch checked={settings.showWordCount} onCheckedChange={(v) => updateSetting('showWordCount', v)} />
@@ -238,19 +245,19 @@ export default function SettingsPage() {
           {activeSection === 'editor' && (
             <section>
               <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                <Type className="h-5 w-5 text-primary" /> Editor Settings
+                <Type className="h-5 w-5 text-primary" /> {t('settings.editor')}
               </h2>
               <div className="space-y-6">
                 <div>
-                  <Label>Font Size: {settings.fontSize}px</Label>
+                  <Label>{t('settings.fontSize')}: {settings.fontSize}px</Label>
                   <Slider value={[settings.fontSize]} onValueChange={([v]) => updateSetting('fontSize', v)} min={12} max={28} step={1} className="mt-2" />
                 </div>
                 <div>
-                  <Label>Line Height: {settings.lineHeight}</Label>
+                  <Label>{t('settings.lineHeight')}: {settings.lineHeight}</Label>
                   <Slider value={[settings.lineHeight]} onValueChange={([v]) => updateSetting('lineHeight', v)} min={1.2} max={2.5} step={0.1} className="mt-2" />
                 </div>
                 <div>
-                  <Label>Font Family</Label>
+                  <Label>{t('settings.fontFamily')}</Label>
                   <Select value={settings.fontFamily} onValueChange={(v) => updateSetting('fontFamily', v as any)}>
                     <SelectTrigger className="mt-2 bg-secondary/30"><SelectValue /></SelectTrigger>
                     <SelectContent>
@@ -261,11 +268,11 @@ export default function SettingsPage() {
                   </Select>
                 </div>
                 <div>
-                  <Label>Autosave Interval: {settings.autosaveInterval}s</Label>
+                  <Label>{t('settings.autosave')}: {settings.autosaveInterval}s</Label>
                   <Slider value={[settings.autosaveInterval]} onValueChange={([v]) => updateSetting('autosaveInterval', v)} min={5} max={120} step={5} className="mt-2" />
                 </div>
                 <div className="flex items-center justify-between">
-                  <div><Label>Spellcheck</Label><p className="text-xs text-muted-foreground">Browser spellcheck</p></div>
+                  <div><Label>{t('settings.spellcheck')}</Label><p className="text-xs text-muted-foreground">Browser spellcheck</p></div>
                   <Switch checked={settings.spellcheck} onCheckedChange={(v) => updateSetting('spellcheck', v)} />
                 </div>
               </div>
@@ -276,41 +283,41 @@ export default function SettingsPage() {
           {activeSection === 'ai' && (
             <section>
               <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                <Brain className="h-5 w-5 text-primary" /> AI Settings
+                <Brain className="h-5 w-5 text-primary" /> {t('settings.ai')}
               </h2>
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <div><Label>Enable AI Assistant</Label><p className="text-xs text-muted-foreground">AI-powered writing help</p></div>
+                  <div><Label>{t('settings.aiEnabled')}</Label><p className="text-xs text-muted-foreground">AI-powered writing help</p></div>
                   <Switch checked={settings.aiEnabled} onCheckedChange={(v) => updateSetting('aiEnabled', v)} />
                 </div>
                 <div className="flex items-center justify-between">
-                  <div><Label>Auto-Suggest</Label><p className="text-xs text-muted-foreground">Suggest completions as you type</p></div>
+                  <div><Label>{t('settings.autoSuggest')}</Label><p className="text-xs text-muted-foreground">Suggest completions as you type</p></div>
                   <Switch checked={settings.aiAutoSuggest} onCheckedChange={(v) => updateSetting('aiAutoSuggest', v)} />
                 </div>
                 <Separator />
-                <p className="text-sm font-medium">Context Sources</p>
+                <p className="text-sm font-medium">{t('settings.contextSources')}</p>
                 <p className="text-xs text-muted-foreground mb-2">Which data should AI use when writing?</p>
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <Label>Use Lore Entries</Label>
+                    <Label>{t('settings.useLore')}</Label>
                     <Switch checked={settings.aiUseLore} onCheckedChange={(v) => updateSetting('aiUseLore', v)} />
                   </div>
                   <div className="flex items-center justify-between">
-                    <Label>Use Outline</Label>
+                    <Label>{t('settings.useOutline')}</Label>
                     <Switch checked={settings.aiUseOutline} onCheckedChange={(v) => updateSetting('aiUseOutline', v)} />
                   </div>
                   <div className="flex items-center justify-between">
-                    <Label>Use Story Map</Label>
+                    <Label>{t('settings.useStoryMap')}</Label>
                     <Switch checked={settings.aiUseStoryMap} onCheckedChange={(v) => updateSetting('aiUseStoryMap', v)} />
                   </div>
                   <div className="flex items-center justify-between">
-                    <Label>Use Characters</Label>
+                    <Label>{t('settings.useCharacters')}</Label>
                     <Switch checked={settings.aiUseCharacters} onCheckedChange={(v) => updateSetting('aiUseCharacters', v)} />
                   </div>
                 </div>
                 <Separator />
                 <div>
-                  <Label>AI Model</Label>
+                  <Label>{t('settings.aiModel')}</Label>
                   <Select value={settings.aiModel} onValueChange={(v) => updateSetting('aiModel', v)}>
                     <SelectTrigger className="mt-2 bg-secondary/30"><SelectValue /></SelectTrigger>
                     <SelectContent>
@@ -323,7 +330,7 @@ export default function SettingsPage() {
                   </Select>
                 </div>
                 <div>
-                  <Label>Creativity: {settings.aiTemperature}</Label>
+                  <Label>{t('settings.creativity')}: {settings.aiTemperature}</Label>
                   <Slider value={[settings.aiTemperature]} onValueChange={([v]) => updateSetting('aiTemperature', v)} min={0.1} max={1.5} step={0.05} className="mt-2" />
                   <div className="flex justify-between text-xs text-muted-foreground mt-1">
                     <span>Focused</span><span>Balanced</span><span>Creative</span>
@@ -337,7 +344,7 @@ export default function SettingsPage() {
           {activeSection === 'language' && (
             <section>
               <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                <Globe className="h-5 w-5 text-primary" /> UI Language
+                <Globe className="h-5 w-5 text-primary" /> {t('settings.uiLanguage')}
               </h2>
               <p className="text-sm text-muted-foreground mb-4">Select the language for the user interface</p>
               <div className="grid grid-cols-2 gap-2">
@@ -366,19 +373,19 @@ export default function SettingsPage() {
           {activeSection === 'notifications' && (
             <section>
               <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                <Bell className="h-5 w-5 text-primary" /> Notifications
+                <Bell className="h-5 w-5 text-primary" /> {t('settings.notifications')}
               </h2>
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <div><Label>Notify on Save</Label><p className="text-xs text-muted-foreground">Show toast when saving</p></div>
+                  <div><Label>{t('settings.notifyOnSave')}</Label><p className="text-xs text-muted-foreground">Show toast when saving</p></div>
                   <Switch checked={settings.notifyOnSave} onCheckedChange={(v) => updateSetting('notifyOnSave', v)} />
                 </div>
                 <div className="flex items-center justify-between">
-                  <div><Label>Notify on AI Complete</Label><p className="text-xs text-muted-foreground">Alert when AI generation finishes</p></div>
+                  <div><Label>{t('settings.notifyOnAI')}</Label><p className="text-xs text-muted-foreground">Alert when AI generation finishes</p></div>
                   <Switch checked={settings.notifyOnAIComplete} onCheckedChange={(v) => updateSetting('notifyOnAIComplete', v)} />
                 </div>
                 <div className="flex items-center justify-between">
-                  <div><Label>Sound Effects</Label><p className="text-xs text-muted-foreground">Play sounds for actions</p></div>
+                  <div><Label>{t('settings.soundEffects')}</Label><p className="text-xs text-muted-foreground">Play sounds for actions</p></div>
                   <Switch checked={settings.soundEnabled} onCheckedChange={(v) => updateSetting('soundEnabled', v)} />
                 </div>
               </div>
@@ -389,15 +396,15 @@ export default function SettingsPage() {
           {activeSection === 'privacy' && (
             <section>
               <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                <Shield className="h-5 w-5 text-primary" /> Privacy
+                <Shield className="h-5 w-5 text-primary" /> {t('settings.privacy')}
               </h2>
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <div><Label>Analytics</Label><p className="text-xs text-muted-foreground">Help improve the app</p></div>
+                  <div><Label>{t('settings.analytics')}</Label><p className="text-xs text-muted-foreground">Help improve the app</p></div>
                   <Switch checked={settings.analyticsEnabled} onCheckedChange={(v) => updateSetting('analyticsEnabled', v)} />
                 </div>
                 <div className="flex items-center justify-between">
-                  <div><Label>Crash Reports</Label><p className="text-xs text-muted-foreground">Send error reports</p></div>
+                  <div><Label>{t('settings.crashReports')}</Label><p className="text-xs text-muted-foreground">Send error reports</p></div>
                   <Switch checked={settings.crashReports} onCheckedChange={(v) => updateSetting('crashReports', v)} />
                 </div>
               </div>
@@ -408,24 +415,30 @@ export default function SettingsPage() {
           {activeSection === 'advanced' && (
             <section>
               <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                <Wrench className="h-5 w-5 text-primary" /> Advanced
+                <Wrench className="h-5 w-5 text-primary" /> {t('settings.advanced')}
               </h2>
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <div><Label>Debug Mode</Label><p className="text-xs text-muted-foreground">Show developer info</p></div>
+                  <div><Label>{t('settings.debugMode')}</Label><p className="text-xs text-muted-foreground">Show developer info</p></div>
                   <Switch checked={settings.debugMode} onCheckedChange={(v) => updateSetting('debugMode', v)} />
                 </div>
-                <div className="flex items-center justify-between">
-                  <div><Label>Experimental Features</Label><p className="text-xs text-muted-foreground">Enable glassmorphism, animated gradients, enhanced effects</p></div>
+                <div className="flex items-center justify-between p-3 rounded-lg border border-primary/30 bg-primary/5">
+                  <div>
+                    <Label className="flex items-center gap-2">
+                      <Sparkles className="h-4 w-4 text-primary" />
+                      {t('settings.experimental')}
+                    </Label>
+                    <p className="text-xs text-muted-foreground">Enable advanced visual effects (glassmorphism, glows, animated orbs)</p>
+                  </div>
                   <Switch checked={settings.experimentalFeatures} onCheckedChange={(v) => updateSetting('experimentalFeatures', v)} />
                 </div>
                 <div className="flex items-center justify-between">
-                  <div><Label>Auto Backup</Label><p className="text-xs text-muted-foreground">Automatic cloud backup</p></div>
+                  <div><Label>{t('settings.autoBackup')}</Label><p className="text-xs text-muted-foreground">Automatic cloud backup</p></div>
                   <Switch checked={settings.autoBackup} onCheckedChange={(v) => updateSetting('autoBackup', v)} />
                 </div>
                 <div>
-                  <Label>Backup Interval: {settings.backupInterval}s</Label>
-                  <Slider value={[settings.backupInterval]} onValueChange={([v]) => updateSetting('backupInterval', v)} min={60} max={600} step={30} className="mt-2" />
+                  <Label>{t('settings.backupInterval')}: {settings.backupInterval}s</Label>
+                  <Slider value={[settings.backupInterval]} onValueChange={([v]) => updateSetting('backupInterval', v)} min={60} max={600} step={60} className="mt-2" />
                 </div>
               </div>
             </section>
@@ -434,15 +447,19 @@ export default function SettingsPage() {
           {/* Danger Zone */}
           {activeSection === 'danger' && (
             <section>
-              <h2 className="text-lg font-semibold text-destructive mb-4 flex items-center gap-2">
-                <Trash2 className="h-5 w-5" /> Danger Zone
+              <h2 className="text-lg font-semibold mb-4 flex items-center gap-2 text-destructive">
+                <Trash2 className="h-5 w-5" /> {t('settings.dangerZone')}
               </h2>
-              <Card className="p-6 border-destructive/30 bg-destructive/5">
-                <p className="text-sm text-muted-foreground mb-4">Permanently delete this story and all its content. This action cannot be undone.</p>
+              <div className="p-4 rounded-lg border border-destructive/50 bg-destructive/5 space-y-4">
+                <div>
+                  <p className="font-medium text-destructive">{t('settings.deleteStory')}</p>
+                  <p className="text-sm text-muted-foreground">This action cannot be undone. All chapters, characters, and lore will be permanently deleted.</p>
+                </div>
                 <Button variant="destructive" onClick={handleDelete} disabled={isDeleting}>
-                  <Trash2 className="h-4 w-4" /> {isDeleting ? 'Deleting...' : 'Delete Story'}
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  {isDeleting ? t('common.loading') : t('settings.deleteStory')}
                 </Button>
-              </Card>
+              </div>
             </section>
           )}
         </div>

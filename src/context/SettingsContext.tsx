@@ -43,7 +43,7 @@ export interface AppSettings {
 
 const DEFAULT_SETTINGS: AppSettings = {
   // Display
-  particles: false,
+  particles: true,
   animations: true,
   reducedMotion: false,
   compactMode: false,
@@ -77,7 +77,7 @@ const DEFAULT_SETTINGS: AppSettings = {
   
   // Advanced
   debugMode: false,
-  experimentalFeatures: false,
+  experimentalFeatures: true,
   autoBackup: true,
   backupInterval: 300,
 };
