@@ -1,6 +1,7 @@
 import { useLocation, useNavigate } from 'react-router-dom';
 import { NavLink } from '@/components/NavLink';
 import { useStory } from '@/context/StoryContext';
+import { useLanguage } from '@/context/LanguageContext';
 import { cn } from '@/lib/utils';
 import {
   LayoutDashboard,
@@ -24,28 +25,29 @@ interface AppSidebarProps {
   projectId: string;
 }
 
-const navItems = [
-  { title: 'Dashboard', icon: LayoutDashboard, path: '' },
-  { title: 'Story Overview', icon: BookOpen, path: '/overview' },
-  { title: 'Outline', icon: ListTree, path: '/outline' },
-  { title: 'Chapters', icon: FileText, path: '/chapters' },
-  { title: 'Characters', icon: Users, path: '/characters' },
-  { title: 'Lore & World', icon: Globe, path: '/lore' },
-  { title: 'Story Map', icon: Map, path: '/map' },
-  { title: 'Writing Studio', icon: PenTool, path: '/studio' },
-  { title: 'Settings', icon: Settings, path: '/settings' },
-];
-
 export function AppSidebar({ projectId }: AppSidebarProps) {
   const location = useLocation();
   const navigate = useNavigate();
   const { currentProject } = useStory();
+  const { t } = useLanguage();
   const [collapsed, setCollapsed] = useState(false);
   const basePath = `/project/${projectId}`;
 
   const currentTheme = useMemo(() => {
     return currentProject?.theme_profile?.themeId || 'default';
   }, [currentProject?.theme_profile?.themeId]);
+
+  const navItems = [
+    { titleKey: 'nav.dashboard' as const, icon: LayoutDashboard, path: '' },
+    { titleKey: 'nav.overview' as const, icon: BookOpen, path: '/overview' },
+    { titleKey: 'nav.outline' as const, icon: ListTree, path: '/outline' },
+    { titleKey: 'nav.chapters' as const, icon: FileText, path: '/chapters' },
+    { titleKey: 'nav.characters' as const, icon: Users, path: '/characters' },
+    { titleKey: 'nav.lore' as const, icon: Globe, path: '/lore' },
+    { titleKey: 'nav.map' as const, icon: Map, path: '/map' },
+    { titleKey: 'nav.studio' as const, icon: PenTool, path: '/studio' },
+    { titleKey: 'nav.settings' as const, icon: Settings, path: '/settings' },
+  ];
 
   const isActive = (path: string) => {
     const fullPath = `${basePath}${path}`;
@@ -80,7 +82,7 @@ export function AppSidebar({ projectId }: AppSidebarProps) {
           className={cn("w-full gap-2", collapsed ? "justify-center px-0" : "justify-start")}
         >
           <Library className="h-4 w-4" />
-          {!collapsed && <span>All Projects</span>}
+          {!collapsed && <span>{t('nav.allProjects')}</span>}
         </Button>
       </div>
 
@@ -88,7 +90,7 @@ export function AppSidebar({ projectId }: AppSidebarProps) {
       <nav className="flex-1 py-4 overflow-y-auto no-scrollbar">
         <ul className="space-y-1 px-2">
           {navItems.map((item) => (
-            <li key={item.title}>
+            <li key={item.titleKey}>
               <NavLink
                 to={`${basePath}${item.path}`}
                 end={item.path === ''}
@@ -100,7 +102,7 @@ export function AppSidebar({ projectId }: AppSidebarProps) {
                 activeClassName="bg-gradient-warm border-l-2 border-primary text-sidebar-foreground font-medium"
               >
                 <item.icon className={cn('h-5 w-5 shrink-0', isActive(item.path) && 'text-primary')} />
-                {!collapsed && <span>{item.title}</span>}
+                {!collapsed && <span>{t(item.titleKey)}</span>}
               </NavLink>
             </li>
           ))}
@@ -120,7 +122,7 @@ export function AppSidebar({ projectId }: AppSidebarProps) {
           ) : (
             <>
               <ChevronLeft className="h-4 w-4" />
-              <span className="ml-2">Collapse</span>
+              <span className="ml-2">{t('nav.collapse')}</span>
             </>
           )}
         </Button>
