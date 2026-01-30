@@ -36,289 +36,107 @@ interface RenderContext {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-// GRIMOIRE - Premium atmospheric candle glow like grimoire.lovable.app
-// Candles DISTRIBUTED across screen with heavy blur for background feel
-// ═══════════════════════════════════════════════════════════════════════════
-class GrimoireRenderer {
-  candles: Array<{
-    x: number;
-    y: number;
-    scale: number;
-    flamePhase: number;
-    flameSpeed: number;
-    swayPhase: number;
-    swaySpeed: number;
-  }> = [];
-  floatingRunes: Array<{
-    x: number;
-    y: number;
-    char: string;
-    alpha: number;
-    speed: number;
-    phase: number;
-  }> = [];
-  initialized = false;
-
-  init(canvas: HTMLCanvasElement) {
-    if (this.initialized) return;
-    this.initialized = true;
-    
-    // DISTRIBUTE candles across the ENTIRE screen, not just edges
-    const candlePositions = [
-      // Left side
-      { x: 0.05, y: 0.2, scale: 0.6 },
-      { x: 0.08, y: 0.5, scale: 0.7 },
-      { x: 0.04, y: 0.75, scale: 0.55 },
-      // Right side  
-      { x: 0.92, y: 0.25, scale: 0.65 },
-      { x: 0.95, y: 0.55, scale: 0.7 },
-      { x: 0.93, y: 0.8, scale: 0.6 },
-      // Top area
-      { x: 0.25, y: 0.08, scale: 0.5 },
-      { x: 0.5, y: 0.05, scale: 0.45 },
-      { x: 0.75, y: 0.1, scale: 0.5 },
-      // Bottom corners
-      { x: 0.15, y: 0.88, scale: 0.75 },
-      { x: 0.85, y: 0.9, scale: 0.7 },
-      // Mid-field (very subtle, far background)
-      { x: 0.35, y: 0.3, scale: 0.35 },
-      { x: 0.65, y: 0.4, scale: 0.3 },
-      { x: 0.4, y: 0.65, scale: 0.35 },
-      { x: 0.6, y: 0.7, scale: 0.3 },
-    ];
-
-    candlePositions.forEach(pos => {
-      this.candles.push({
-        x: pos.x * canvas.width,
-        y: pos.y * canvas.height,
-        scale: pos.scale,
-        flamePhase: Math.random() * Math.PI * 2,
-        flameSpeed: 0.08 + Math.random() * 0.04,
-        swayPhase: Math.random() * Math.PI * 2,
-        swaySpeed: 0.02 + Math.random() * 0.015,
-      });
-    });
-
-    // Floating mystical runes
-    const runeChars = '᛭ᚠᚢᚦᚨᚱᚲᚷᚹᚺᚾᛁᛃᛇᛈᛉᛊᛏᛒᛖᛗᛚᛝᛞᛟ';
-    for (let i = 0; i < 12; i++) {
-      this.floatingRunes.push({
-        x: Math.random() * canvas.width,
-        y: Math.random() * canvas.height,
-        char: runeChars[Math.floor(Math.random() * runeChars.length)],
-        alpha: 0.1 + Math.random() * 0.15,
-        speed: 0.2 + Math.random() * 0.3,
-        phase: Math.random() * Math.PI * 2,
-      });
-    }
-  }
-
-  render(rc: RenderContext) {
-    const { ctx, canvas, time } = rc;
-
-    // Render each candle with HEAVY BLUR for background feel
-    this.candles.forEach(candle => {
-      candle.flamePhase += candle.flameSpeed;
-      candle.swayPhase += candle.swaySpeed;
-      
-      // Flame flicker with multiple sine waves for natural look
-      const flicker = 0.75 + 
-        Math.sin(candle.flamePhase) * 0.12 + 
-        Math.sin(candle.flamePhase * 2.7) * 0.08 +
-        Math.sin(candle.flamePhase * 5.3) * 0.05;
-      
-      // Gentle sway
-      const sway = Math.sin(candle.swayPhase) * 3 * candle.scale;
-      const flameX = candle.x + sway;
-      
-      // Blur intensity based on scale (smaller = more blur = farther)
-      const blurRadius = (1 - candle.scale) * 80 + 40;
-      
-      // MASSIVE ambient glow - the key to grimoire.lovable.app look
-      const glowLayers = [
-        { radius: 350 * candle.scale, alpha: 0.03 * flicker },
-        { radius: 250 * candle.scale, alpha: 0.05 * flicker },
-        { radius: 180 * candle.scale, alpha: 0.08 * flicker },
-        { radius: 120 * candle.scale, alpha: 0.12 * flicker },
-        { radius: 70 * candle.scale, alpha: 0.18 * flicker },
-      ];
-
-      glowLayers.forEach(layer => {
-        const grad = ctx.createRadialGradient(
-          flameX, candle.y - 20 * candle.scale, 0,
-          flameX, candle.y - 20 * candle.scale, layer.radius
-        );
-        grad.addColorStop(0, `rgba(255, 160, 60, ${layer.alpha})`);
-        grad.addColorStop(0.3, `rgba(255, 120, 40, ${layer.alpha * 0.6})`);
-        grad.addColorStop(0.6, `rgba(200, 80, 20, ${layer.alpha * 0.3})`);
-        grad.addColorStop(1, 'transparent');
-        
-        ctx.fillStyle = grad;
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-      });
-
-      // Candle body (subtle, blurred)
-      const bodyHeight = 50 * candle.scale;
-      const bodyWidth = 10 * candle.scale;
-      
-      ctx.save();
-      ctx.filter = `blur(${blurRadius * 0.3}px)`;
-      
-      ctx.fillStyle = `rgba(240, 230, 200, ${0.4 * candle.scale})`;
-      ctx.beginPath();
-      ctx.roundRect(
-        candle.x - bodyWidth / 2,
-        candle.y,
-        bodyWidth,
-        bodyHeight,
-        [3, 3, 5, 5]
-      );
-      ctx.fill();
-      ctx.restore();
-
-      // Flame - heavily blurred for atmosphere
-      ctx.save();
-      ctx.filter = `blur(${blurRadius * 0.5}px)`;
-      
-      const flameHeight = 30 * candle.scale * flicker;
-      const flameGrad = ctx.createRadialGradient(
-        flameX, candle.y - flameHeight * 0.3, 0,
-        flameX, candle.y - flameHeight * 0.3, flameHeight
-      );
-      flameGrad.addColorStop(0, `rgba(255, 255, 220, ${0.9 * candle.scale})`);
-      flameGrad.addColorStop(0.2, `rgba(255, 200, 100, ${0.7 * candle.scale})`);
-      flameGrad.addColorStop(0.5, `rgba(255, 120, 40, ${0.4 * candle.scale})`);
-      flameGrad.addColorStop(1, 'transparent');
-      
-      ctx.fillStyle = flameGrad;
-      ctx.beginPath();
-      ctx.ellipse(flameX, candle.y - flameHeight * 0.3, flameHeight * 0.4, flameHeight, 0, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.restore();
-    });
-
-    // Floating runes with blur
-    ctx.save();
-    ctx.filter = 'blur(2px)';
-    this.floatingRunes.forEach(rune => {
-      rune.y -= rune.speed;
-      rune.phase += 0.02;
-      rune.x += Math.sin(rune.phase) * 0.5;
-      
-      if (rune.y < -50) {
-        rune.y = canvas.height + 50;
-        rune.x = Math.random() * canvas.width;
-      }
-      
-      ctx.font = '24px serif';
-      ctx.fillStyle = `rgba(180, 100, 80, ${rune.alpha * (0.7 + Math.sin(rune.phase) * 0.3)})`;
-      ctx.fillText(rune.char, rune.x, rune.y);
-    });
-    ctx.restore();
-  }
-}
-
-// ═══════════════════════════════════════════════════════════════════════════
-// MATRIX RAIN - Dense cascading code like androidport.lovable.app
+// MATRIX RAIN - Like androidport.lovable.app - Dense cascading code
+// Premium quality with depth, proper character animation, glowing heads
 // ═══════════════════════════════════════════════════════════════════════════
 class MatrixRainRenderer {
   columns: Array<{
     x: number;
-    chars: Array<{ y: number; char: string; brightness: number }>;
+    chars: Array<{ y: number; char: string; speed: number }>;
     speed: number;
     depth: number;
   }> = [];
-  charSet = 'アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン01234789<>{}[]|\\/@#$%&';
+  charSet = 'アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン0123456789<>{}[]|/@#$%&=+*';
   initialized = false;
 
-  init(canvas: HTMLCanvasElement) {
+  init(canvas: HTMLCanvasElement, primaryRgb: [number, number, number]) {
     if (this.initialized) return;
     this.initialized = true;
-    
-    const columnWidth = 18;
-    const numColumns = Math.ceil(canvas.width / columnWidth);
-    
+
+    const columnWidth = 20;
+    const numColumns = Math.ceil(canvas.width / columnWidth) + 5;
+
     for (let i = 0; i < numColumns; i++) {
-      const depth = 0.3 + Math.random() * 0.7;
-      const chars: Array<{ y: number; char: string; brightness: number }> = [];
-      
-      const numChars = Math.floor(10 + Math.random() * 25);
-      let startY = -Math.random() * canvas.height * 2;
-      
-      for (let j = 0; j < numChars; j++) {
+      const depth = 0.4 + Math.random() * 0.6;
+      const chars: Array<{ y: number; char: string; speed: number }> = [];
+      const charCount = Math.floor(8 + Math.random() * 20);
+      const startY = -Math.random() * canvas.height * 1.5;
+
+      for (let j = 0; j < charCount; j++) {
         chars.push({
-          y: startY + j * 20,
+          y: startY + j * 22,
           char: this.charSet[Math.floor(Math.random() * this.charSet.length)],
-          brightness: 1 - (j / numChars)
+          speed: 1 + Math.random() * 0.5
         });
       }
-      
+
       this.columns.push({
-        x: i * columnWidth + Math.random() * 5,
+        x: i * columnWidth + (Math.random() - 0.5) * 8,
         chars,
-        speed: (2 + Math.random() * 5) * depth,
+        speed: (3 + Math.random() * 6) * depth,
         depth
       });
     }
   }
 
   render(rc: RenderContext) {
-    const { ctx, canvas } = rc;
+    const { ctx, canvas, primaryRgb } = rc;
+    const [pr, pg, pb] = primaryRgb;
 
-    // Background glow
-    const bgGlow = ctx.createRadialGradient(
+    // Subtle center glow
+    const centerGlow = ctx.createRadialGradient(
       canvas.width / 2, canvas.height / 2, 0,
-      canvas.width / 2, canvas.height / 2, canvas.width * 0.7
+      canvas.width / 2, canvas.height / 2, canvas.width * 0.6
     );
-    bgGlow.addColorStop(0, 'rgba(0, 80, 40, 0.1)');
-    bgGlow.addColorStop(1, 'transparent');
-    ctx.fillStyle = bgGlow;
+    centerGlow.addColorStop(0, `rgba(${pr}, ${pg}, ${pb}, 0.03)`);
+    centerGlow.addColorStop(1, 'transparent');
+    ctx.fillStyle = centerGlow;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     this.columns.forEach(column => {
-      const fontSize = Math.floor(12 * column.depth + 8);
-      ctx.font = `${fontSize}px monospace`;
-      
-      column.chars.forEach((char, i) => {
-        char.y += column.speed;
-        
-        // Random character mutation
-        if (Math.random() > 0.97) {
-          char.char = this.charSet[Math.floor(Math.random() * this.charSet.length)];
+      const fontSize = Math.floor(14 * column.depth + 6);
+      ctx.font = `${fontSize}px 'Courier New', monospace`;
+
+      column.chars.forEach((charObj, i) => {
+        charObj.y += column.speed * charObj.speed;
+
+        // Random character change
+        if (Math.random() > 0.96) {
+          charObj.char = this.charSet[Math.floor(Math.random() * this.charSet.length)];
         }
 
         const isHead = i === column.chars.length - 1;
-        const fadePos = column.chars.length - 1 - i;
-        const fade = Math.max(0, 1 - fadePos * 0.04);
-        
-        if (char.y > 0 && char.y < canvas.height && fade > 0) {
+        const distFromHead = column.chars.length - 1 - i;
+        const fade = Math.max(0, 1 - distFromHead * 0.05);
+
+        if (charObj.y >= 0 && charObj.y <= canvas.height && fade > 0.05) {
           if (isHead) {
-            // Bright white head with strong glow
+            // Bright glowing head
             ctx.save();
-            ctx.shadowColor = '#00ff88';
-            ctx.shadowBlur = 20;
-            ctx.fillStyle = `rgba(255, 255, 255, ${column.depth * 0.95})`;
-            ctx.fillText(char.char, column.x, char.y);
+            ctx.shadowColor = `rgb(${pr}, ${pg}, ${pb})`;
+            ctx.shadowBlur = 15 * column.depth;
+            ctx.fillStyle = `rgba(255, 255, 255, ${0.95 * column.depth})`;
+            ctx.fillText(charObj.char, column.x, charObj.y);
             ctx.restore();
           } else {
-            // Green trail with depth-based opacity
-            const green = 150 + fadePos * 10;
-            ctx.fillStyle = `rgba(0, ${Math.min(255, green)}, ${60 + fadePos * 5}, ${fade * column.depth * 0.75})`;
-            ctx.fillText(char.char, column.x, char.y);
+            // Fading trail with primary color
+            const brightness = Math.min(255, pg + distFromHead * 8);
+            ctx.fillStyle = `rgba(${Math.floor(pr * 0.3)}, ${brightness}, ${Math.floor(pb * 0.5)}, ${fade * column.depth * 0.8})`;
+            ctx.fillText(charObj.char, column.x, charObj.y);
           }
         }
       });
 
-      // Reset column when off screen
-      if (column.chars[0]?.y > canvas.height + 100) {
-        const numChars = Math.floor(10 + Math.random() * 25);
+      // Reset when off screen
+      const firstChar = column.chars[0];
+      if (firstChar && firstChar.y > canvas.height + 200) {
+        const charCount = Math.floor(8 + Math.random() * 20);
         column.chars = [];
-        
-        for (let j = 0; j < numChars; j++) {
+        for (let j = 0; j < charCount; j++) {
           column.chars.push({
-            y: -numChars * 20 + j * 20,
+            y: -charCount * 22 + j * 22,
             char: this.charSet[Math.floor(Math.random() * this.charSet.length)],
-            brightness: 1 - (j / numChars)
+            speed: 1 + Math.random() * 0.5
           });
         }
       }
@@ -327,15 +145,237 @@ class MatrixRainRenderer {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-// CYBERPUNK - Clean neon rain, NO weird shapes, just beautiful atmosphere
+// STARFIELD - Gentle twinkling stars with subtle nebula colors
 // ═══════════════════════════════════════════════════════════════════════════
-class CyberpunkRenderer {
-  raindrops: Array<{ 
-    x: number; 
-    y: number; 
-    length: number; 
-    speed: number; 
+class StarfieldRenderer {
+  stars: Array<{
+    x: number; y: number;
+    size: number;
+    baseAlpha: number;
+    twinkleSpeed: number;
+    twinklePhase: number;
+  }> = [];
+  initialized = false;
+
+  init(canvas: HTMLCanvasElement) {
+    if (this.initialized) return;
+    this.initialized = true;
+
+    for (let i = 0; i < 200; i++) {
+      this.stars.push({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        size: 0.5 + Math.random() * 2,
+        baseAlpha: 0.3 + Math.random() * 0.5,
+        twinkleSpeed: 0.02 + Math.random() * 0.04,
+        twinklePhase: Math.random() * Math.PI * 2
+      });
+    }
+  }
+
+  render(rc: RenderContext) {
+    const { ctx, canvas, time, primaryRgb, accentRgb } = rc;
+
+    // Subtle nebula clouds
+    const nebula1 = ctx.createRadialGradient(
+      canvas.width * 0.3, canvas.height * 0.3, 0,
+      canvas.width * 0.3, canvas.height * 0.3, canvas.width * 0.4
+    );
+    nebula1.addColorStop(0, `rgba(${primaryRgb[0]}, ${primaryRgb[1]}, ${primaryRgb[2]}, 0.04)`);
+    nebula1.addColorStop(1, 'transparent');
+    ctx.fillStyle = nebula1;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    const nebula2 = ctx.createRadialGradient(
+      canvas.width * 0.7, canvas.height * 0.6, 0,
+      canvas.width * 0.7, canvas.height * 0.6, canvas.width * 0.35
+    );
+    nebula2.addColorStop(0, `rgba(${accentRgb[0]}, ${accentRgb[1]}, ${accentRgb[2]}, 0.03)`);
+    nebula2.addColorStop(1, 'transparent');
+    ctx.fillStyle = nebula2;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Stars
+    this.stars.forEach(star => {
+      star.twinklePhase += star.twinkleSpeed;
+      const twinkle = 0.5 + Math.sin(star.twinklePhase) * 0.5;
+      const alpha = star.baseAlpha * twinkle;
+
+      ctx.beginPath();
+      ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`;
+      ctx.fill();
+
+      // Glow for larger stars
+      if (star.size > 1.2) {
+        const glow = ctx.createRadialGradient(star.x, star.y, 0, star.x, star.y, star.size * 3);
+        glow.addColorStop(0, `rgba(255, 255, 255, ${alpha * 0.3})`);
+        glow.addColorStop(1, 'transparent');
+        ctx.fillStyle = glow;
+        ctx.fillRect(star.x - star.size * 3, star.y - star.size * 3, star.size * 6, star.size * 6);
+      }
+    });
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// DUST MOTES - Gentle floating particles with warm glow
+// ═══════════════════════════════════════════════════════════════════════════
+class DustMotesRenderer {
+  particles: Array<{
+    x: number; y: number;
+    vx: number; vy: number;
+    size: number;
+    alpha: number;
+    phase: number;
+  }> = [];
+  initialized = false;
+
+  init(canvas: HTMLCanvasElement) {
+    if (this.initialized) return;
+    this.initialized = true;
+
+    for (let i = 0; i < 60; i++) {
+      this.particles.push({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        vx: (Math.random() - 0.5) * 0.3,
+        vy: -0.1 - Math.random() * 0.3,
+        size: 1 + Math.random() * 3,
+        alpha: 0.2 + Math.random() * 0.4,
+        phase: Math.random() * Math.PI * 2
+      });
+    }
+  }
+
+  render(rc: RenderContext) {
+    const { ctx, canvas, primaryRgb, time } = rc;
+
+    // Warm ambient light
+    const warmGlow = ctx.createRadialGradient(
+      canvas.width * 0.5, canvas.height * 0.3, 0,
+      canvas.width * 0.5, canvas.height * 0.3, canvas.width * 0.5
+    );
+    warmGlow.addColorStop(0, `rgba(${primaryRgb[0]}, ${primaryRgb[1]}, ${primaryRgb[2]}, 0.05)`);
+    warmGlow.addColorStop(1, 'transparent');
+    ctx.fillStyle = warmGlow;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    this.particles.forEach(p => {
+      p.phase += 0.02;
+      p.x += p.vx + Math.sin(p.phase) * 0.2;
+      p.y += p.vy;
+
+      if (p.y < -20) {
+        p.y = canvas.height + 20;
+        p.x = Math.random() * canvas.width;
+      }
+      if (p.x < -20) p.x = canvas.width + 20;
+      if (p.x > canvas.width + 20) p.x = -20;
+
+      const glow = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.size * 4);
+      glow.addColorStop(0, `rgba(${primaryRgb[0]}, ${primaryRgb[1]}, ${primaryRgb[2]}, ${p.alpha})`);
+      glow.addColorStop(0.5, `rgba(${primaryRgb[0]}, ${primaryRgb[1]}, ${primaryRgb[2]}, ${p.alpha * 0.3})`);
+      glow.addColorStop(1, 'transparent');
+      ctx.fillStyle = glow;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.size * 4, 0, Math.PI * 2);
+      ctx.fill();
+    });
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// FALLING LEAVES - Gentle drifting leaves with natural movement
+// ═══════════════════════════════════════════════════════════════════════════
+class FallingLeavesRenderer {
+  leaves: Array<{
+    x: number; y: number;
+    rotation: number;
+    rotSpeed: number;
+    size: number;
+    swayPhase: number;
+    speed: number;
     hue: number;
+  }> = [];
+  initialized = false;
+
+  init(canvas: HTMLCanvasElement) {
+    if (this.initialized) return;
+    this.initialized = true;
+
+    for (let i = 0; i < 25; i++) {
+      this.leaves.push({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        rotation: Math.random() * Math.PI * 2,
+        rotSpeed: (Math.random() - 0.5) * 0.02,
+        size: 8 + Math.random() * 12,
+        swayPhase: Math.random() * Math.PI * 2,
+        speed: 0.5 + Math.random() * 1,
+        hue: 30 + Math.random() * 30
+      });
+    }
+  }
+
+  render(rc: RenderContext) {
+    const { ctx, canvas, primaryRgb } = rc;
+
+    // Forest mist
+    const mist = ctx.createLinearGradient(0, canvas.height, 0, canvas.height - 300);
+    mist.addColorStop(0, `rgba(${primaryRgb[0]}, ${primaryRgb[1]}, ${primaryRgb[2]}, 0.08)`);
+    mist.addColorStop(1, 'transparent');
+    ctx.fillStyle = mist;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    this.leaves.forEach(leaf => {
+      leaf.swayPhase += 0.015;
+      leaf.rotation += leaf.rotSpeed;
+      leaf.x += Math.sin(leaf.swayPhase) * 1.5;
+      leaf.y += leaf.speed;
+
+      if (leaf.y > canvas.height + 30) {
+        leaf.y = -30;
+        leaf.x = Math.random() * canvas.width;
+      }
+
+      ctx.save();
+      ctx.translate(leaf.x, leaf.y);
+      ctx.rotate(leaf.rotation);
+      ctx.scale(leaf.size / 15, leaf.size / 15);
+
+      // Simple leaf shape
+      ctx.beginPath();
+      ctx.moveTo(0, -10);
+      ctx.quadraticCurveTo(8, -5, 6, 5);
+      ctx.quadraticCurveTo(0, 12, -6, 5);
+      ctx.quadraticCurveTo(-8, -5, 0, -10);
+      ctx.fillStyle = `hsla(${leaf.hue}, 60%, 40%, 0.6)`;
+      ctx.fill();
+
+      // Leaf vein
+      ctx.beginPath();
+      ctx.moveTo(0, -8);
+      ctx.lineTo(0, 8);
+      ctx.strokeStyle = `hsla(${leaf.hue}, 40%, 30%, 0.4)`;
+      ctx.lineWidth = 0.5;
+      ctx.stroke();
+
+      ctx.restore();
+    });
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// SNOWFALL - Gentle falling snow with subtle sparkle
+// ═══════════════════════════════════════════════════════════════════════════
+class SnowfallRenderer {
+  flakes: Array<{
+    x: number; y: number;
+    size: number;
+    speed: number;
+    swayPhase: number;
+    swaySpeed: number;
     alpha: number;
   }> = [];
   initialized = false;
@@ -343,71 +383,61 @@ class CyberpunkRenderer {
   init(canvas: HTMLCanvasElement) {
     if (this.initialized) return;
     this.initialized = true;
-    
-    for (let i = 0; i < 400; i++) {
-      this.raindrops.push({
+
+    for (let i = 0; i < 80; i++) {
+      this.flakes.push({
         x: Math.random() * canvas.width,
         y: Math.random() * canvas.height,
-        length: 25 + Math.random() * 50,
-        speed: 12 + Math.random() * 18,
-        hue: Math.random() > 0.5 ? 320 : 180, // Magenta or Cyan
-        alpha: 0.2 + Math.random() * 0.4
+        size: 1 + Math.random() * 4,
+        speed: 0.5 + Math.random() * 1.5,
+        swayPhase: Math.random() * Math.PI * 2,
+        swaySpeed: 0.01 + Math.random() * 0.02,
+        alpha: 0.4 + Math.random() * 0.5
       });
     }
   }
 
   render(rc: RenderContext) {
-    const { ctx, canvas } = rc;
+    const { ctx, canvas, primaryRgb } = rc;
 
-    // Atmospheric glow from bottom
-    const bottomGlow = ctx.createLinearGradient(0, canvas.height, 0, canvas.height - 350);
-    bottomGlow.addColorStop(0, 'rgba(255, 0, 180, 0.08)');
-    bottomGlow.addColorStop(0.4, 'rgba(0, 180, 255, 0.04)');
-    bottomGlow.addColorStop(1, 'transparent');
-    ctx.fillStyle = bottomGlow;
+    // Cold ambient glow
+    const coldGlow = ctx.createRadialGradient(
+      canvas.width * 0.5, 0, 0,
+      canvas.width * 0.5, 0, canvas.height * 0.6
+    );
+    coldGlow.addColorStop(0, `rgba(${primaryRgb[0]}, ${primaryRgb[1]}, ${primaryRgb[2]}, 0.04)`);
+    coldGlow.addColorStop(1, 'transparent');
+    ctx.fillStyle = coldGlow;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Top glow
-    const topGlow = ctx.createLinearGradient(0, 0, 0, 200);
-    topGlow.addColorStop(0, 'rgba(180, 0, 255, 0.06)');
-    topGlow.addColorStop(1, 'transparent');
-    ctx.fillStyle = topGlow;
-    ctx.fillRect(0, 0, canvas.width, 200);
+    this.flakes.forEach(flake => {
+      flake.swayPhase += flake.swaySpeed;
+      flake.x += Math.sin(flake.swayPhase) * 0.8;
+      flake.y += flake.speed;
 
-    // Rain
-    this.raindrops.forEach(drop => {
-      drop.y += drop.speed;
-      
-      if (drop.y > canvas.height) {
-        drop.y = -drop.length;
-        drop.x = Math.random() * canvas.width;
+      if (flake.y > canvas.height + 10) {
+        flake.y = -10;
+        flake.x = Math.random() * canvas.width;
       }
 
-      // Gradient rain trail
-      const gradient = ctx.createLinearGradient(drop.x, drop.y, drop.x, drop.y + drop.length);
-      const color = drop.hue === 320 ? '255, 50, 200' : '50, 200, 255';
-      gradient.addColorStop(0, `rgba(${color}, 0)`);
-      gradient.addColorStop(0.2, `rgba(${color}, ${drop.alpha})`);
-      gradient.addColorStop(1, `rgba(${color}, ${drop.alpha * 0.2})`);
-      
-      ctx.strokeStyle = gradient;
-      ctx.lineWidth = 1.5;
+      // Snowflake with glow
       ctx.beginPath();
-      ctx.moveTo(drop.x, drop.y);
-      ctx.lineTo(drop.x, drop.y + drop.length);
-      ctx.stroke();
-    });
+      ctx.arc(flake.x, flake.y, flake.size, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(255, 255, 255, ${flake.alpha})`;
+      ctx.fill();
 
-    // Subtle scanlines
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.015)';
-    for (let y = 0; y < canvas.height; y += 3) {
-      ctx.fillRect(0, y, canvas.width, 1);
-    }
+      // Subtle glow
+      const glow = ctx.createRadialGradient(flake.x, flake.y, 0, flake.x, flake.y, flake.size * 3);
+      glow.addColorStop(0, `rgba(200, 220, 255, ${flake.alpha * 0.3})`);
+      glow.addColorStop(1, 'transparent');
+      ctx.fillStyle = glow;
+      ctx.fillRect(flake.x - flake.size * 3, flake.y - flake.size * 3, flake.size * 6, flake.size * 6);
+    });
   }
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-// DRAGON FIRE - Majestic flames with embers and heat distortion
+// DRAGON FIRE - Warm embers rising with flame glow
 // ═══════════════════════════════════════════════════════════════════════════
 class DragonFireRenderer {
   embers: Array<{
@@ -419,87 +449,68 @@ class DragonFireRenderer {
   }> = [];
 
   render(rc: RenderContext) {
-    const { ctx, canvas, time } = rc;
+    const { ctx, canvas, time, primaryRgb } = rc;
 
-    // Massive warm glow from bottom
-    const heatGrad = ctx.createLinearGradient(0, canvas.height, 0, canvas.height - 500);
-    heatGrad.addColorStop(0, 'rgba(255, 80, 20, 0.3)');
-    heatGrad.addColorStop(0.3, 'rgba(255, 100, 30, 0.15)');
-    heatGrad.addColorStop(0.6, 'rgba(255, 120, 40, 0.06)');
-    heatGrad.addColorStop(1, 'transparent');
-    ctx.fillStyle = heatGrad;
+    // Heat glow from bottom
+    const heatGlow = ctx.createLinearGradient(0, canvas.height, 0, canvas.height - 400);
+    heatGlow.addColorStop(0, `rgba(${primaryRgb[0]}, ${Math.floor(primaryRgb[1] * 0.5)}, 0, 0.15)`);
+    heatGlow.addColorStop(0.5, `rgba(${primaryRgb[0]}, ${Math.floor(primaryRgb[1] * 0.3)}, 0, 0.05)`);
+    heatGlow.addColorStop(1, 'transparent');
+    ctx.fillStyle = heatGlow;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Animated fire waves at bottom
-    for (let layer = 0; layer < 4; layer++) {
-      const layerY = canvas.height - 20 - layer * 35;
-      const alpha = 0.3 - layer * 0.06;
-      
-      ctx.beginPath();
-      ctx.moveTo(0, canvas.height);
-      
-      for (let x = 0; x <= canvas.width; x += 8) {
-        const noise = 
-          Math.sin(x * 0.015 + time * 5 + layer * 0.5) * 40 +
-          Math.sin(x * 0.03 + time * 8 + layer) * 20 +
-          Math.sin(x * 0.05 + time * 3) * 10;
-        ctx.lineTo(x, layerY + noise);
-      }
-      
-      ctx.lineTo(canvas.width, canvas.height);
-      ctx.closePath();
-
-      const flameGrad = ctx.createLinearGradient(0, layerY - 60, 0, canvas.height);
-      flameGrad.addColorStop(0, `rgba(255, 220, 100, ${alpha})`);
-      flameGrad.addColorStop(0.3, `rgba(255, 140, 50, ${alpha})`);
-      flameGrad.addColorStop(0.7, `rgba(200, 60, 20, ${alpha * 0.5})`);
-      flameGrad.addColorStop(1, `rgba(100, 20, 0, ${alpha * 0.3})`);
-      
-      ctx.fillStyle = flameGrad;
-      ctx.fill();
+    // Animated fire line at bottom
+    ctx.beginPath();
+    ctx.moveTo(0, canvas.height);
+    for (let x = 0; x <= canvas.width; x += 10) {
+      const flame = Math.sin(x * 0.02 + time * 4) * 30 + Math.sin(x * 0.05 + time * 6) * 15;
+      ctx.lineTo(x, canvas.height - 40 - flame);
     }
+    ctx.lineTo(canvas.width, canvas.height);
+    ctx.closePath();
+
+    const fireGrad = ctx.createLinearGradient(0, canvas.height - 100, 0, canvas.height);
+    fireGrad.addColorStop(0, 'rgba(255, 200, 50, 0.3)');
+    fireGrad.addColorStop(0.4, 'rgba(255, 100, 20, 0.2)');
+    fireGrad.addColorStop(1, 'rgba(150, 30, 0, 0.1)');
+    ctx.fillStyle = fireGrad;
+    ctx.fill();
 
     // Spawn embers
-    if (Math.random() > 0.4) {
+    if (Math.random() > 0.5) {
       this.embers.push({
         x: Math.random() * canvas.width,
-        y: canvas.height - 80 - Math.random() * 40,
-        vx: (Math.random() - 0.5) * 2,
-        vy: -3 - Math.random() * 5,
-        size: 2 + Math.random() * 5,
+        y: canvas.height - 50,
+        vx: (Math.random() - 0.5) * 1.5,
+        vy: -2 - Math.random() * 3,
+        size: 1 + Math.random() * 4,
         life: 0,
-        maxLife: 120 + Math.random() * 100
+        maxLife: 80 + Math.random() * 80
       });
     }
 
-    // Render embers with glow
+    // Render embers
     this.embers = this.embers.filter(ember => {
-      ember.x += ember.vx + Math.sin(ember.life * 0.05) * 0.8;
+      ember.x += ember.vx + Math.sin(ember.life * 0.08) * 0.5;
       ember.y += ember.vy;
-      ember.vy *= 0.995;
+      ember.vy *= 0.99;
       ember.life++;
 
       const lifeRatio = 1 - ember.life / ember.maxLife;
-      
+
       if (lifeRatio > 0) {
-        // Ember glow
-        const glowGrad = ctx.createRadialGradient(
-          ember.x, ember.y, 0,
-          ember.x, ember.y, ember.size * 4 * lifeRatio
-        );
-        glowGrad.addColorStop(0, `rgba(255, 200, 100, ${lifeRatio * 0.6})`);
-        glowGrad.addColorStop(0.5, `rgba(255, 120, 50, ${lifeRatio * 0.3})`);
-        glowGrad.addColorStop(1, 'transparent');
-        
-        ctx.fillStyle = glowGrad;
+        const glow = ctx.createRadialGradient(ember.x, ember.y, 0, ember.x, ember.y, ember.size * 4);
+        glow.addColorStop(0, `rgba(255, 200, 80, ${lifeRatio * 0.7})`);
+        glow.addColorStop(0.5, `rgba(255, 100, 30, ${lifeRatio * 0.3})`);
+        glow.addColorStop(1, 'transparent');
+        ctx.fillStyle = glow;
         ctx.beginPath();
-        ctx.arc(ember.x, ember.y, ember.size * 4 * lifeRatio, 0, Math.PI * 2);
+        ctx.arc(ember.x, ember.y, ember.size * 4, 0, Math.PI * 2);
         ctx.fill();
 
-        // Ember core
-        ctx.fillStyle = `rgba(255, 255, 220, ${lifeRatio * 0.9})`;
         ctx.beginPath();
-        ctx.arc(ember.x, ember.y, ember.size * 0.5 * lifeRatio, 0, Math.PI * 2);
+        ctx.arc(ember.x, ember.y, ember.size * lifeRatio, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(255, 255, 200, ${lifeRatio})`;
         ctx.fill();
       }
 
@@ -509,793 +520,598 @@ class DragonFireRenderer {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-// SNOWFALL - Soft, dreamy snowflakes with depth
+// CYBERPUNK - Neon rain with ambient city glow
 // ═══════════════════════════════════════════════════════════════════════════
-class SnowfallRenderer {
-  snowflakes: Array<{
+class CyberpunkRenderer {
+  raindrops: Array<{
     x: number; y: number;
-    size: number;
+    length: number;
     speed: number;
-    wobble: number;
-    wobbleSpeed: number;
+    color: string;
     alpha: number;
-    depth: number;
   }> = [];
   initialized = false;
 
   init(canvas: HTMLCanvasElement) {
     if (this.initialized) return;
     this.initialized = true;
-    
-    for (let i = 0; i < 180; i++) {
-      const depth = 0.2 + Math.random() * 0.8;
-      this.snowflakes.push({
+
+    for (let i = 0; i < 250; i++) {
+      const isCyan = Math.random() > 0.5;
+      this.raindrops.push({
         x: Math.random() * canvas.width,
         y: Math.random() * canvas.height,
-        size: (1.5 + Math.random() * 4) * depth,
-        speed: (0.4 + Math.random() * 1.2) * depth,
-        wobble: Math.random() * Math.PI * 2,
-        wobbleSpeed: 0.015 + Math.random() * 0.025,
-        alpha: 0.3 + depth * 0.6,
-        depth
+        length: 20 + Math.random() * 40,
+        speed: 8 + Math.random() * 12,
+        color: isCyan ? '0, 255, 255' : '255, 0, 200',
+        alpha: 0.15 + Math.random() * 0.3
       });
     }
   }
 
   render(rc: RenderContext) {
-    const { ctx, canvas } = rc;
+    const { ctx, canvas, primaryRgb, accentRgb } = rc;
 
-    // Cool atmospheric glow
-    const atmGrad = ctx.createRadialGradient(
-      canvas.width / 2, canvas.height / 2, 0,
-      canvas.width / 2, canvas.height / 2, canvas.width * 0.6
-    );
-    atmGrad.addColorStop(0, 'rgba(180, 200, 255, 0.05)');
-    atmGrad.addColorStop(1, 'transparent');
-    ctx.fillStyle = atmGrad;
+    // Neon ambient glow
+    const bottomGlow = ctx.createLinearGradient(0, canvas.height, 0, canvas.height - 300);
+    bottomGlow.addColorStop(0, `rgba(${primaryRgb[0]}, ${primaryRgb[1]}, ${primaryRgb[2]}, 0.08)`);
+    bottomGlow.addColorStop(1, 'transparent');
+    ctx.fillStyle = bottomGlow;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Snowflakes with blur based on depth
-    this.snowflakes.forEach(flake => {
-      flake.wobble += flake.wobbleSpeed;
-      flake.x += Math.sin(flake.wobble) * 0.6;
-      flake.y += flake.speed;
+    const topGlow = ctx.createLinearGradient(0, 0, 0, 200);
+    topGlow.addColorStop(0, `rgba(${accentRgb[0]}, ${accentRgb[1]}, ${accentRgb[2]}, 0.05)`);
+    topGlow.addColorStop(1, 'transparent');
+    ctx.fillStyle = topGlow;
+    ctx.fillRect(0, 0, canvas.width, 200);
 
-      if (flake.y > canvas.height + 20) {
-        flake.y = -20;
-        flake.x = Math.random() * canvas.width;
+    // Rain
+    this.raindrops.forEach(drop => {
+      drop.y += drop.speed;
+      if (drop.y > canvas.height) {
+        drop.y = -drop.length;
+        drop.x = Math.random() * canvas.width;
       }
 
-      // Soft glow
-      const glow = ctx.createRadialGradient(
-        flake.x, flake.y, 0,
-        flake.x, flake.y, flake.size * 3
-      );
-      glow.addColorStop(0, `rgba(220, 235, 255, ${flake.alpha})`);
-      glow.addColorStop(0.4, `rgba(200, 220, 255, ${flake.alpha * 0.5})`);
-      glow.addColorStop(1, 'transparent');
-      
-      ctx.fillStyle = glow;
-      ctx.beginPath();
-      ctx.arc(flake.x, flake.y, flake.size * 3, 0, Math.PI * 2);
-      ctx.fill();
+      const grad = ctx.createLinearGradient(drop.x, drop.y, drop.x, drop.y + drop.length);
+      grad.addColorStop(0, `rgba(${drop.color}, 0)`);
+      grad.addColorStop(0.3, `rgba(${drop.color}, ${drop.alpha})`);
+      grad.addColorStop(1, `rgba(${drop.color}, 0.05)`);
 
-      // Core
-      ctx.fillStyle = `rgba(255, 255, 255, ${flake.alpha * 0.8})`;
+      ctx.strokeStyle = grad;
+      ctx.lineWidth = 1.5;
       ctx.beginPath();
-      ctx.arc(flake.x, flake.y, flake.size * 0.6, 0, Math.PI * 2);
-      ctx.fill();
+      ctx.moveTo(drop.x, drop.y);
+      ctx.lineTo(drop.x, drop.y + drop.length);
+      ctx.stroke();
     });
+
+    // Subtle scanlines
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.02)';
+    for (let y = 0; y < canvas.height; y += 3) {
+      ctx.fillRect(0, y, canvas.width, 1);
+    }
   }
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-// NUCLEAR FALLOUT - Radioactive atmosphere with ash and radiation
+// GRIMOIRE - Warm candlelight atmosphere with floating runes
 // ═══════════════════════════════════════════════════════════════════════════
-class NuclearRenderer {
-  particles: Array<{
+class GrimoireRenderer {
+  candles: Array<{
     x: number; y: number;
-    vx: number; vy: number;
-    size: number;
+    scale: number;
+    flickerPhase: number;
+    flickerSpeed: number;
+  }> = [];
+  runes: Array<{
+    x: number; y: number;
+    char: string;
     alpha: number;
-    type: 'ash' | 'radiation';
+    speed: number;
+    phase: number;
   }> = [];
-  pulsePhase = 0;
   initialized = false;
 
   init(canvas: HTMLCanvasElement) {
     if (this.initialized) return;
     this.initialized = true;
-    
-    // Ash particles
-    for (let i = 0; i < 80; i++) {
-      this.particles.push({
-        x: Math.random() * canvas.width,
-        y: Math.random() * canvas.height,
-        vx: (Math.random() - 0.5) * 0.5,
-        vy: 0.3 + Math.random() * 0.8,
-        size: 1 + Math.random() * 3,
-        alpha: 0.2 + Math.random() * 0.3,
-        type: 'ash'
+
+    // Candle positions around edges
+    const positions = [
+      { x: 0.05, y: 0.3, s: 0.7 }, { x: 0.08, y: 0.7, s: 0.6 },
+      { x: 0.92, y: 0.25, s: 0.65 }, { x: 0.95, y: 0.65, s: 0.7 },
+      { x: 0.3, y: 0.05, s: 0.5 }, { x: 0.7, y: 0.08, s: 0.5 },
+      { x: 0.15, y: 0.9, s: 0.6 }, { x: 0.85, y: 0.92, s: 0.55 }
+    ];
+
+    positions.forEach(pos => {
+      this.candles.push({
+        x: pos.x * canvas.width,
+        y: pos.y * canvas.height,
+        scale: pos.s,
+        flickerPhase: Math.random() * Math.PI * 2,
+        flickerSpeed: 0.1 + Math.random() * 0.05
       });
-    }
-
-    // Radiation particles (yellow/green specks)
-    for (let i = 0; i < 30; i++) {
-      this.particles.push({
-        x: Math.random() * canvas.width,
-        y: Math.random() * canvas.height,
-        vx: (Math.random() - 0.5) * 1.5,
-        vy: (Math.random() - 0.5) * 1.5,
-        size: 2 + Math.random() * 3,
-        alpha: 0.3 + Math.random() * 0.4,
-        type: 'radiation'
-      });
-    }
-  }
-
-  render(rc: RenderContext) {
-    const { ctx, canvas, time } = rc;
-    this.pulsePhase += 0.02;
-
-    // Radiation pulse effect
-    const pulseIntensity = 0.5 + Math.sin(this.pulsePhase) * 0.2;
-    
-    // Yellow/orange atmospheric glow
-    const radGrad = ctx.createRadialGradient(
-      canvas.width / 2, canvas.height * 0.6, 0,
-      canvas.width / 2, canvas.height * 0.6, canvas.width * 0.8
-    );
-    radGrad.addColorStop(0, `rgba(255, 200, 0, ${0.08 * pulseIntensity})`);
-    radGrad.addColorStop(0.5, `rgba(255, 150, 0, ${0.04 * pulseIntensity})`);
-    radGrad.addColorStop(1, 'transparent');
-    ctx.fillStyle = radGrad;
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    // Hazard glow from corners
-    const cornerGlow = ctx.createRadialGradient(0, 0, 0, 0, 0, 400);
-    cornerGlow.addColorStop(0, 'rgba(200, 180, 0, 0.1)');
-    cornerGlow.addColorStop(1, 'transparent');
-    ctx.fillStyle = cornerGlow;
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    // Particles
-    this.particles.forEach(p => {
-      p.x += p.vx;
-      p.y += p.vy;
-
-      // Wrap around
-      if (p.y > canvas.height + 20) p.y = -20;
-      if (p.y < -20) p.y = canvas.height + 20;
-      if (p.x > canvas.width + 20) p.x = -20;
-      if (p.x < -20) p.x = canvas.width + 20;
-
-      if (p.type === 'ash') {
-        ctx.fillStyle = `rgba(80, 70, 60, ${p.alpha})`;
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-        ctx.fill();
-      } else {
-        // Radiation particles with glow
-        const glow = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.size * 3);
-        glow.addColorStop(0, `rgba(180, 255, 0, ${p.alpha * pulseIntensity})`);
-        glow.addColorStop(0.5, `rgba(255, 200, 0, ${p.alpha * 0.5 * pulseIntensity})`);
-        glow.addColorStop(1, 'transparent');
-        ctx.fillStyle = glow;
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.size * 3, 0, Math.PI * 2);
-        ctx.fill();
-      }
     });
 
-    // Subtle grain/noise effect
-    ctx.fillStyle = 'rgba(100, 90, 60, 0.02)';
-    for (let i = 0; i < 100; i++) {
-      const x = Math.random() * canvas.width;
-      const y = Math.random() * canvas.height;
-      ctx.fillRect(x, y, 2, 2);
-    }
-  }
-}
-
-// ═══════════════════════════════════════════════════════════════════════════
-// STARFIELD - Twinkling stars with nebula
-// ═══════════════════════════════════════════════════════════════════════════
-class StarfieldRenderer {
-  stars: Array<{
-    x: number; y: number;
-    size: number;
-    twinklePhase: number;
-    twinkleSpeed: number;
-    brightness: number;
-  }> = [];
-  initialized = false;
-
-  init(canvas: HTMLCanvasElement) {
-    if (this.initialized) return;
-    this.initialized = true;
-    
-    for (let i = 0; i < 200; i++) {
-      this.stars.push({
+    // Floating runes
+    const runeChars = '᛭ᚠᚢᚦᚨᚱᚲ☽☾✧⚝';
+    for (let i = 0; i < 15; i++) {
+      this.runes.push({
         x: Math.random() * canvas.width,
         y: Math.random() * canvas.height,
-        size: 0.5 + Math.random() * 2,
-        twinklePhase: Math.random() * Math.PI * 2,
-        twinkleSpeed: 0.02 + Math.random() * 0.04,
-        brightness: 0.3 + Math.random() * 0.7
+        char: runeChars[Math.floor(Math.random() * runeChars.length)],
+        alpha: 0.1 + Math.random() * 0.2,
+        speed: 0.2 + Math.random() * 0.4,
+        phase: Math.random() * Math.PI * 2
       });
     }
   }
 
   render(rc: RenderContext) {
-    const { ctx, canvas } = rc;
+    const { ctx, canvas, primaryRgb } = rc;
 
-    // Nebula effect
-    const nebula = ctx.createRadialGradient(
-      canvas.width * 0.3, canvas.height * 0.4, 0,
-      canvas.width * 0.3, canvas.height * 0.4, canvas.width * 0.5
-    );
-    nebula.addColorStop(0, 'rgba(100, 80, 180, 0.06)');
-    nebula.addColorStop(0.5, 'rgba(60, 40, 120, 0.03)');
-    nebula.addColorStop(1, 'transparent');
-    ctx.fillStyle = nebula;
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    // Render candle glows
+    this.candles.forEach(candle => {
+      candle.flickerPhase += candle.flickerSpeed;
+      const flicker = 0.7 + Math.sin(candle.flickerPhase) * 0.15 + Math.sin(candle.flickerPhase * 2.3) * 0.1;
 
-    const nebula2 = ctx.createRadialGradient(
-      canvas.width * 0.7, canvas.height * 0.6, 0,
-      canvas.width * 0.7, canvas.height * 0.6, canvas.width * 0.4
-    );
-    nebula2.addColorStop(0, 'rgba(80, 100, 200, 0.05)');
-    nebula2.addColorStop(1, 'transparent');
-    ctx.fillStyle = nebula2;
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    // Stars
-    this.stars.forEach(star => {
-      star.twinklePhase += star.twinkleSpeed;
-      const twinkle = 0.5 + Math.sin(star.twinklePhase) * 0.5;
-      const alpha = star.brightness * twinkle;
-
-      // Star glow
+      // Large warm glow
       const glow = ctx.createRadialGradient(
-        star.x, star.y, 0,
-        star.x, star.y, star.size * 4
+        candle.x, candle.y - 10, 0,
+        candle.x, candle.y - 10, 200 * candle.scale
       );
-      glow.addColorStop(0, `rgba(200, 210, 255, ${alpha})`);
-      glow.addColorStop(0.3, `rgba(180, 190, 255, ${alpha * 0.4})`);
+      glow.addColorStop(0, `rgba(255, 160, 60, ${0.12 * flicker * candle.scale})`);
+      glow.addColorStop(0.3, `rgba(255, 100, 40, ${0.06 * flicker * candle.scale})`);
       glow.addColorStop(1, 'transparent');
-      
       ctx.fillStyle = glow;
-      ctx.beginPath();
-      ctx.arc(star.x, star.y, star.size * 4, 0, Math.PI * 2);
-      ctx.fill();
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+    });
 
-      // Star core
-      ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`;
-      ctx.beginPath();
-      ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
-      ctx.fill();
+    // Floating runes
+    this.runes.forEach(rune => {
+      rune.phase += 0.02;
+      rune.y -= rune.speed;
+      rune.x += Math.sin(rune.phase) * 0.5;
+
+      if (rune.y < -30) {
+        rune.y = canvas.height + 30;
+        rune.x = Math.random() * canvas.width;
+      }
+
+      const pulse = 0.6 + Math.sin(rune.phase) * 0.4;
+      ctx.font = '18px serif';
+      ctx.fillStyle = `rgba(${primaryRgb[0]}, ${Math.floor(primaryRgb[1] * 0.6)}, ${Math.floor(primaryRgb[2] * 0.4)}, ${rune.alpha * pulse})`;
+      ctx.fillText(rune.char, rune.x, rune.y);
     });
   }
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-// ENCHANTED FOREST - Fireflies and magical particles
+// ENCHANTED FOREST - Fireflies and magic mist
 // ═══════════════════════════════════════════════════════════════════════════
 class EnchantedForestRenderer {
   fireflies: Array<{
     x: number; y: number;
     vx: number; vy: number;
-    phase: number;
-    phaseSpeed: number;
+    glowPhase: number;
+    glowSpeed: number;
     size: number;
-    hue: number;
   }> = [];
   initialized = false;
 
   init(canvas: HTMLCanvasElement) {
     if (this.initialized) return;
     this.initialized = true;
-    
-    for (let i = 0; i < 50; i++) {
+
+    for (let i = 0; i < 40; i++) {
       this.fireflies.push({
         x: Math.random() * canvas.width,
         y: Math.random() * canvas.height,
         vx: (Math.random() - 0.5) * 0.8,
-        vy: (Math.random() - 0.5) * 0.8,
-        phase: Math.random() * Math.PI * 2,
-        phaseSpeed: 0.03 + Math.random() * 0.05,
-        size: 3 + Math.random() * 4,
-        hue: Math.random() > 0.5 ? 120 : 60 // Green or yellow-green
+        vy: (Math.random() - 0.5) * 0.5,
+        glowPhase: Math.random() * Math.PI * 2,
+        glowSpeed: 0.03 + Math.random() * 0.05,
+        size: 2 + Math.random() * 3
       });
     }
   }
 
   render(rc: RenderContext) {
-    const { ctx, canvas } = rc;
+    const { ctx, canvas, primaryRgb, accentRgb } = rc;
 
-    // Mystical mist from bottom
-    const mistGrad = ctx.createLinearGradient(0, canvas.height, 0, canvas.height - 300);
-    mistGrad.addColorStop(0, 'rgba(100, 150, 100, 0.12)');
-    mistGrad.addColorStop(0.5, 'rgba(80, 120, 80, 0.06)');
-    mistGrad.addColorStop(1, 'transparent');
-    ctx.fillStyle = mistGrad;
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    // Purple magic overlay
-    const magicGrad = ctx.createRadialGradient(
-      canvas.width * 0.5, canvas.height * 0.3, 0,
-      canvas.width * 0.5, canvas.height * 0.3, canvas.width * 0.6
-    );
-    magicGrad.addColorStop(0, 'rgba(150, 100, 200, 0.04)');
-    magicGrad.addColorStop(1, 'transparent');
-    ctx.fillStyle = magicGrad;
+    // Magic mist from bottom
+    const mist = ctx.createLinearGradient(0, canvas.height, 0, canvas.height - 350);
+    mist.addColorStop(0, `rgba(${accentRgb[0]}, ${accentRgb[1]}, ${accentRgb[2]}, 0.1)`);
+    mist.addColorStop(0.5, `rgba(${primaryRgb[0]}, ${primaryRgb[1]}, ${primaryRgb[2]}, 0.04)`);
+    mist.addColorStop(1, 'transparent');
+    ctx.fillStyle = mist;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     // Fireflies
-    this.fireflies.forEach(ff => {
-      ff.phase += ff.phaseSpeed;
-      ff.x += ff.vx + Math.sin(ff.phase * 0.5) * 0.3;
-      ff.y += ff.vy + Math.cos(ff.phase * 0.5) * 0.3;
+    this.fireflies.forEach(fly => {
+      fly.glowPhase += fly.glowSpeed;
+      fly.x += fly.vx;
+      fly.y += fly.vy;
 
-      // Bounce off edges gently
-      if (ff.x < 0 || ff.x > canvas.width) ff.vx *= -1;
-      if (ff.y < 0 || ff.y > canvas.height) ff.vy *= -1;
+      // Change direction occasionally
+      if (Math.random() > 0.98) {
+        fly.vx = (Math.random() - 0.5) * 0.8;
+        fly.vy = (Math.random() - 0.5) * 0.5;
+      }
 
-      // Pulsing glow
-      const pulse = 0.5 + Math.sin(ff.phase) * 0.5;
-      const alpha = 0.4 + pulse * 0.5;
+      // Wrap
+      if (fly.x < -20) fly.x = canvas.width + 20;
+      if (fly.x > canvas.width + 20) fly.x = -20;
+      if (fly.y < -20) fly.y = canvas.height + 20;
+      if (fly.y > canvas.height + 20) fly.y = -20;
 
-      // Glow
-      const glow = ctx.createRadialGradient(
-        ff.x, ff.y, 0,
-        ff.x, ff.y, ff.size * 5
-      );
-      glow.addColorStop(0, `hsla(${ff.hue}, 80%, 70%, ${alpha})`);
-      glow.addColorStop(0.3, `hsla(${ff.hue}, 70%, 50%, ${alpha * 0.4})`);
-      glow.addColorStop(1, 'transparent');
-      
-      ctx.fillStyle = glow;
-      ctx.beginPath();
-      ctx.arc(ff.x, ff.y, ff.size * 5, 0, Math.PI * 2);
-      ctx.fill();
+      const glow = Math.max(0, Math.sin(fly.glowPhase));
+      if (glow > 0.1) {
+        const grad = ctx.createRadialGradient(fly.x, fly.y, 0, fly.x, fly.y, fly.size * 8);
+        grad.addColorStop(0, `rgba(180, 255, 100, ${glow * 0.8})`);
+        grad.addColorStop(0.3, `rgba(100, 255, 80, ${glow * 0.3})`);
+        grad.addColorStop(1, 'transparent');
+        ctx.fillStyle = grad;
+        ctx.beginPath();
+        ctx.arc(fly.x, fly.y, fly.size * 8, 0, Math.PI * 2);
+        ctx.fill();
 
-      // Core
-      ctx.fillStyle = `hsla(${ff.hue}, 90%, 85%, ${alpha})`;
-      ctx.beginPath();
-      ctx.arc(ff.x, ff.y, ff.size * 0.8, 0, Math.PI * 2);
-      ctx.fill();
+        ctx.beginPath();
+        ctx.arc(fly.x, fly.y, fly.size * glow, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(255, 255, 200, ${glow})`;
+        ctx.fill();
+      }
     });
   }
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-// DEEP SPACE - Vast cosmic expanse
-// ═══════════════════════════════════════════════════════════════════════════
-class DeepSpaceRenderer {
-  stars: Array<{
-    x: number; y: number;
-    size: number;
-    brightness: number;
-  }> = [];
-  initialized = false;
-
-  init(canvas: HTMLCanvasElement) {
-    if (this.initialized) return;
-    this.initialized = true;
-    
-    for (let i = 0; i < 150; i++) {
-      this.stars.push({
-        x: Math.random() * canvas.width,
-        y: Math.random() * canvas.height,
-        size: 0.3 + Math.random() * 1.5,
-        brightness: 0.2 + Math.random() * 0.6
-      });
-    }
-  }
-
-  render(rc: RenderContext) {
-    const { ctx, canvas, time } = rc;
-
-    // Deep nebula layers
-    const nebula1 = ctx.createRadialGradient(
-      canvas.width * 0.2, canvas.height * 0.3, 0,
-      canvas.width * 0.2, canvas.height * 0.3, canvas.width * 0.6
-    );
-    nebula1.addColorStop(0, 'rgba(80, 50, 150, 0.08)');
-    nebula1.addColorStop(0.5, 'rgba(50, 30, 100, 0.04)');
-    nebula1.addColorStop(1, 'transparent');
-    ctx.fillStyle = nebula1;
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    const nebula2 = ctx.createRadialGradient(
-      canvas.width * 0.8, canvas.height * 0.7, 0,
-      canvas.width * 0.8, canvas.height * 0.7, canvas.width * 0.5
-    );
-    nebula2.addColorStop(0, 'rgba(100, 60, 180, 0.06)');
-    nebula2.addColorStop(1, 'transparent');
-    ctx.fillStyle = nebula2;
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    // Stars (static, no twinkle for calm feel)
-    this.stars.forEach(star => {
-      ctx.fillStyle = `rgba(200, 210, 255, ${star.brightness})`;
-      ctx.beginPath();
-      ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
-      ctx.fill();
-    });
-  }
-}
-
-// ═══════════════════════════════════════════════════════════════════════════
-// VAMPIRE NIGHT - Gothic with bats and blood moon
+// VAMPIRE NIGHT - Bats and blood moon atmosphere
 // ═══════════════════════════════════════════════════════════════════════════
 class VampireNightRenderer {
   bats: Array<{
     x: number; y: number;
-    vx: number; vy: number;
+    speed: number;
     wingPhase: number;
-    wingSpeed: number;
     size: number;
   }> = [];
-  moonPhase = 0;
   initialized = false;
 
   init(canvas: HTMLCanvasElement) {
     if (this.initialized) return;
     this.initialized = true;
-    
+
     for (let i = 0; i < 12; i++) {
       this.bats.push({
         x: Math.random() * canvas.width,
-        y: Math.random() * canvas.height * 0.5,
-        vx: 1 + Math.random() * 2,
-        vy: (Math.random() - 0.5) * 1,
+        y: Math.random() * canvas.height * 0.6,
+        speed: 1 + Math.random() * 2,
         wingPhase: Math.random() * Math.PI * 2,
-        wingSpeed: 0.2 + Math.random() * 0.15,
         size: 8 + Math.random() * 10
       });
     }
   }
 
   render(rc: RenderContext) {
-    const { ctx, canvas } = rc;
-    this.moonPhase += 0.01;
+    const { ctx, canvas, primaryRgb } = rc;
 
-    // Blood moon in corner
-    const moonX = canvas.width * 0.85;
+    // Blood moon glow
+    const moonX = canvas.width * 0.8;
     const moonY = canvas.height * 0.15;
-    const moonSize = 60;
-    
-    // Moon glow
-    const moonGlow = ctx.createRadialGradient(moonX, moonY, moonSize, moonX, moonY, moonSize * 4);
-    moonGlow.addColorStop(0, 'rgba(200, 50, 50, 0.15)');
-    moonGlow.addColorStop(0.5, 'rgba(150, 30, 30, 0.06)');
+    const moonGlow = ctx.createRadialGradient(moonX, moonY, 20, moonX, moonY, 200);
+    moonGlow.addColorStop(0, `rgba(${primaryRgb[0]}, ${Math.floor(primaryRgb[1] * 0.3)}, ${Math.floor(primaryRgb[2] * 0.3)}, 0.3)`);
+    moonGlow.addColorStop(0.3, `rgba(${primaryRgb[0]}, 0, 0, 0.1)`);
     moonGlow.addColorStop(1, 'transparent');
     ctx.fillStyle = moonGlow;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Moon body
-    const moonBody = ctx.createRadialGradient(moonX, moonY, 0, moonX, moonY, moonSize);
-    moonBody.addColorStop(0, 'rgba(220, 80, 60, 0.9)');
-    moonBody.addColorStop(0.7, 'rgba(180, 50, 40, 0.8)');
-    moonBody.addColorStop(1, 'rgba(120, 30, 20, 0.6)');
-    ctx.fillStyle = moonBody;
+    // Moon disc
     ctx.beginPath();
-    ctx.arc(moonX, moonY, moonSize, 0, Math.PI * 2);
+    ctx.arc(moonX, moonY, 30, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(${primaryRgb[0]}, ${Math.floor(primaryRgb[1] * 0.4)}, ${Math.floor(primaryRgb[2] * 0.3)}, 0.4)`;
     ctx.fill();
-
-    // Mist at bottom
-    const mistGrad = ctx.createLinearGradient(0, canvas.height, 0, canvas.height - 200);
-    mistGrad.addColorStop(0, 'rgba(50, 30, 40, 0.25)');
-    mistGrad.addColorStop(1, 'transparent');
-    ctx.fillStyle = mistGrad;
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     // Bats
     this.bats.forEach(bat => {
-      bat.wingPhase += bat.wingSpeed;
-      bat.x += bat.vx;
-      bat.y += bat.vy + Math.sin(bat.wingPhase * 0.3) * 0.5;
+      bat.wingPhase += 0.2;
+      bat.x -= bat.speed;
+      bat.y += Math.sin(bat.wingPhase * 0.3) * 0.5;
 
-      if (bat.x > canvas.width + 50) {
-        bat.x = -50;
+      if (bat.x < -30) {
+        bat.x = canvas.width + 30;
         bat.y = Math.random() * canvas.height * 0.5;
       }
 
-      const wingFlap = Math.sin(bat.wingPhase);
-      
+      const wingUp = Math.sin(bat.wingPhase) * 0.4;
+
       ctx.save();
       ctx.translate(bat.x, bat.y);
-      
-      // Simple bat silhouette
-      ctx.fillStyle = 'rgba(20, 10, 15, 0.8)';
+      ctx.scale(bat.size / 15, bat.size / 15);
+
+      // Simple bat shape
+      ctx.fillStyle = 'rgba(20, 10, 10, 0.7)';
       ctx.beginPath();
       // Body
-      ctx.ellipse(0, 0, bat.size * 0.3, bat.size * 0.2, 0, 0, Math.PI * 2);
+      ctx.ellipse(0, 0, 4, 6, 0, 0, Math.PI * 2);
       ctx.fill();
       // Wings
       ctx.beginPath();
-      ctx.moveTo(0, 0);
-      ctx.quadraticCurveTo(-bat.size * 0.5, -bat.size * wingFlap * 0.3, -bat.size, bat.size * wingFlap * 0.2);
-      ctx.quadraticCurveTo(-bat.size * 0.5, bat.size * 0.2, 0, 0);
+      ctx.moveTo(-3, 0);
+      ctx.quadraticCurveTo(-15, -8 + wingUp * 10, -18, 2 + wingUp * 5);
+      ctx.quadraticCurveTo(-10, 4, -3, 2);
       ctx.fill();
       ctx.beginPath();
-      ctx.moveTo(0, 0);
-      ctx.quadraticCurveTo(bat.size * 0.5, -bat.size * wingFlap * 0.3, bat.size, bat.size * wingFlap * 0.2);
-      ctx.quadraticCurveTo(bat.size * 0.5, bat.size * 0.2, 0, 0);
+      ctx.moveTo(3, 0);
+      ctx.quadraticCurveTo(15, -8 + wingUp * 10, 18, 2 + wingUp * 5);
+      ctx.quadraticCurveTo(10, 4, 3, 2);
       ctx.fill();
-      
+
       ctx.restore();
     });
   }
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-// UTOPIA GARDEN - Peaceful particles and soft light
+// DEEP SPACE - Nebulae and distant galaxies
 // ═══════════════════════════════════════════════════════════════════════════
-class UtopiaGardenRenderer {
+class DeepSpaceRenderer {
+  stars: Array<{ x: number; y: number; size: number; alpha: number }> = [];
+  initialized = false;
+
+  init(canvas: HTMLCanvasElement) {
+    if (this.initialized) return;
+    this.initialized = true;
+
+    for (let i = 0; i < 150; i++) {
+      this.stars.push({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        size: 0.3 + Math.random() * 1.5,
+        alpha: 0.2 + Math.random() * 0.6
+      });
+    }
+  }
+
+  render(rc: RenderContext) {
+    const { ctx, canvas, primaryRgb, accentRgb, time } = rc;
+
+    // Nebula cloud 1
+    const nebula1 = ctx.createRadialGradient(
+      canvas.width * 0.25, canvas.height * 0.35, 0,
+      canvas.width * 0.25, canvas.height * 0.35, canvas.width * 0.35
+    );
+    nebula1.addColorStop(0, `rgba(${primaryRgb[0]}, ${primaryRgb[1]}, ${primaryRgb[2]}, 0.06)`);
+    nebula1.addColorStop(0.5, `rgba(${primaryRgb[0]}, ${primaryRgb[1]}, ${primaryRgb[2]}, 0.02)`);
+    nebula1.addColorStop(1, 'transparent');
+    ctx.fillStyle = nebula1;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Nebula cloud 2
+    const nebula2 = ctx.createRadialGradient(
+      canvas.width * 0.75, canvas.height * 0.6, 0,
+      canvas.width * 0.75, canvas.height * 0.6, canvas.width * 0.3
+    );
+    nebula2.addColorStop(0, `rgba(${accentRgb[0]}, ${accentRgb[1]}, ${accentRgb[2]}, 0.05)`);
+    nebula2.addColorStop(1, 'transparent');
+    ctx.fillStyle = nebula2;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Stars
+    this.stars.forEach(star => {
+      const twinkle = 0.7 + Math.sin(time * 2 + star.x * 0.01) * 0.3;
+      ctx.beginPath();
+      ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(255, 255, 255, ${star.alpha * twinkle})`;
+      ctx.fill();
+    });
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// GENERIC PARTICLE RENDERER - For themes without specific renderers
+// ═══════════════════════════════════════════════════════════════════════════
+class GenericParticleRenderer {
   particles: Array<{
     x: number; y: number;
     vx: number; vy: number;
     size: number;
     alpha: number;
-    hue: number;
+    phase: number;
   }> = [];
   initialized = false;
 
   init(canvas: HTMLCanvasElement) {
     if (this.initialized) return;
     this.initialized = true;
-    
-    for (let i = 0; i < 60; i++) {
+
+    for (let i = 0; i < 40; i++) {
       this.particles.push({
         x: Math.random() * canvas.width,
         y: Math.random() * canvas.height,
-        vx: (Math.random() - 0.5) * 0.3,
-        vy: -0.2 - Math.random() * 0.4,
-        size: 3 + Math.random() * 5,
-        alpha: 0.3 + Math.random() * 0.4,
-        hue: 40 + Math.random() * 30 // Warm yellows
+        vx: (Math.random() - 0.5) * 0.5,
+        vy: (Math.random() - 0.5) * 0.5,
+        size: 1 + Math.random() * 2,
+        alpha: 0.2 + Math.random() * 0.3,
+        phase: Math.random() * Math.PI * 2
       });
     }
   }
 
   render(rc: RenderContext) {
-    const { ctx, canvas } = rc;
+    const { ctx, canvas, primaryRgb } = rc;
 
-    // Warm sunlight glow
-    const sunGlow = ctx.createRadialGradient(
-      canvas.width * 0.3, canvas.height * 0.2, 0,
-      canvas.width * 0.3, canvas.height * 0.2, canvas.width * 0.7
+    // Ambient glow
+    const glow = ctx.createRadialGradient(
+      canvas.width / 2, canvas.height / 2, 0,
+      canvas.width / 2, canvas.height / 2, canvas.width * 0.5
     );
-    sunGlow.addColorStop(0, 'rgba(255, 240, 200, 0.1)');
-    sunGlow.addColorStop(0.3, 'rgba(255, 220, 180, 0.05)');
-    sunGlow.addColorStop(1, 'transparent');
-    ctx.fillStyle = sunGlow;
+    glow.addColorStop(0, `rgba(${primaryRgb[0]}, ${primaryRgb[1]}, ${primaryRgb[2]}, 0.04)`);
+    glow.addColorStop(1, 'transparent');
+    ctx.fillStyle = glow;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Soft gradient at bottom
-    const groundGlow = ctx.createLinearGradient(0, canvas.height, 0, canvas.height - 250);
-    groundGlow.addColorStop(0, 'rgba(180, 220, 150, 0.08)');
-    groundGlow.addColorStop(1, 'transparent');
-    ctx.fillStyle = groundGlow;
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    // Floating particles
     this.particles.forEach(p => {
+      p.phase += 0.02;
       p.x += p.vx;
       p.y += p.vy;
 
-      if (p.y < -20) {
-        p.y = canvas.height + 20;
-        p.x = Math.random() * canvas.width;
-      }
+      if (p.x < 0) p.x = canvas.width;
+      if (p.x > canvas.width) p.x = 0;
+      if (p.y < 0) p.y = canvas.height;
+      if (p.y > canvas.height) p.y = 0;
 
-      // Soft glow
-      const glow = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.size * 3);
-      glow.addColorStop(0, `hsla(${p.hue}, 70%, 80%, ${p.alpha})`);
-      glow.addColorStop(0.5, `hsla(${p.hue}, 60%, 70%, ${p.alpha * 0.3})`);
+      const glow = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.size * 5);
+      glow.addColorStop(0, `rgba(${primaryRgb[0]}, ${primaryRgb[1]}, ${primaryRgb[2]}, ${p.alpha})`);
       glow.addColorStop(1, 'transparent');
-      
       ctx.fillStyle = glow;
       ctx.beginPath();
-      ctx.arc(p.x, p.y, p.size * 3, 0, Math.PI * 2);
+      ctx.arc(p.x, p.y, p.size * 5, 0, Math.PI * 2);
       ctx.fill();
     });
   }
 }
 
-// ═══════════════════════════════════════════════════════════════════════════
-// DEFAULT DUST MOTES - Subtle floating dust
-// ═══════════════════════════════════════════════════════════════════════════
-class DustMotesRenderer {
-  motes: Array<{
-    x: number; y: number;
-    vx: number; vy: number;
-    size: number;
-    alpha: number;
-  }> = [];
-  initialized = false;
+// Renderer instances
+const matrixRain = new MatrixRainRenderer();
+const starfield = new StarfieldRenderer();
+const dustMotes = new DustMotesRenderer();
+const fallingLeaves = new FallingLeavesRenderer();
+const snowfall = new SnowfallRenderer();
+const dragonFire = new DragonFireRenderer();
+const cyberpunk = new CyberpunkRenderer();
+const grimoire = new GrimoireRenderer();
+const enchantedForest = new EnchantedForestRenderer();
+const vampireNight = new VampireNightRenderer();
+const deepSpace = new DeepSpaceRenderer();
+const genericParticle = new GenericParticleRenderer();
 
-  init(canvas: HTMLCanvasElement) {
-    if (this.initialized) return;
-    this.initialized = true;
-    
-    for (let i = 0; i < 80; i++) {
-      this.motes.push({
-        x: Math.random() * canvas.width,
-        y: Math.random() * canvas.height,
-        vx: (Math.random() - 0.5) * 0.2,
-        vy: -0.1 - Math.random() * 0.2,
-        size: 1 + Math.random() * 2,
-        alpha: 0.15 + Math.random() * 0.25
-      });
-    }
-  }
-
-  render(rc: RenderContext) {
-    const { ctx, canvas } = rc;
-
-    this.motes.forEach(mote => {
-      mote.x += mote.vx;
-      mote.y += mote.vy;
-
-      if (mote.y < -10) {
-        mote.y = canvas.height + 10;
-        mote.x = Math.random() * canvas.width;
-      }
-
-      ctx.fillStyle = `rgba(255, 220, 180, ${mote.alpha})`;
-      ctx.beginPath();
-      ctx.arc(mote.x, mote.y, mote.size, 0, Math.PI * 2);
-      ctx.fill();
-    });
-  }
-}
-
-// ═══════════════════════════════════════════════════════════════════════════
-// RENDERER FACTORY
-// ═══════════════════════════════════════════════════════════════════════════
-const renderers: Record<string, any> = {};
-
-function getRenderer(rendererType: string, canvas: HTMLCanvasElement) {
-  if (!renderers[rendererType]) {
-    switch (rendererType) {
-      case 'grimoire':
-        renderers[rendererType] = new GrimoireRenderer();
-        break;
-      case 'matrixRain':
-        renderers[rendererType] = new MatrixRainRenderer();
-        break;
-      case 'cyberpunkCity':
-        renderers[rendererType] = new CyberpunkRenderer();
-        break;
-      case 'dragonFire':
-        renderers[rendererType] = new DragonFireRenderer();
-        break;
-      case 'snowfall':
-        renderers[rendererType] = new SnowfallRenderer();
-        break;
-      case 'nuclearFallout':
-        renderers[rendererType] = new NuclearRenderer();
-        break;
-      case 'starfield':
-        renderers[rendererType] = new StarfieldRenderer();
-        break;
-      case 'enchantedForest':
-        renderers[rendererType] = new EnchantedForestRenderer();
-        break;
-      case 'deepSpace':
-        renderers[rendererType] = new DeepSpaceRenderer();
-        break;
-      case 'vampireNight':
-        renderers[rendererType] = new VampireNightRenderer();
-        break;
-      case 'utopiaGarden':
-        renderers[rendererType] = new UtopiaGardenRenderer();
-        break;
-      case 'dustMotes':
-      default:
-        renderers[rendererType] = new DustMotesRenderer();
-        break;
-    }
-    renderers[rendererType].init?.(canvas);
-  }
-  return renderers[rendererType];
-}
+// Get renderer by name
+const getRenderer = (rendererName: string) => {
+  const renderers: Record<string, any> = {
+    matrixRain,
+    starfield,
+    dustMotes,
+    fallingLeaves,
+    snowfall,
+    dragonFire,
+    cyberpunkCity: cyberpunk,
+    grimoire,
+    enchantedForest,
+    vampireNight,
+    deepSpace,
+    // Map other names to appropriate renderers
+    royalSparkles: dustMotes,
+    potionBrew: enchantedForest,
+    celestialMagic: starfield,
+    ghostlyApparitions: grimoire,
+    darkForest: enchantedForest,
+    cosmicHorror: deepSpace,
+    asylum: cyberpunk,
+    hologramDisplay: cyberpunk,
+    nuclearFallout: dragonFire,
+    utopiaGarden: enchantedForest,
+    steamEngine: dustMotes,
+    clockwork: dustMotes,
+    aetherPunk: cyberpunk,
+    passionFlame: dragonFire,
+    secretGarden: fallingLeaves,
+    masquerade: grimoire,
+    paranoidMind: cyberpunk,
+    detectiveNoir: grimoire,
+    escapeTension: cyberpunk,
+    jungleExpedition: fallingLeaves,
+    treasureHunt: dustMotes,
+    seafaring: deepSpace,
+    medievalCourt: grimoire,
+    ancientEmpire: dustMotes,
+    vikingAge: snowfall,
+    wildWest: dustMotes,
+    samurai: fallingLeaves
+  };
+  return renderers[rendererName] || genericParticle;
+};
 
 export function ThemeEffectsCanvas({ subTheme, reducedMotion }: ThemeEffectsCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const animationRef = useRef<number>(0);
+  const animationRef = useRef<number>();
+  const startTimeRef = useRef<number>(0);
   const lastTimeRef = useRef<number>(0);
 
-  const animate = useCallback((currentTime: number) => {
+  const primary = parseHsl(subTheme.primary);
+  const accent = parseHsl(subTheme.accent);
+  const secondary = parseHsl(subTheme.secondary);
+
+  const primaryRgb = hslToRgb(primary.h, primary.s, primary.l);
+  const accentRgb = hslToRgb(accent.h, accent.s, accent.l);
+  const secondaryRgb = hslToRgb(secondary.h, secondary.s, secondary.l);
+
+  const animate = useCallback(() => {
     const canvas = canvasRef.current;
-    if (!canvas) return;
+    const ctx = canvas?.getContext('2d');
+    if (!canvas || !ctx || reducedMotion) return;
 
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
+    const now = performance.now();
+    if (!startTimeRef.current) startTimeRef.current = now;
+    const time = (now - startTimeRef.current) / 1000;
+    const deltaTime = (now - lastTimeRef.current) / 1000;
+    lastTimeRef.current = now;
 
-    const deltaTime = currentTime - lastTimeRef.current;
-    lastTimeRef.current = currentTime;
-
-    // Clear canvas
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // Parse colors
-    const primary = parseHsl(subTheme.primary);
-    const accent = parseHsl(subTheme.accent);
-    const secondary = parseHsl(subTheme.secondary);
+    const renderer = getRenderer(subTheme.effects.renderer);
+    if (renderer.init) {
+      renderer.init(canvas, primaryRgb);
+    }
 
     const renderContext: RenderContext = {
       ctx,
       canvas,
-      time: currentTime / 1000,
-      deltaTime: deltaTime / 1000,
-      primaryRgb: hslToRgb(primary.h, primary.s, primary.l),
-      accentRgb: hslToRgb(accent.h, accent.s, accent.l),
-      secondaryRgb: hslToRgb(secondary.h, secondary.s, secondary.l),
-      effects: subTheme.effects,
+      time,
+      deltaTime,
+      primaryRgb,
+      accentRgb,
+      secondaryRgb,
+      effects: subTheme.effects
     };
 
-    // Get and run the appropriate renderer
-    const renderer = getRenderer(subTheme.effects.renderer, canvas);
     renderer.render(renderContext);
 
     animationRef.current = requestAnimationFrame(animate);
-  }, [subTheme]);
+  }, [subTheme, reducedMotion, primaryRgb, accentRgb, secondaryRgb]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
-    if (!canvas || reducedMotion) return;
+    if (!canvas) return;
 
-    // Set canvas size
     const handleResize = () => {
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
-      
-      // Reset renderer when resizing
-      const rendererType = subTheme.effects.renderer;
-      if (renderers[rendererType]) {
-        renderers[rendererType].initialized = false;
-        renderers[rendererType].init?.(canvas);
-      }
     };
 
     handleResize();
     window.addEventListener('resize', handleResize);
 
-    // Start animation
-    lastTimeRef.current = performance.now();
-    animationRef.current = requestAnimationFrame(animate);
+    if (!reducedMotion) {
+      animate();
+    }
 
     return () => {
       window.removeEventListener('resize', handleResize);
-      cancelAnimationFrame(animationRef.current);
-    };
-  }, [animate, reducedMotion, subTheme.effects.renderer]);
-
-  // Clear renderers cache when theme changes
-  useEffect(() => {
-    Object.keys(renderers).forEach(key => {
-      if (key !== subTheme.effects.renderer) {
-        delete renderers[key];
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current);
       }
-    });
-  }, [subTheme.effects.renderer]);
+    };
+  }, [animate, reducedMotion]);
 
   if (reducedMotion) return null;
 
   return (
     <canvas
       ref={canvasRef}
-      className="absolute inset-0 pointer-events-none"
-      style={{ 
-        opacity: 0.9,
-        mixBlendMode: 'screen',
-        filter: 'blur(1px)',
-      }}
+      className="fixed inset-0 pointer-events-none"
+      style={{ zIndex: 0 }}
     />
   );
 }
