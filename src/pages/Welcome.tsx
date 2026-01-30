@@ -36,7 +36,7 @@ export default function Welcome() {
           <div className="text-center mb-12 animate-fade-in">
             <div className="inline-flex items-center gap-2 mb-6">
               <Sparkles className="h-8 w-8 text-primary" />
-              <span className="font-display text-2xl font-bold gradient-text">STORYLOOM</span>
+              <span className="font-display text-2xl font-bold gradient-text">LOOMY</span>
             </div>
             <h1 className="font-display text-4xl md:text-5xl font-bold mb-4 text-balance">
               Let's Weave Your Story
@@ -75,7 +75,7 @@ export default function Welcome() {
               <div className="p-2 rounded-xl bg-primary/10 border border-primary/20">
                 <Sparkles className="h-8 w-8 text-primary" />
               </div>
-              <span className="font-display text-3xl font-bold gradient-text">STORYLOOM</span>
+              <span className="font-display text-3xl font-bold gradient-text">LOOMY</span>
             </div>
 
             {/* Headline */}
