@@ -60,7 +60,7 @@ export function AppSidebar({ projectId }: AppSidebarProps) {
           <div className="flex items-center gap-2">
             <Sparkles className="h-6 w-6 text-primary" />
             <span className="font-display text-lg font-semibold gradient-text">
-              STORYLOOM
+              LOOMY
             </span>
           </div>
         )}

@@ -29,11 +29,12 @@ export interface NarrativeRules {
 }
 
 export interface ThemeProfile {
+  themeId?: string;
   colorPalette?: {
     primary: string;
-    secondary: string;
+    secondary?: string;
     accent: string;
-    background: string;
+    background?: string;
   };
   typography?: {
     displayFont: string;
@@ -155,7 +156,7 @@ export interface LoreEntry {
 export interface StoryMapNode {
   id: string;
   project_id: string;
-  node_type: 'event' | 'character' | 'location' | 'item' | 'concept';
+  node_type: 'event' | 'character' | 'location' | 'item' | 'concept' | 'chapter';
   title: string;
   description: string | null;
   position_x: number;
