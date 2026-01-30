@@ -1,6 +1,6 @@
 import { useStory } from '@/context/StoryContext';
 import { useSettings } from '@/context/SettingsContext';
-import { useLanguage, LANGUAGES } from '@/context/LanguageContext';
+import { useLanguage } from '@/context/LanguageContext';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,24 +12,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Separator } from '@/components/ui/separator';
 import { 
   Settings, Trash2, Palette, Check, Monitor, Sparkles, Shield, Bell, 
-  Wrench, RotateCcw, BookOpen, Eye, Type, Save, Brain, Globe, Download
+  Wrench, RotateCcw, BookOpen, Type, Brain, Globe
 } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { ExportDialog } from '@/components/export/ExportDialog';
-
-const GENRE_THEMES = [
-  { id: 'default', nameKey: 'theme.default' as const, description: 'Warm amber with dark cinematic tones', primary: '38 85% 55%', accent: '35 90% 50%', preview: 'from-amber-500/20 to-orange-500/20' },
-  { id: 'fantasy', nameKey: 'theme.fantasy' as const, description: 'Golden mystical with arcane purple', primary: '45 80% 50%', accent: '280 60% 50%', preview: 'from-yellow-500/20 to-purple-500/20' },
-  { id: 'scifi', nameKey: 'theme.scifi' as const, description: 'Neon cyan with electric violet', primary: '190 80% 50%', accent: '260 70% 60%', preview: 'from-cyan-500/20 to-violet-500/20' },
-  { id: 'thriller', nameKey: 'theme.thriller' as const, description: 'High contrast black and crimson', primary: '0 0% 95%', accent: '0 70% 50%', preview: 'from-slate-300/20 to-red-500/20' },
-  { id: 'romance', nameKey: 'theme.romance' as const, description: 'Soft rose with blush pink', primary: '340 70% 60%', accent: '320 60% 50%', preview: 'from-rose-500/20 to-pink-500/20' },
-  { id: 'horror', nameKey: 'theme.horror' as const, description: 'Blood red with shadow purple', primary: '0 60% 45%', accent: '270 50% 40%', preview: 'from-red-700/20 to-purple-900/20' },
-  { id: 'mystery', nameKey: 'theme.mystery' as const, description: 'Deep indigo with shadowy teal', primary: '230 60% 55%', accent: '180 50% 40%', preview: 'from-indigo-500/20 to-teal-700/20' },
-  { id: 'adventure', nameKey: 'theme.adventure' as const, description: 'Earthy bronze with forest green', primary: '30 60% 50%', accent: '140 50% 40%', preview: 'from-orange-600/20 to-green-700/20' },
-];
+import { SubThemeSelector } from '@/components/themes/SubThemeSelector';
+import { SubTheme, MainTheme, getParentTheme } from '@/config/themes';
 
 const AI_MODELS = [
   { id: 'google/gemini-3-flash-preview', name: 'Gemini 3 Flash (Fast)', description: 'Fast, efficient for most tasks' },
@@ -46,14 +37,7 @@ export default function SettingsPage() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isDeleting, setIsDeleting] = useState(false);
-  const [selectedTheme, setSelectedTheme] = useState('default');
   const [activeSection, setActiveSection] = useState('story');
-
-  useEffect(() => {
-    if (currentProject?.theme_profile?.themeId) {
-      setSelectedTheme(currentProject.theme_profile.themeId);
-    }
-  }, [currentProject]);
 
   if (!currentProject) return null;
 
@@ -70,18 +54,24 @@ export default function SettingsPage() {
     setIsDeleting(false);
   };
 
-  const applyTheme = (themeId: string) => {
-    const theme = GENRE_THEMES.find(t => t.id === themeId);
-    if (!theme) return;
-    setSelectedTheme(themeId);
+  const applySubTheme = (subTheme: SubTheme, parentTheme: MainTheme) => {
     const root = document.documentElement;
-    root.style.setProperty('--primary', theme.primary);
-    root.style.setProperty('--accent', theme.accent);
-    root.style.setProperty('--ring', theme.primary);
-    root.style.setProperty('--glow-primary', theme.primary);
-    root.setAttribute('data-theme', themeId);
-    updateProject({ theme_profile: { ...currentProject.theme_profile, themeId, colorPalette: { primary: theme.primary, accent: theme.accent } } });
-    toast({ title: `${t(theme.nameKey)} theme applied!` });
+    root.style.setProperty('--primary', subTheme.primary);
+    root.style.setProperty('--accent', subTheme.accent);
+    root.style.setProperty('--ring', subTheme.primary);
+    root.style.setProperty('--glow-primary', subTheme.primary);
+    root.setAttribute('data-theme', parentTheme.id);
+    
+    updateSetting('selectedSubTheme', subTheme.id);
+    updateProject({ 
+      theme_profile: { 
+        ...currentProject.theme_profile, 
+        themeId: parentTheme.id, 
+        subThemeId: subTheme.id,
+        colorPalette: { primary: subTheme.primary, accent: subTheme.accent } 
+      } 
+    });
+    toast({ title: `${t(subTheme.nameKey as any)} theme applied!` });
   };
 
   const sections = [
@@ -166,32 +156,13 @@ export default function SettingsPage() {
               <h2 className="text-lg font-semibold mb-2 flex items-center gap-2">
                 <Palette className="h-5 w-5 text-primary" /> {t('settings.themeColors')}
               </h2>
-              <p className="text-sm text-muted-foreground mb-4">Choose a color theme that matches your story's genre</p>
-              <div className="grid grid-cols-2 gap-3">
-                {GENRE_THEMES.map((theme) => (
-                  <Card
-                    key={theme.id}
-                    onClick={() => applyTheme(theme.id)}
-                    className={cn(
-                      "p-4 cursor-pointer transition-all duration-300 hover:scale-105 relative overflow-hidden border-2",
-                      selectedTheme === theme.id ? "border-primary ring-2 ring-primary/30" : "border-border hover:border-primary/50"
-                    )}
-                  >
-                    <div className={cn("absolute inset-0 bg-gradient-to-br opacity-50", theme.preview)} />
-                    <div className="relative z-10">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="font-medium text-sm">{t(theme.nameKey)}</span>
-                        {selectedTheme === theme.id && <Check className="h-4 w-4 text-primary" />}
-                      </div>
-                      <p className="text-xs text-muted-foreground line-clamp-2">{theme.description}</p>
-                      <div className="flex gap-1 mt-2">
-                        <div className="w-4 h-4 rounded-full" style={{ backgroundColor: `hsl(${theme.primary})` }} />
-                        <div className="w-4 h-4 rounded-full" style={{ backgroundColor: `hsl(${theme.accent})` }} />
-                      </div>
-                    </div>
-                  </Card>
-                ))}
-              </div>
+              <p className="text-sm text-muted-foreground mb-4">
+                Click a genre to explore unique visual styles with custom effects
+              </p>
+              <SubThemeSelector 
+                selectedSubTheme={settings.selectedSubTheme}
+                onSelectSubTheme={applySubTheme}
+              />
             </section>
           )}
 

@@ -8,6 +8,7 @@ export interface AppSettings {
   compactMode: boolean;
   showWordCount: boolean;
   glassSidebar: boolean;
+  selectedSubTheme: string | null;
   
   // Editor
   fontSize: number;
@@ -50,6 +51,7 @@ const DEFAULT_SETTINGS: AppSettings = {
   compactMode: false,
   showWordCount: true,
   glassSidebar: true,
+  selectedSubTheme: null,
   
   // Editor
   fontSize: 18,
