@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/context/AuthContext";
 import { StoryProvider } from "@/context/StoryContext";
 import { LanguageProvider } from "@/context/LanguageContext";
+import { SettingsProvider } from "@/context/SettingsContext";
 import Welcome from "./pages/Welcome";
 import Projects from "./pages/Projects";
 import Project from "./pages/Project";
@@ -24,31 +25,33 @@ const queryClient = new QueryClient();
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <LanguageProvider>
-      <AuthProvider>
-        <StoryProvider>
-          <TooltipProvider>
-            <Toaster />
-            <Sonner />
-            <BrowserRouter>
-              <Routes>
-                <Route path="/" element={<Welcome />} />
-                <Route path="/projects" element={<Projects />} />
-                <Route path="/project/:projectId" element={<Project />}>
-                  <Route path="overview" element={<StoryOverview />} />
-                  <Route path="outline" element={<Outline />} />
-                  <Route path="chapters" element={<Chapters />} />
-                  <Route path="characters" element={<Characters />} />
-                  <Route path="lore" element={<Lore />} />
-                  <Route path="map" element={<StoryMap />} />
-                  <Route path="studio" element={<WritingStudio />} />
-                  <Route path="settings" element={<Settings />} />
-                </Route>
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </BrowserRouter>
-          </TooltipProvider>
-        </StoryProvider>
-      </AuthProvider>
+      <SettingsProvider>
+        <AuthProvider>
+          <StoryProvider>
+            <TooltipProvider>
+              <Toaster />
+              <Sonner />
+              <BrowserRouter>
+                <Routes>
+                  <Route path="/" element={<Welcome />} />
+                  <Route path="/projects" element={<Projects />} />
+                  <Route path="/project/:projectId" element={<Project />}>
+                    <Route path="overview" element={<StoryOverview />} />
+                    <Route path="outline" element={<Outline />} />
+                    <Route path="chapters" element={<Chapters />} />
+                    <Route path="characters" element={<Characters />} />
+                    <Route path="lore" element={<Lore />} />
+                    <Route path="map" element={<StoryMap />} />
+                    <Route path="studio" element={<WritingStudio />} />
+                    <Route path="settings" element={<Settings />} />
+                  </Route>
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </BrowserRouter>
+            </TooltipProvider>
+          </StoryProvider>
+        </AuthProvider>
+      </SettingsProvider>
     </LanguageProvider>
   </QueryClientProvider>
 );

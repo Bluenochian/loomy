@@ -1,91 +1,53 @@
 import { useStory } from '@/context/StoryContext';
+import { useSettings } from '@/context/SettingsContext';
+import { useLanguage, LANGUAGES } from '@/context/LanguageContext';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
 import { Card } from '@/components/ui/card';
-import { Settings, Trash2, Palette, Check } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Separator } from '@/components/ui/separator';
+import { 
+  Settings, Trash2, Palette, Check, Monitor, Sparkles, Shield, Bell, 
+  Wrench, RotateCcw, BookOpen, Eye, Type, Save, Brain, Globe
+} from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 
 const GENRE_THEMES = [
-  {
-    id: 'default',
-    name: 'Default',
-    description: 'Warm amber with dark cinematic tones',
-    primary: '38 85% 55%',
-    accent: '35 90% 50%',
-    preview: 'from-amber-500/20 to-orange-500/20',
-  },
-  {
-    id: 'fantasy',
-    name: 'Fantasy',
-    description: 'Golden mystical with arcane purple',
-    primary: '45 80% 50%',
-    accent: '280 60% 50%',
-    preview: 'from-yellow-500/20 to-purple-500/20',
-  },
-  {
-    id: 'scifi',
-    name: 'Sci-Fi',
-    description: 'Neon cyan with electric violet',
-    primary: '190 80% 50%',
-    accent: '260 70% 60%',
-    preview: 'from-cyan-500/20 to-violet-500/20',
-  },
-  {
-    id: 'thriller',
-    name: 'Thriller',
-    description: 'High contrast black and crimson',
-    primary: '0 0% 95%',
-    accent: '0 70% 50%',
-    preview: 'from-slate-300/20 to-red-500/20',
-  },
-  {
-    id: 'romance',
-    name: 'Romance',
-    description: 'Soft rose with blush pink',
-    primary: '340 70% 60%',
-    accent: '320 60% 50%',
-    preview: 'from-rose-500/20 to-pink-500/20',
-  },
-  {
-    id: 'horror',
-    name: 'Horror',
-    description: 'Blood red with shadow purple',
-    primary: '0 60% 45%',
-    accent: '270 50% 40%',
-    preview: 'from-red-700/20 to-purple-900/20',
-  },
-  {
-    id: 'mystery',
-    name: 'Mystery',
-    description: 'Deep indigo with shadowy teal',
-    primary: '230 60% 55%',
-    accent: '180 50% 40%',
-    preview: 'from-indigo-500/20 to-teal-700/20',
-  },
-  {
-    id: 'adventure',
-    name: 'Adventure',
-    description: 'Earthy bronze with forest green',
-    primary: '30 60% 50%',
-    accent: '140 50% 40%',
-    preview: 'from-orange-600/20 to-green-700/20',
-  },
+  { id: 'default', name: 'Default', description: 'Warm amber with dark cinematic tones', primary: '38 85% 55%', accent: '35 90% 50%', preview: 'from-amber-500/20 to-orange-500/20' },
+  { id: 'fantasy', name: 'Fantasy', description: 'Golden mystical with arcane purple', primary: '45 80% 50%', accent: '280 60% 50%', preview: 'from-yellow-500/20 to-purple-500/20' },
+  { id: 'scifi', name: 'Sci-Fi', description: 'Neon cyan with electric violet', primary: '190 80% 50%', accent: '260 70% 60%', preview: 'from-cyan-500/20 to-violet-500/20' },
+  { id: 'thriller', name: 'Thriller', description: 'High contrast black and crimson', primary: '0 0% 95%', accent: '0 70% 50%', preview: 'from-slate-300/20 to-red-500/20' },
+  { id: 'romance', name: 'Romance', description: 'Soft rose with blush pink', primary: '340 70% 60%', accent: '320 60% 50%', preview: 'from-rose-500/20 to-pink-500/20' },
+  { id: 'horror', name: 'Horror', description: 'Blood red with shadow purple', primary: '0 60% 45%', accent: '270 50% 40%', preview: 'from-red-700/20 to-purple-900/20' },
+  { id: 'mystery', name: 'Mystery', description: 'Deep indigo with shadowy teal', primary: '230 60% 55%', accent: '180 50% 40%', preview: 'from-indigo-500/20 to-teal-700/20' },
+  { id: 'adventure', name: 'Adventure', description: 'Earthy bronze with forest green', primary: '30 60% 50%', accent: '140 50% 40%', preview: 'from-orange-600/20 to-green-700/20' },
+];
+
+const AI_MODELS = [
+  { id: 'google/gemini-3-flash-preview', name: 'Gemini 3 Flash (Fast)', description: 'Fast, efficient for most tasks' },
+  { id: 'google/gemini-2.5-flash', name: 'Gemini 2.5 Flash', description: 'Balanced speed and quality' },
+  { id: 'google/gemini-2.5-pro', name: 'Gemini 2.5 Pro', description: 'High quality, complex tasks' },
+  { id: 'openai/gpt-5-mini', name: 'GPT-5 Mini', description: 'Strong reasoning, balanced' },
+  { id: 'openai/gpt-5', name: 'GPT-5', description: 'Most capable, slower' },
 ];
 
 export default function SettingsPage() {
   const { currentProject, updateProject } = useStory();
+  const { settings, updateSetting, resetSettings } = useSettings();
+  const { language, setLanguage, languages, t } = useLanguage();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isDeleting, setIsDeleting] = useState(false);
   const [selectedTheme, setSelectedTheme] = useState('default');
+  const [activeSection, setActiveSection] = useState('story');
 
-  // Load current theme from project
   useEffect(() => {
     if (currentProject?.theme_profile?.themeId) {
       setSelectedTheme(currentProject.theme_profile.themeId);
@@ -101,7 +63,7 @@ export default function SettingsPage() {
       await supabase.from('projects').delete().eq('id', currentProject.id);
       toast({ title: 'Story deleted' });
       navigate('/projects');
-    } catch (error) {
+    } catch {
       toast({ title: 'Error deleting story', variant: 'destructive' });
     }
     setIsDeleting(false);
@@ -110,145 +72,380 @@ export default function SettingsPage() {
   const applyTheme = (themeId: string) => {
     const theme = GENRE_THEMES.find(t => t.id === themeId);
     if (!theme) return;
-
     setSelectedTheme(themeId);
-    
-    // Apply theme to document
     const root = document.documentElement;
     root.style.setProperty('--primary', theme.primary);
     root.style.setProperty('--accent', theme.accent);
     root.style.setProperty('--ring', theme.primary);
     root.style.setProperty('--glow-primary', theme.primary);
     root.setAttribute('data-theme', themeId);
-
-    // Save to project
-    updateProject({
-      theme_profile: {
-        ...currentProject.theme_profile,
-        themeId,
-        colorPalette: {
-          primary: theme.primary,
-          accent: theme.accent,
-        },
-      },
-    });
-
+    updateProject({ theme_profile: { ...currentProject.theme_profile, themeId, colorPalette: { primary: theme.primary, accent: theme.accent } } });
     toast({ title: `${theme.name} theme applied!` });
   };
 
+  const sections = [
+    { id: 'story', label: 'Story Details', icon: BookOpen },
+    { id: 'theme', label: 'Theme Colors', icon: Palette },
+    { id: 'display', label: 'Display', icon: Monitor },
+    { id: 'editor', label: 'Editor', icon: Type },
+    { id: 'ai', label: 'AI Settings', icon: Brain },
+    { id: 'language', label: 'Language', icon: Globe },
+    { id: 'notifications', label: 'Notifications', icon: Bell },
+    { id: 'privacy', label: 'Privacy', icon: Shield },
+    { id: 'advanced', label: 'Advanced', icon: Wrench },
+    { id: 'danger', label: 'Danger Zone', icon: Trash2 },
+  ];
+
   return (
-    <div className="p-8 max-w-3xl mx-auto animate-fade-in">
-      <h1 className="font-display text-3xl font-bold mb-8 flex items-center gap-2">
-        <Settings className="h-7 w-7" /> Settings
-      </h1>
+    <div className="flex h-[calc(100vh-4rem)] animate-fade-in">
+      {/* Sidebar */}
+      <div className="w-56 border-r border-border p-4 space-y-1">
+        <h1 className="font-display text-xl font-bold mb-4 flex items-center gap-2">
+          <Settings className="h-5 w-5" /> Settings
+        </h1>
+        {sections.map(section => (
+          <button
+            key={section.id}
+            onClick={() => setActiveSection(section.id)}
+            className={cn(
+              "w-full text-left px-3 py-2 rounded-lg flex items-center gap-2 text-sm transition-colors",
+              activeSection === section.id ? "bg-primary/10 text-primary" : "hover:bg-secondary/50",
+              section.id === 'danger' && "text-destructive hover:bg-destructive/10"
+            )}
+          >
+            <section.icon className="h-4 w-4" />
+            {section.label}
+          </button>
+        ))}
+        <Separator className="my-4" />
+        <Button variant="ghost" size="sm" onClick={resetSettings} className="w-full gap-2">
+          <RotateCcw className="h-4 w-4" /> Reset All Settings
+        </Button>
+      </div>
 
-      <div className="space-y-10">
-        {/* Basic Settings */}
-        <section>
-          <h2 className="text-lg font-semibold mb-4">Story Details</h2>
-          <div className="space-y-4">
-            <div>
-              <Label>Story Title</Label>
-              <Input
-                value={currentProject.title}
-                onChange={(e) => updateProject({ title: e.target.value })}
-                className="mt-2 bg-secondary/30"
-              />
-            </div>
-
-            <div>
-              <Label>Language</Label>
-              <Input
-                value={currentProject.language}
-                onChange={(e) => updateProject({ language: e.target.value })}
-                className="mt-2 bg-secondary/30"
-              />
-            </div>
-
-            <div>
-              <Label>
-                Tone ({currentProject.tone_value < 0.3 ? 'Hopeful' : currentProject.tone_value > 0.7 ? 'Dark' : 'Balanced'})
-              </Label>
-              <Slider
-                value={[currentProject.tone_value]}
-                onValueChange={([val]) => updateProject({ tone_value: val })}
-                max={1} min={0} step={0.1}
-                className="mt-4"
-              />
-              <div className="flex justify-between text-xs text-muted-foreground mt-1">
-                <span>Hopeful</span>
-                <span>Balanced</span>
-                <span>Dark</span>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Theme Settings */}
-        <section>
-          <h2 className="text-lg font-semibold mb-2 flex items-center gap-2">
-            <Palette className="h-5 w-5 text-primary" /> Theme Colors
-          </h2>
-          <p className="text-sm text-muted-foreground mb-4">
-            Choose a color theme that matches your story's genre
-          </p>
+      {/* Content */}
+      <div className="flex-1 overflow-auto p-8">
+        <div className="max-w-2xl space-y-8">
           
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            {GENRE_THEMES.map((theme) => (
-              <Card
-                key={theme.id}
-                onClick={() => applyTheme(theme.id)}
-                className={cn(
-                  "p-4 cursor-pointer transition-all duration-300 hover:scale-105 relative overflow-hidden border-2",
-                  selectedTheme === theme.id 
-                    ? "border-primary ring-2 ring-primary/30" 
-                    : "border-border hover:border-primary/50"
-                )}
-              >
-                {/* Theme Preview Gradient */}
-                <div className={cn(
-                  "absolute inset-0 bg-gradient-to-br opacity-50",
-                  theme.preview
-                )} />
-                
-                <div className="relative z-10">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="font-medium text-sm">{theme.name}</span>
-                    {selectedTheme === theme.id && (
-                      <Check className="h-4 w-4 text-primary" />
-                    )}
-                  </div>
-                  <p className="text-xs text-muted-foreground line-clamp-2">
-                    {theme.description}
-                  </p>
-                  
-                  {/* Color Swatches */}
-                  <div className="flex gap-1 mt-2">
-                    <div 
-                      className="w-4 h-4 rounded-full" 
-                      style={{ backgroundColor: `hsl(${theme.primary})` }}
-                    />
-                    <div 
-                      className="w-4 h-4 rounded-full" 
-                      style={{ backgroundColor: `hsl(${theme.accent})` }}
-                    />
+          {/* Story Details */}
+          {activeSection === 'story' && (
+            <section>
+              <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                <BookOpen className="h-5 w-5 text-primary" /> Story Details
+              </h2>
+              <div className="space-y-4">
+                <div>
+                  <Label>Story Title</Label>
+                  <Input value={currentProject.title} onChange={(e) => updateProject({ title: e.target.value })} className="mt-2 bg-secondary/30" />
+                </div>
+                <div>
+                  <Label>Story Language</Label>
+                  <Input value={currentProject.language} onChange={(e) => updateProject({ language: e.target.value })} className="mt-2 bg-secondary/30" placeholder="English" />
+                </div>
+                <div>
+                  <Label>Tone ({currentProject.tone_value < 0.3 ? 'Hopeful' : currentProject.tone_value > 0.7 ? 'Dark' : 'Balanced'})</Label>
+                  <Slider value={[currentProject.tone_value]} onValueChange={([val]) => updateProject({ tone_value: val })} max={1} min={0} step={0.1} className="mt-4" />
+                  <div className="flex justify-between text-xs text-muted-foreground mt-1">
+                    <span>Hopeful</span><span>Balanced</span><span>Dark</span>
                   </div>
                 </div>
-              </Card>
-            ))}
-          </div>
-        </section>
+              </div>
+            </section>
+          )}
 
-        {/* Danger Zone */}
-        <section className="pt-8 border-t border-border">
-          <h2 className="text-lg font-semibold text-destructive mb-4">Danger Zone</h2>
-          <p className="text-sm text-muted-foreground mb-4">
-            Permanently delete this story and all its content. This action cannot be undone.
-          </p>
-          <Button variant="destructive" onClick={handleDelete} disabled={isDeleting}>
-            <Trash2 className="h-4 w-4" /> Delete Story
-          </Button>
-        </section>
+          {/* Theme */}
+          {activeSection === 'theme' && (
+            <section>
+              <h2 className="text-lg font-semibold mb-2 flex items-center gap-2">
+                <Palette className="h-5 w-5 text-primary" /> Theme Colors
+              </h2>
+              <p className="text-sm text-muted-foreground mb-4">Choose a color theme that matches your story's genre</p>
+              <div className="grid grid-cols-2 gap-3">
+                {GENRE_THEMES.map((theme) => (
+                  <Card
+                    key={theme.id}
+                    onClick={() => applyTheme(theme.id)}
+                    className={cn(
+                      "p-4 cursor-pointer transition-all duration-300 hover:scale-105 relative overflow-hidden border-2",
+                      selectedTheme === theme.id ? "border-primary ring-2 ring-primary/30" : "border-border hover:border-primary/50"
+                    )}
+                  >
+                    <div className={cn("absolute inset-0 bg-gradient-to-br opacity-50", theme.preview)} />
+                    <div className="relative z-10">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="font-medium text-sm">{theme.name}</span>
+                        {selectedTheme === theme.id && <Check className="h-4 w-4 text-primary" />}
+                      </div>
+                      <p className="text-xs text-muted-foreground line-clamp-2">{theme.description}</p>
+                      <div className="flex gap-1 mt-2">
+                        <div className="w-4 h-4 rounded-full" style={{ backgroundColor: `hsl(${theme.primary})` }} />
+                        <div className="w-4 h-4 rounded-full" style={{ backgroundColor: `hsl(${theme.accent})` }} />
+                      </div>
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {/* Display */}
+          {activeSection === 'display' && (
+            <section>
+              <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                <Monitor className="h-5 w-5 text-primary" /> Display Settings
+              </h2>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label>Particle Effects</Label>
+                    <p className="text-xs text-muted-foreground">Animated particles in the background</p>
+                  </div>
+                  <Switch checked={settings.particles} onCheckedChange={(v) => updateSetting('particles', v)} />
+                </div>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label>Animations</Label>
+                    <p className="text-xs text-muted-foreground">Enable UI animations and transitions</p>
+                  </div>
+                  <Switch checked={settings.animations} onCheckedChange={(v) => updateSetting('animations', v)} />
+                </div>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label>Reduced Motion</Label>
+                    <p className="text-xs text-muted-foreground">Minimize motion for accessibility</p>
+                  </div>
+                  <Switch checked={settings.reducedMotion} onCheckedChange={(v) => updateSetting('reducedMotion', v)} />
+                </div>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label>Compact Mode</Label>
+                    <p className="text-xs text-muted-foreground">Reduce spacing for more content</p>
+                  </div>
+                  <Switch checked={settings.compactMode} onCheckedChange={(v) => updateSetting('compactMode', v)} />
+                </div>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label>Show Word Count</Label>
+                    <p className="text-xs text-muted-foreground">Display word counts in editor</p>
+                  </div>
+                  <Switch checked={settings.showWordCount} onCheckedChange={(v) => updateSetting('showWordCount', v)} />
+                </div>
+              </div>
+            </section>
+          )}
+
+          {/* Editor */}
+          {activeSection === 'editor' && (
+            <section>
+              <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                <Type className="h-5 w-5 text-primary" /> Editor Settings
+              </h2>
+              <div className="space-y-6">
+                <div>
+                  <Label>Font Size: {settings.fontSize}px</Label>
+                  <Slider value={[settings.fontSize]} onValueChange={([v]) => updateSetting('fontSize', v)} min={12} max={28} step={1} className="mt-2" />
+                </div>
+                <div>
+                  <Label>Line Height: {settings.lineHeight}</Label>
+                  <Slider value={[settings.lineHeight]} onValueChange={([v]) => updateSetting('lineHeight', v)} min={1.2} max={2.5} step={0.1} className="mt-2" />
+                </div>
+                <div>
+                  <Label>Font Family</Label>
+                  <Select value={settings.fontFamily} onValueChange={(v) => updateSetting('fontFamily', v as any)}>
+                    <SelectTrigger className="mt-2 bg-secondary/30"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="serif">Serif (Classic)</SelectItem>
+                      <SelectItem value="sans">Sans-serif (Modern)</SelectItem>
+                      <SelectItem value="mono">Monospace (Code)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label>Autosave Interval: {settings.autosaveInterval}s</Label>
+                  <Slider value={[settings.autosaveInterval]} onValueChange={([v]) => updateSetting('autosaveInterval', v)} min={5} max={120} step={5} className="mt-2" />
+                </div>
+                <div className="flex items-center justify-between">
+                  <div><Label>Spellcheck</Label><p className="text-xs text-muted-foreground">Browser spellcheck</p></div>
+                  <Switch checked={settings.spellcheck} onCheckedChange={(v) => updateSetting('spellcheck', v)} />
+                </div>
+              </div>
+            </section>
+          )}
+
+          {/* AI */}
+          {activeSection === 'ai' && (
+            <section>
+              <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                <Brain className="h-5 w-5 text-primary" /> AI Settings
+              </h2>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div><Label>Enable AI Assistant</Label><p className="text-xs text-muted-foreground">AI-powered writing help</p></div>
+                  <Switch checked={settings.aiEnabled} onCheckedChange={(v) => updateSetting('aiEnabled', v)} />
+                </div>
+                <div className="flex items-center justify-between">
+                  <div><Label>Auto-Suggest</Label><p className="text-xs text-muted-foreground">Suggest completions as you type</p></div>
+                  <Switch checked={settings.aiAutoSuggest} onCheckedChange={(v) => updateSetting('aiAutoSuggest', v)} />
+                </div>
+                <Separator />
+                <p className="text-sm font-medium">Context Sources</p>
+                <p className="text-xs text-muted-foreground mb-2">Which data should AI use when writing?</p>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <Label>Use Lore Entries</Label>
+                    <Switch checked={settings.aiUseLore} onCheckedChange={(v) => updateSetting('aiUseLore', v)} />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <Label>Use Outline</Label>
+                    <Switch checked={settings.aiUseOutline} onCheckedChange={(v) => updateSetting('aiUseOutline', v)} />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <Label>Use Story Map</Label>
+                    <Switch checked={settings.aiUseStoryMap} onCheckedChange={(v) => updateSetting('aiUseStoryMap', v)} />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <Label>Use Characters</Label>
+                    <Switch checked={settings.aiUseCharacters} onCheckedChange={(v) => updateSetting('aiUseCharacters', v)} />
+                  </div>
+                </div>
+                <Separator />
+                <div>
+                  <Label>AI Model</Label>
+                  <Select value={settings.aiModel} onValueChange={(v) => updateSetting('aiModel', v)}>
+                    <SelectTrigger className="mt-2 bg-secondary/30"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {AI_MODELS.map(model => (
+                        <SelectItem key={model.id} value={model.id}>
+                          <div><span>{model.name}</span><span className="text-xs text-muted-foreground ml-2">{model.description}</span></div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label>Creativity: {settings.aiTemperature}</Label>
+                  <Slider value={[settings.aiTemperature]} onValueChange={([v]) => updateSetting('aiTemperature', v)} min={0.1} max={1.5} step={0.05} className="mt-2" />
+                  <div className="flex justify-between text-xs text-muted-foreground mt-1">
+                    <span>Focused</span><span>Balanced</span><span>Creative</span>
+                  </div>
+                </div>
+              </div>
+            </section>
+          )}
+
+          {/* Language */}
+          {activeSection === 'language' && (
+            <section>
+              <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                <Globe className="h-5 w-5 text-primary" /> UI Language
+              </h2>
+              <p className="text-sm text-muted-foreground mb-4">Select the language for the user interface</p>
+              <div className="grid grid-cols-2 gap-2">
+                {languages.map(lang => (
+                  <button
+                    key={lang.code}
+                    onClick={() => setLanguage(lang.code)}
+                    className={cn(
+                      "p-3 rounded-lg border-2 flex items-center gap-3 transition-all",
+                      language === lang.code ? "border-primary bg-primary/10" : "border-border hover:border-primary/50"
+                    )}
+                  >
+                    <span className="text-2xl">{lang.flag}</span>
+                    <div className="text-left">
+                      <p className="font-medium text-sm">{lang.nativeName}</p>
+                      <p className="text-xs text-muted-foreground">{lang.name}</p>
+                    </div>
+                    {language === lang.code && <Check className="h-4 w-4 text-primary ml-auto" />}
+                  </button>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {/* Notifications */}
+          {activeSection === 'notifications' && (
+            <section>
+              <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                <Bell className="h-5 w-5 text-primary" /> Notifications
+              </h2>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div><Label>Notify on Save</Label><p className="text-xs text-muted-foreground">Show toast when saving</p></div>
+                  <Switch checked={settings.notifyOnSave} onCheckedChange={(v) => updateSetting('notifyOnSave', v)} />
+                </div>
+                <div className="flex items-center justify-between">
+                  <div><Label>Notify on AI Complete</Label><p className="text-xs text-muted-foreground">Alert when AI generation finishes</p></div>
+                  <Switch checked={settings.notifyOnAIComplete} onCheckedChange={(v) => updateSetting('notifyOnAIComplete', v)} />
+                </div>
+                <div className="flex items-center justify-between">
+                  <div><Label>Sound Effects</Label><p className="text-xs text-muted-foreground">Play sounds for actions</p></div>
+                  <Switch checked={settings.soundEnabled} onCheckedChange={(v) => updateSetting('soundEnabled', v)} />
+                </div>
+              </div>
+            </section>
+          )}
+
+          {/* Privacy */}
+          {activeSection === 'privacy' && (
+            <section>
+              <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                <Shield className="h-5 w-5 text-primary" /> Privacy
+              </h2>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div><Label>Analytics</Label><p className="text-xs text-muted-foreground">Help improve the app</p></div>
+                  <Switch checked={settings.analyticsEnabled} onCheckedChange={(v) => updateSetting('analyticsEnabled', v)} />
+                </div>
+                <div className="flex items-center justify-between">
+                  <div><Label>Crash Reports</Label><p className="text-xs text-muted-foreground">Send error reports</p></div>
+                  <Switch checked={settings.crashReports} onCheckedChange={(v) => updateSetting('crashReports', v)} />
+                </div>
+              </div>
+            </section>
+          )}
+
+          {/* Advanced */}
+          {activeSection === 'advanced' && (
+            <section>
+              <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                <Wrench className="h-5 w-5 text-primary" /> Advanced
+              </h2>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div><Label>Debug Mode</Label><p className="text-xs text-muted-foreground">Show developer info</p></div>
+                  <Switch checked={settings.debugMode} onCheckedChange={(v) => updateSetting('debugMode', v)} />
+                </div>
+                <div className="flex items-center justify-between">
+                  <div><Label>Experimental Features</Label><p className="text-xs text-muted-foreground">Try new features early</p></div>
+                  <Switch checked={settings.experimentalFeatures} onCheckedChange={(v) => updateSetting('experimentalFeatures', v)} />
+                </div>
+                <div className="flex items-center justify-between">
+                  <div><Label>Auto Backup</Label><p className="text-xs text-muted-foreground">Automatic cloud backup</p></div>
+                  <Switch checked={settings.autoBackup} onCheckedChange={(v) => updateSetting('autoBackup', v)} />
+                </div>
+                <div>
+                  <Label>Backup Interval: {settings.backupInterval}s</Label>
+                  <Slider value={[settings.backupInterval]} onValueChange={([v]) => updateSetting('backupInterval', v)} min={60} max={600} step={30} className="mt-2" />
+                </div>
+              </div>
+            </section>
+          )}
+
+          {/* Danger Zone */}
+          {activeSection === 'danger' && (
+            <section>
+              <h2 className="text-lg font-semibold text-destructive mb-4 flex items-center gap-2">
+                <Trash2 className="h-5 w-5" /> Danger Zone
+              </h2>
+              <Card className="p-6 border-destructive/30 bg-destructive/5">
+                <p className="text-sm text-muted-foreground mb-4">Permanently delete this story and all its content. This action cannot be undone.</p>
+                <Button variant="destructive" onClick={handleDelete} disabled={isDeleting}>
+                  <Trash2 className="h-4 w-4" /> {isDeleting ? 'Deleting...' : 'Delete Story'}
+                </Button>
+              </Card>
+            </section>
+          )}
+        </div>
       </div>
     </div>
   );

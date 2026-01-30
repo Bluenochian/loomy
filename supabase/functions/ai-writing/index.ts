@@ -6,18 +6,31 @@ const corsHeaders = {
 };
 
 interface WritingRequest {
-  action: 'continue' | 'rewrite' | 'expand' | 'summarize' | 'dialogue' | 'describe';
+  action: 'continue' | 'rewrite' | 'expand' | 'summarize' | 'dialogue' | 'describe' | 'draft';
   content: string;
   context: {
     storyTitle: string;
     genre: string;
     tone: string;
-    characters?: Array<{ name: string; role: string; traits?: string[] }>;
-    lore?: Array<{ title: string; content: string }>;
+    characters?: Array<{ name: string; role: string; traits?: string[]; backstory?: string }>;
+    lore?: Array<{ title: string; content: string; category?: string }>;
+    outline?: { acts?: Array<{ title: string; description: string }>; arcs?: Array<{ name: string; description: string }> };
+    storyMap?: Array<{ title: string; type: string; description?: string }>;
     chapterTitle?: string;
-    previousContent?: string;
+    chapterNumber?: number;
+    previousChapterSummary?: string;
+    narrativeIntent?: string;
+    stakes?: string;
   };
   instructions?: string;
+  settings?: {
+    useLore?: boolean;
+    useOutline?: boolean;
+    useStoryMap?: boolean;
+    useCharacters?: boolean;
+    temperature?: number;
+    model?: string;
+  };
 }
 
 serve(async (req) => {
@@ -31,31 +44,84 @@ serve(async (req) => {
       throw new Error("LOVABLE_API_KEY is not configured");
     }
 
-    const { action, content, context, instructions }: WritingRequest = await req.json();
+    const { action, content, context, instructions, settings }: WritingRequest = await req.json();
 
-    const characterContext = context.characters?.length 
-      ? `\n\nKEY CHARACTERS:\n${context.characters.map(c => `- ${c.name} (${c.role}): ${c.traits?.join(', ') || 'No traits specified'}`).join('\n')}`
-      : '';
+    // Build rich context based on settings
+    let characterContext = '';
+    if (settings?.useCharacters !== false && context.characters?.length) {
+      characterContext = `\n\n## KEY CHARACTERS:\n${context.characters.map(c => 
+        `- **${c.name}** (${c.role}): ${c.traits?.join(', ') || 'No traits specified'}${c.backstory ? `\n  Background: ${c.backstory.slice(0, 200)}...` : ''}`
+      ).join('\n')}`;
+    }
 
-    const loreContext = context.lore?.length
-      ? `\n\nWORLD LORE:\n${context.lore.slice(0, 5).map(l => `- ${l.title}: ${l.content.slice(0, 200)}...`).join('\n')}`
-      : '';
+    let loreContext = '';
+    if (settings?.useLore !== false && context.lore?.length) {
+      loreContext = `\n\n## WORLD LORE:\n${context.lore.slice(0, 8).map(l => 
+        `- **${l.title}** (${l.category || 'general'}): ${l.content?.slice(0, 300) || 'No content'}...`
+      ).join('\n')}`;
+    }
+
+    let outlineContext = '';
+    if (settings?.useOutline !== false && context.outline) {
+      const acts = context.outline.acts?.map(a => `- ${a.title}: ${a.description}`).join('\n') || '';
+      const arcs = context.outline.arcs?.map(a => `- ${a.name}: ${a.description}`).join('\n') || '';
+      if (acts || arcs) {
+        outlineContext = `\n\n## STORY STRUCTURE:\n${acts ? `Acts:\n${acts}` : ''}${arcs ? `\nArcs:\n${arcs}` : ''}`;
+      }
+    }
+
+    let storyMapContext = '';
+    if (settings?.useStoryMap !== false && context.storyMap?.length) {
+      storyMapContext = `\n\n## STORY MAP ELEMENTS:\n${context.storyMap.slice(0, 10).map(n => 
+        `- [${n.type}] ${n.title}${n.description ? `: ${n.description.slice(0, 100)}` : ''}`
+      ).join('\n')}`;
+    }
+
+    let narrativeContext = '';
+    if (context.narrativeIntent || context.stakes) {
+      narrativeContext = `\n\n## NARRATIVE VISION:${context.narrativeIntent ? `\nIntent: ${context.narrativeIntent}` : ''}${context.stakes ? `\nStakes: ${context.stakes}` : ''}`;
+    }
+
+    let chapterContext = '';
+    if (context.chapterTitle || context.previousChapterSummary) {
+      chapterContext = `\n\n## CURRENT CHAPTER:${context.chapterNumber ? `\nChapter ${context.chapterNumber}` : ''}${context.chapterTitle ? `: ${context.chapterTitle}` : ''}${context.previousChapterSummary ? `\n\nPrevious chapter summary: ${context.previousChapterSummary}` : ''}`;
+    }
 
     const systemPrompt = `You are Loomy, an expert narrative writer helping craft a ${context.genre} story titled "${context.storyTitle}". 
 The tone is ${context.tone}.
 ${characterContext}
 ${loreContext}
+${outlineContext}
+${storyMapContext}
+${narrativeContext}
+${chapterContext}
 
-Writing guidelines:
+## WRITING GUIDELINES:
 - Match the established style and voice
-- Never contradict established facts
-- Write vivid, immersive prose
+- NEVER contradict established facts from lore, characters, or world details
+- Write vivid, immersive prose with sensory details
 - Show don't tell when possible
-- Maintain consistent POV and tense`;
+- Maintain consistent POV and tense
+- Use character names and reference established elements naturally
+- Create compelling hooks and tension`;
 
     let userPrompt = '';
     
     switch (action) {
+      case 'draft':
+        userPrompt = `Write an opening draft for this chapter. Create an engaging start that:
+- Establishes the scene with vivid sensory details
+- Introduces or continues character presence naturally
+- Sets up tension or intrigue
+- Flows from previous events (if any)
+
+Chapter context: "${content}"
+
+${instructions ? `Specific direction: ${instructions}` : ''}
+
+Write 3-5 compelling paragraphs. Only output the story text, no metadata.`;
+        break;
+
       case 'continue':
         userPrompt = `Continue this passage naturally with 2-3 paragraphs that flow seamlessly:
 
@@ -115,6 +181,12 @@ Write an immersive, sensory-rich description in 2-3 paragraphs.`;
         break;
     }
 
+    const modelToUse = settings?.model || "google/gemini-3-flash-preview";
+    const temperature = settings?.temperature || 0.85;
+
+    console.log(`AI Writing: action=${action}, model=${modelToUse}, temp=${temperature}`);
+    console.log(`Context: ${characterContext ? 'chars✓' : ''} ${loreContext ? 'lore✓' : ''} ${outlineContext ? 'outline✓' : ''} ${storyMapContext ? 'map✓' : ''}`);
+
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -122,13 +194,13 @@ Write an immersive, sensory-rich description in 2-3 paragraphs.`;
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-3-flash-preview",
+        model: modelToUse,
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: userPrompt },
         ],
-        temperature: 0.85,
-        max_tokens: 2000,
+        temperature,
+        max_tokens: 3000,
         stream: true,
       }),
     });
@@ -151,7 +223,6 @@ Write an immersive, sensory-rich description in 2-3 paragraphs.`;
       throw new Error(`AI gateway error: ${response.status}`);
     }
 
-    // Return the stream directly
     return new Response(response.body, {
       headers: { ...corsHeaders, "Content-Type": "text/event-stream" },
     });
