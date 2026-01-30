@@ -128,7 +128,7 @@ export function SubThemeSelector({ selectedSubTheme, onSelectSubTheme }: SubThem
                           <div className="flex items-center justify-between mb-1">
                             <span className="font-medium text-sm flex items-center gap-2">
                               {t(subTheme.nameKey as any)}
-                              {subTheme.effects.specialEffects.length > 3 && (
+                              {subTheme.effects.overlays.length > 2 && (
                                 <Sparkles className="h-3 w-3 text-primary animate-pulse" />
                               )}
                             </span>
@@ -153,7 +153,7 @@ export function SubThemeSelector({ selectedSubTheme, onSelectSubTheme }: SubThem
                               />
                             </div>
                             <span className="text-[10px] text-muted-foreground">
-                              {subTheme.effects.particleCount} particles • {subTheme.effects.style}
+                              {subTheme.effects.overlays.length} effects • {subTheme.effects.style}
                             </span>
                           </div>
                         </div>
