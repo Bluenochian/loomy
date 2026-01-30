@@ -6,8 +6,9 @@ const corsHeaders = {
 };
 
 interface GenerateRequest {
-  type: 'full_generation' | 'continue_chapter' | 'expand_character' | 'expand_lore' | 'recompute_theme';
-  projectData: {
+  type?: 'full_generation' | 'continue_chapter' | 'expand_character' | 'expand_lore' | 'recompute_theme';
+  action?: 'generate_character' | 'analyze_story_map' | 'generate_chapter_ideas';
+  projectData?: {
     concept: string;
     language: string;
     tone_value: number;
@@ -20,7 +21,22 @@ interface GenerateRequest {
       lore?: unknown[];
     };
   };
+  context?: string;
+  summary?: string;
+  storyMapData?: {
+    nodes: Array<{ id: string; title: string; type: string; description?: string }>;
+    edges: Array<{ source: string; target: string; label?: string }>;
+  };
+  chapterData?: {
+    title: string;
+    number: number;
+    intent?: string;
+  };
   additionalContext?: string;
+  settings?: {
+    temperature?: number;
+    model?: string;
+  };
 }
 
 serve(async (req) => {
@@ -35,10 +51,158 @@ serve(async (req) => {
     }
 
     const requestData: GenerateRequest = await req.json();
-    const { type, projectData, additionalContext } = requestData;
+    const { type, action, projectData, additionalContext, context, summary, storyMapData, chapterData, settings } = requestData;
 
     let systemPrompt = "";
     let userPrompt = "";
+    let modelToUse = settings?.model || "google/gemini-3-flash-preview";
+    let temperature = settings?.temperature || 0.85;
+    let maxTokens = 2000;
+
+    // Handle new action-based requests (character generation, story map analysis)
+    if (action) {
+      switch (action) {
+        case 'generate_character':
+          systemPrompt = `You are a creative writing assistant specialized in character creation. You create detailed, nuanced characters that fit naturally into the story world. Return ONLY valid JSON.`;
+          userPrompt = `Based on this story context:
+${context}
+
+Create a character based on this description: "${summary}"
+
+Return a JSON object with exactly this structure:
+{
+  "name": "Full character name",
+  "role": "protagonist" | "antagonist" | "supporting" | "minor",
+  "description": "2-3 sentences about appearance, mannerisms, first impressions",
+  "backstory": "2-3 sentences about their history and what shaped them",
+  "motivations": ["motivation 1", "motivation 2", "motivation 3"],
+  "traits": ["trait 1", "trait 2", "trait 3", "trait 4"]
+}
+
+Ensure the character fits the story's genre and tone. Make them unique and memorable.`;
+          break;
+
+        case 'analyze_story_map':
+          systemPrompt = `You are a narrative structure analyst. You examine story maps and suggest improvements to narrative flow, identify plot holes, and recommend new connections. Return ONLY valid JSON.`;
+          userPrompt = `Story context:
+${context}
+
+Current story map:
+Nodes: ${JSON.stringify(storyMapData?.nodes || [])}
+Connections: ${JSON.stringify(storyMapData?.edges || [])}
+
+Analyze this story map and return JSON with:
+{
+  "analysis": "Brief overview of the current narrative structure",
+  "strengths": ["strength 1", "strength 2"],
+  "issues": ["issue or gap 1", "issue or gap 2"],
+  "suggestedConnections": [
+    { "sourceTitle": "node title", "targetTitle": "node title", "reason": "why connect" }
+  ],
+  "suggestedNodes": [
+    { "title": "suggested node", "type": "chapter|character|event|location", "description": "why needed" }
+  ]
+}`;
+          break;
+
+        case 'generate_chapter_ideas':
+          systemPrompt = `You are a creative writing assistant that generates engaging chapter content ideas. You understand narrative structure and pacing. Return ONLY valid JSON.`;
+          userPrompt = `Story context:
+${context}
+
+Chapter to write:
+Title: ${chapterData?.title}
+Number: ${chapterData?.number}
+Intent: ${chapterData?.intent || 'Not specified'}
+
+Generate opening ideas and key beats for this chapter. Return JSON:
+{
+  "openingHook": "A compelling first line or paragraph concept",
+  "keyBeats": [
+    "First major beat or scene",
+    "Second major beat",
+    "Third major beat",
+    "Closing hook leading to next chapter"
+  ],
+  "suggestedConflict": "The main tension or conflict for this chapter",
+  "characterFocus": "Which characters should feature prominently",
+  "moodProgression": "How the mood shifts through the chapter"
+}`;
+          break;
+      }
+
+      console.log(`Generate Story: action=${action}, model=${modelToUse}`);
+
+      const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${LOVABLE_API_KEY}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: modelToUse,
+          messages: [
+            { role: "system", content: systemPrompt },
+            { role: "user", content: userPrompt },
+          ],
+          temperature,
+          max_tokens: maxTokens,
+        }),
+      });
+
+      if (!response.ok) {
+        if (response.status === 429) {
+          return new Response(
+            JSON.stringify({ error: "Rate limit exceeded. Please try again." }),
+            { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+        if (response.status === 402) {
+          return new Response(
+            JSON.stringify({ error: "AI credits exhausted." }),
+            { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+        throw new Error(`AI gateway error: ${response.status}`);
+      }
+
+      const data = await response.json();
+      const content = data.choices?.[0]?.message?.content || '';
+
+      let result;
+      try {
+        const jsonMatch = content.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          result = JSON.parse(jsonMatch[0]);
+        } else {
+          throw new Error('No JSON found in response');
+        }
+      } catch (parseError) {
+        console.error('JSON parse error:', parseError, 'Content:', content);
+        if (action === 'generate_character') {
+          result = {
+            name: 'Generated Character',
+            role: 'supporting',
+            description: content.slice(0, 200),
+            backstory: 'A mysterious figure with an unknown past.',
+            motivations: ['To be discovered'],
+            traits: ['Enigmatic', 'Determined'],
+          };
+        } else {
+          result = { error: 'Failed to parse AI response', raw: content.slice(0, 500) };
+        }
+      }
+
+      return new Response(
+        JSON.stringify({ [action === 'generate_character' ? 'character' : 'result']: result }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Handle legacy type-based requests
+    if (!projectData) {
+      throw new Error("Project data is required for type-based requests");
+    }
 
     const toneDescription = projectData.tone_value < 0.3 
       ? "hopeful and uplifting" 
@@ -49,6 +213,9 @@ serve(async (req) => {
     const genreContext = projectData.genre_influences.length > 0
       ? `with influences from ${projectData.genre_influences.join(', ')}`
       : "";
+
+    modelToUse = "google/gemini-2.5-pro";
+    maxTokens = 8000;
 
     switch (type) {
       case 'full_generation':
@@ -232,13 +399,13 @@ Respond with JSON:
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-2.5-pro",
+        model: modelToUse,
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: userPrompt },
         ],
         temperature: 0.8,
-        max_tokens: 8000,
+        max_tokens: maxTokens,
       }),
     });
 
@@ -278,7 +445,6 @@ Respond with JSON:
     // Parse JSON response
     let parsedContent;
     try {
-      // Remove any markdown code blocks if present
       const cleanedContent = content.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
       parsedContent = JSON.parse(cleanedContent);
     } catch (parseError) {

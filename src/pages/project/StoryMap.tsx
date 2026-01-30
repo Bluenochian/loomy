@@ -1,28 +1,35 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { useStory } from '@/context/StoryContext';
+import { useSettings } from '@/context/SettingsContext';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { Plus, BookOpen, User, Zap, MapPin, Trash2, Link2, X, Move, Save, Loader2 } from 'lucide-react';
+import { Slider } from '@/components/ui/slider';
+import { 
+  Plus, BookOpen, User, Zap, MapPin, Trash2, Link2, X, Move, Save, Loader2,
+  ZoomIn, ZoomOut, Maximize2, Sparkles, RefreshCw, Eye
+} from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import type { StoryMapNode } from '@/types/story';
 
 const NODE_CONFIG = {
-  chapter: { icon: BookOpen, color: 'bg-blue-500/20 border-blue-500/50', textColor: 'text-blue-400' },
-  character: { icon: User, color: 'bg-emerald-500/20 border-emerald-500/50', textColor: 'text-emerald-400' },
-  event: { icon: Zap, color: 'bg-amber-500/20 border-amber-500/50', textColor: 'text-amber-400' },
-  location: { icon: MapPin, color: 'bg-purple-500/20 border-purple-500/50', textColor: 'text-purple-400' },
+  chapter: { icon: BookOpen, color: 'bg-blue-500/20 border-blue-500/50 hover:bg-blue-500/30', textColor: 'text-blue-400', glowColor: 'shadow-blue-500/30' },
+  character: { icon: User, color: 'bg-emerald-500/20 border-emerald-500/50 hover:bg-emerald-500/30', textColor: 'text-emerald-400', glowColor: 'shadow-emerald-500/30' },
+  event: { icon: Zap, color: 'bg-amber-500/20 border-amber-500/50 hover:bg-amber-500/30', textColor: 'text-amber-400', glowColor: 'shadow-amber-500/30' },
+  location: { icon: MapPin, color: 'bg-purple-500/20 border-purple-500/50 hover:bg-purple-500/30', textColor: 'text-purple-400', glowColor: 'shadow-purple-500/30' },
 };
 
 type NodeType = keyof typeof NODE_CONFIG;
 
 export default function StoryMapPage() {
-  const { storyMapNodes, storyMapEdges, addStoryMapNode, updateStoryMapNode, deleteStoryMapNode, addStoryMapEdge, deleteStoryMapEdge } = useStory();
+  const { currentProject, storyMapNodes, storyMapEdges, addStoryMapNode, updateStoryMapNode, deleteStoryMapNode, addStoryMapEdge, deleteStoryMapEdge, storyOverview } = useStory();
+  const { settings } = useSettings();
   const { toast } = useToast();
   const canvasRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   
   const [selectedNode, setSelectedNode] = useState<string | null>(null);
   const [connectingFrom, setConnectingFrom] = useState<string | null>(null);
@@ -35,18 +42,37 @@ export default function StoryMapPage() {
   const [editTitle, setEditTitle] = useState('');
   const [editDescription, setEditDescription] = useState('');
   const [isSaving, setIsSaving] = useState(false);
+  const [zoom, setZoom] = useState(1);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [analysisResult, setAnalysisResult] = useState<any>(null);
 
   const selectedNodeData = storyMapNodes.find(n => n.id === selectedNode);
 
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setConnectingFrom(null);
+        setEditingNode(null);
+        setSelectedNode(null);
+      }
+      if (e.key === 'Delete' && selectedNode && !editingNode) {
+        handleDeleteNode(selectedNode);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [selectedNode, editingNode]);
+
   const handleAddNode = async (type: NodeType) => {
     const canvas = canvasRef.current;
-    const centerX = canvas ? (canvas.clientWidth / 2 - canvasOffset.x) : 300;
-    const centerY = canvas ? (canvas.clientHeight / 2 - canvasOffset.y) : 200;
+    const centerX = canvas ? (canvas.clientWidth / 2 - canvasOffset.x) / zoom : 300;
+    const centerY = canvas ? (canvas.clientHeight / 2 - canvasOffset.y) / zoom : 200;
     
     const node = await addStoryMapNode({
       node_type: type,
       title: `New ${type.charAt(0).toUpperCase() + type.slice(1)}`,
-      position_x: centerX + (Math.random() - 0.5) * 100,
+      position_x: centerX + (Math.random() - 0.5) * 150,
       position_y: centerY + (Math.random() - 0.5) * 100,
       description: '',
     });
@@ -71,17 +97,23 @@ export default function StoryMapPage() {
     setSelectedNode(nodeId);
     const node = storyMapNodes.find(n => n.id === nodeId);
     if (node) {
-      setDragOffset({
-        x: e.clientX - node.position_x - canvasOffset.x,
-        y: e.clientY - node.position_y - canvasOffset.y,
-      });
+      const rect = canvasRef.current?.getBoundingClientRect();
+      if (rect) {
+        setDragOffset({
+          x: e.clientX - rect.left - (node.position_x * zoom + canvasOffset.x),
+          y: e.clientY - rect.top - (node.position_y * zoom + canvasOffset.y),
+        });
+      }
     }
   };
 
   const handleMouseMove = useCallback((e: React.MouseEvent) => {
+    const rect = canvasRef.current?.getBoundingClientRect();
+    if (!rect) return;
+
     if (draggingNode) {
-      const newX = e.clientX - dragOffset.x - canvasOffset.x;
-      const newY = e.clientY - dragOffset.y - canvasOffset.y;
+      const newX = (e.clientX - rect.left - dragOffset.x - canvasOffset.x) / zoom;
+      const newY = (e.clientY - rect.top - dragOffset.y - canvasOffset.y) / zoom;
       updateStoryMapNode(draggingNode, { position_x: Math.max(0, newX), position_y: Math.max(0, newY) });
     } else if (isPanning) {
       setCanvasOffset({
@@ -90,7 +122,7 @@ export default function StoryMapPage() {
       });
       setPanStart({ x: e.clientX, y: e.clientY });
     }
-  }, [draggingNode, dragOffset, canvasOffset, isPanning, panStart, updateStoryMapNode]);
+  }, [draggingNode, dragOffset, canvasOffset, isPanning, panStart, zoom, updateStoryMapNode]);
 
   const handleMouseUp = () => {
     setDraggingNode(null);
@@ -98,11 +130,17 @@ export default function StoryMapPage() {
   };
 
   const handleCanvasMouseDown = (e: React.MouseEvent) => {
-    if (e.target === canvasRef.current) {
+    if (e.target === canvasRef.current || (e.target as HTMLElement).classList.contains('canvas-bg')) {
       setSelectedNode(null);
       setIsPanning(true);
       setPanStart({ x: e.clientX, y: e.clientY });
     }
+  };
+
+  const handleWheel = (e: React.WheelEvent) => {
+    e.preventDefault();
+    const delta = e.deltaY > 0 ? -0.1 : 0.1;
+    setZoom(z => Math.min(2, Math.max(0.3, z + delta)));
   };
 
   const startEditing = (node: StoryMapNode) => {
@@ -131,33 +169,95 @@ export default function StoryMapPage() {
     toast({ title: 'Connection removed' });
   };
 
+  const resetView = () => {
+    setZoom(1);
+    setCanvasOffset({ x: 0, y: 0 });
+  };
+
+  const analyzeWithAI = async () => {
+    if (!currentProject) return;
+    setIsAnalyzing(true);
+    setAnalysisResult(null);
+
+    try {
+      const context = `
+Story: ${currentProject.title}
+Concept: ${currentProject.concept}
+Genre: ${currentProject.genre_influences?.join(', ') || 'General'}
+${storyOverview?.narrative_intent ? `Intent: ${storyOverview.narrative_intent}` : ''}
+      `.trim();
+
+      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-story`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+        },
+        body: JSON.stringify({
+          action: 'analyze_story_map',
+          context,
+          storyMapData: {
+            nodes: storyMapNodes.map(n => ({ id: n.id, title: n.title, type: n.node_type, description: n.description })),
+            edges: storyMapEdges.map(e => ({ source: e.source_node_id, target: e.target_node_id, label: e.label })),
+          },
+          settings: { temperature: settings.aiTemperature, model: settings.aiModel },
+        }),
+      });
+
+      if (!response.ok) throw new Error('Analysis failed');
+      const data = await response.json();
+      setAnalysisResult(data.result);
+      toast({ title: 'Analysis complete!' });
+    } catch (error) {
+      console.error('Analysis error:', error);
+      toast({ title: 'Analysis failed', variant: 'destructive' });
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
+
   return (
-    <div className="h-[calc(100vh-4rem)] flex animate-fade-in">
+    <div className="h-[calc(100vh-4rem)] flex animate-fade-in" ref={containerRef}>
       {/* Canvas */}
       <div 
         ref={canvasRef}
-        className="flex-1 relative bg-secondary/10 overflow-hidden cursor-grab active:cursor-grabbing"
+        className="flex-1 relative bg-gradient-to-br from-secondary/20 via-background to-secondary/10 overflow-hidden"
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseUp}
         onMouseDown={handleCanvasMouseDown}
+        onWheel={handleWheel}
+        style={{ cursor: isPanning ? 'grabbing' : 'grab' }}
       >
         {/* Grid pattern */}
         <div 
-          className="absolute inset-0 opacity-20"
+          className="absolute inset-0 opacity-30 pointer-events-none canvas-bg"
           style={{
-            backgroundImage: 'radial-gradient(circle, hsl(var(--muted-foreground)) 1px, transparent 1px)',
-            backgroundSize: '30px 30px',
-            transform: `translate(${canvasOffset.x % 30}px, ${canvasOffset.y % 30}px)`,
+            backgroundImage: `
+              linear-gradient(hsl(var(--border) / 0.3) 1px, transparent 1px),
+              linear-gradient(90deg, hsl(var(--border) / 0.3) 1px, transparent 1px)
+            `,
+            backgroundSize: `${30 * zoom}px ${30 * zoom}px`,
+            transform: `translate(${canvasOffset.x % (30 * zoom)}px, ${canvasOffset.y % (30 * zoom)}px)`,
           }}
         />
 
         {/* SVG Edges */}
-        <svg className="absolute inset-0 w-full h-full pointer-events-none" style={{ transform: `translate(${canvasOffset.x}px, ${canvasOffset.y}px)` }}>
+        <svg 
+          className="absolute inset-0 w-full h-full pointer-events-none" 
+          style={{ transform: `translate(${canvasOffset.x}px, ${canvasOffset.y}px) scale(${zoom})`, transformOrigin: '0 0' }}
+        >
           <defs>
             <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
-              <polygon points="0 0, 10 3.5, 0 7" fill="hsl(var(--primary))" opacity="0.6" />
+              <polygon points="0 0, 10 3.5, 0 7" fill="hsl(var(--primary))" opacity="0.7" />
             </marker>
+            <filter id="glow">
+              <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+              <feMerge>
+                <feMergeNode in="coloredBlur"/>
+                <feMergeNode in="SourceGraphic"/>
+              </feMerge>
+            </filter>
           </defs>
           {storyMapEdges.map(edge => {
             const source = storyMapNodes.find(n => n.id === edge.source_node_id);
@@ -169,30 +269,47 @@ export default function StoryMapPage() {
             const x2 = target.position_x + 70;
             const y2 = target.position_y + 35;
             
+            // Create curved path
+            const midX = (x1 + x2) / 2;
+            const midY = (y1 + y2) / 2;
+            const dx = x2 - x1;
+            const dy = y2 - y1;
+            const curvature = Math.min(50, Math.sqrt(dx * dx + dy * dy) / 4);
+            const controlX = midX - dy * 0.2;
+            const controlY = midY + dx * 0.2;
+            
             return (
               <g key={edge.id}>
-                <line
-                  x1={x1} y1={y1} x2={x2} y2={y2}
+                <path
+                  d={`M ${x1} ${y1} Q ${controlX} ${controlY} ${x2} ${y2}`}
                   stroke="hsl(var(--primary))"
                   strokeWidth={2}
-                  strokeOpacity={0.4}
+                  strokeOpacity={0.5}
+                  fill="none"
                   markerEnd="url(#arrowhead)"
+                  filter="url(#glow)"
                 />
                 {/* Clickable hitbox for deletion */}
-                <line
-                  x1={x1} y1={y1} x2={x2} y2={y2}
+                <path
+                  d={`M ${x1} ${y1} Q ${controlX} ${controlY} ${x2} ${y2}`}
                   stroke="transparent"
-                  strokeWidth={15}
+                  strokeWidth={20}
+                  fill="none"
                   className="cursor-pointer pointer-events-auto"
                   onClick={() => handleDeleteEdge(edge.id)}
                 />
+                {edge.label && (
+                  <text x={controlX} y={controlY} fill="hsl(var(--muted-foreground))" fontSize={10} textAnchor="middle">
+                    {edge.label}
+                  </text>
+                )}
               </g>
             );
           })}
         </svg>
 
         {/* Nodes */}
-        <div style={{ transform: `translate(${canvasOffset.x}px, ${canvasOffset.y}px)` }}>
+        <div style={{ transform: `translate(${canvasOffset.x}px, ${canvasOffset.y}px) scale(${zoom})`, transformOrigin: '0 0' }}>
           {storyMapNodes.map(node => {
             const config = NODE_CONFIG[node.node_type as NodeType] || NODE_CONFIG.event;
             const Icon = config.icon;
@@ -203,11 +320,12 @@ export default function StoryMapPage() {
               <div
                 key={node.id}
                 className={cn(
-                  "absolute w-[140px] p-3 rounded-xl border-2 cursor-move transition-all duration-150 select-none",
+                  "absolute w-[140px] p-3 rounded-xl border-2 cursor-move transition-all duration-200 select-none backdrop-blur-sm",
                   config.color,
-                  isSelected && "ring-2 ring-primary shadow-xl scale-105",
+                  isSelected && "ring-2 ring-primary shadow-lg scale-105",
+                  isSelected && config.glowColor && `shadow-xl ${config.glowColor}`,
                   isConnecting && "ring-2 ring-accent animate-pulse",
-                  draggingNode === node.id && "opacity-80 shadow-2xl"
+                  draggingNode === node.id && "opacity-90 shadow-2xl scale-110"
                 )}
                 style={{ left: node.position_x, top: node.position_y }}
                 onMouseDown={(e) => handleMouseDown(e, node.id)}
@@ -239,14 +357,29 @@ export default function StoryMapPage() {
 
         {/* Connecting mode indicator */}
         {connectingFrom && (
-          <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-accent text-accent-foreground px-4 py-2 rounded-full text-sm font-medium animate-pulse">
+          <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-accent text-accent-foreground px-4 py-2 rounded-full text-sm font-medium animate-pulse shadow-lg">
             Click another node to connect, or press ESC to cancel
           </div>
         )}
+
+        {/* Zoom controls */}
+        <div className="absolute bottom-4 left-4 flex items-center gap-2 bg-card/80 backdrop-blur-sm rounded-lg p-2 border border-border">
+          <Button size="icon" variant="ghost" onClick={() => setZoom(z => Math.min(2, z + 0.2))} className="h-8 w-8">
+            <ZoomIn className="h-4 w-4" />
+          </Button>
+          <span className="text-sm font-mono w-12 text-center">{Math.round(zoom * 100)}%</span>
+          <Button size="icon" variant="ghost" onClick={() => setZoom(z => Math.max(0.3, z - 0.2))} className="h-8 w-8">
+            <ZoomOut className="h-4 w-4" />
+          </Button>
+          <div className="w-px h-6 bg-border" />
+          <Button size="icon" variant="ghost" onClick={resetView} className="h-8 w-8" title="Reset view">
+            <Maximize2 className="h-4 w-4" />
+          </Button>
+        </div>
       </div>
 
       {/* Sidebar */}
-      <div className="w-72 border-l border-border bg-card/50 flex flex-col">
+      <div className="w-72 border-l border-border bg-card/50 flex flex-col overflow-hidden">
         {/* Add Nodes */}
         <div className="p-4 border-b border-border">
           <h3 className="font-semibold mb-3 flex items-center gap-2">
@@ -271,9 +404,57 @@ export default function StoryMapPage() {
           </div>
         </div>
 
+        {/* AI Analysis */}
+        <div className="p-4 border-b border-border">
+          <Button 
+            onClick={analyzeWithAI} 
+            disabled={isAnalyzing || storyMapNodes.length === 0}
+            className="w-full gap-2"
+            variant="outline"
+          >
+            {isAnalyzing ? (
+              <><Loader2 className="h-4 w-4 animate-spin" /> Analyzing...</>
+            ) : (
+              <><Sparkles className="h-4 w-4" /> AI Analyze Map</>
+            )}
+          </Button>
+        </div>
+
+        {/* Analysis Result */}
+        {analysisResult && (
+          <div className="p-4 border-b border-border space-y-3 max-h-64 overflow-y-auto">
+            <h4 className="font-semibold text-sm flex items-center gap-2">
+              <Eye className="h-4 w-4 text-primary" /> AI Insights
+            </h4>
+            {analysisResult.analysis && (
+              <p className="text-xs text-muted-foreground">{analysisResult.analysis}</p>
+            )}
+            {analysisResult.suggestedConnections?.length > 0 && (
+              <div>
+                <p className="text-xs font-medium mb-1">Suggested Connections:</p>
+                <ul className="text-xs text-muted-foreground space-y-1">
+                  {analysisResult.suggestedConnections.slice(0, 3).map((c: any, i: number) => (
+                    <li key={i}>• {c.sourceTitle} → {c.targetTitle}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            {analysisResult.issues?.length > 0 && (
+              <div>
+                <p className="text-xs font-medium mb-1">Potential Issues:</p>
+                <ul className="text-xs text-muted-foreground space-y-1">
+                  {analysisResult.issues.slice(0, 3).map((issue: string, i: number) => (
+                    <li key={i}>• {issue}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Selected Node Details */}
         {selectedNodeData && !editingNode && (
-          <div className="p-4 border-b border-border space-y-3">
+          <div className="p-4 border-b border-border space-y-3 flex-1 overflow-y-auto">
             <h3 className="font-semibold">Selected Node</h3>
             <Card className={cn("p-3", NODE_CONFIG[selectedNodeData.node_type as NodeType]?.color)}>
               <p className="font-medium">{selectedNodeData.title}</p>
@@ -303,7 +484,7 @@ export default function StoryMapPage() {
 
         {/* Editing Mode */}
         {editingNode && (
-          <div className="p-4 border-b border-border space-y-3">
+          <div className="p-4 border-b border-border space-y-3 flex-1 overflow-y-auto">
             <h3 className="font-semibold">Edit Node</h3>
             <Input
               value={editTitle}
