@@ -11,65 +11,65 @@ const THEME_EFFECTS = {
   default: {
     primary: '38 85% 55%',
     accent: '35 90% 50%',
-    glowIntensity: 0.15,
+    glowIntensity: 0.2,
     particleSpeed: 0.5,
-    orbCount: 3,
+    orbCount: 4,
     style: 'warm',
   },
   fantasy: {
     primary: '45 80% 50%',
     accent: '280 60% 50%',
-    glowIntensity: 0.25,
+    glowIntensity: 0.35,
     particleSpeed: 0.3,
-    orbCount: 5,
+    orbCount: 6,
     style: 'magical',
   },
   scifi: {
     primary: '190 80% 50%',
     accent: '260 70% 60%',
-    glowIntensity: 0.3,
+    glowIntensity: 0.4,
     particleSpeed: 0.8,
-    orbCount: 4,
+    orbCount: 5,
     style: 'digital',
   },
   thriller: {
     primary: '0 0% 95%',
     accent: '0 70% 50%',
-    glowIntensity: 0.1,
+    glowIntensity: 0.15,
     particleSpeed: 0.6,
-    orbCount: 2,
+    orbCount: 3,
     style: 'noir',
   },
   romance: {
     primary: '340 70% 60%',
     accent: '320 60% 50%',
-    glowIntensity: 0.2,
+    glowIntensity: 0.3,
     particleSpeed: 0.4,
-    orbCount: 6,
+    orbCount: 7,
     style: 'soft',
   },
   horror: {
     primary: '0 60% 45%',
     accent: '270 50% 40%',
-    glowIntensity: 0.35,
+    glowIntensity: 0.45,
     particleSpeed: 0.2,
-    orbCount: 3,
+    orbCount: 4,
     style: 'dark',
   },
   mystery: {
     primary: '230 60% 55%',
     accent: '180 50% 40%',
-    glowIntensity: 0.15,
+    glowIntensity: 0.2,
     particleSpeed: 0.5,
-    orbCount: 4,
+    orbCount: 5,
     style: 'shadowy',
   },
   adventure: {
     primary: '30 60% 50%',
     accent: '140 50% 40%',
-    glowIntensity: 0.2,
+    glowIntensity: 0.25,
     particleSpeed: 0.7,
-    orbCount: 4,
+    orbCount: 5,
     style: 'earthy',
   },
 };
@@ -81,7 +81,7 @@ export function ThemeEffects({ themeId = 'default' }: ThemeEffectsProps) {
 
   // Animated gradient background with theme-specific effects
   useEffect(() => {
-    if (!settings.animations || settings.reducedMotion) return;
+    if (settings.reducedMotion) return;
     
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -118,7 +118,7 @@ export function ThemeEffects({ themeId = 'default' }: ThemeEffectsProps) {
     const accentHsl = parseHsl(themeConfig.accent);
 
     const animate = () => {
-      time += 0.002 * themeConfig.particleSpeed;
+      time += 0.003 * themeConfig.particleSpeed;
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
       // Create animated gradient orbs based on theme style
@@ -126,10 +126,10 @@ export function ThemeEffects({ themeId = 'default' }: ThemeEffectsProps) {
       
       for (let i = 0; i < themeConfig.orbCount; i++) {
         const angle = (i / themeConfig.orbCount) * Math.PI * 2 + time;
-        const radius = 150 + i * 50;
+        const radius = 180 + i * 60;
         orbs.push({
-          x: canvas.width * 0.5 + Math.sin(angle) * (canvas.width * 0.25),
-          y: canvas.height * 0.5 + Math.cos(angle * 0.7) * (canvas.height * 0.2),
+          x: canvas.width * 0.5 + Math.sin(angle) * (canvas.width * 0.3),
+          y: canvas.height * 0.5 + Math.cos(angle * 0.7) * (canvas.height * 0.25),
           r: radius,
           hsl: i % 2 === 0 ? primaryHsl : accentHsl,
           pulseOffset: i * 0.5,
@@ -155,21 +155,37 @@ export function ThemeEffects({ themeId = 'default' }: ThemeEffectsProps) {
       // Style-specific effects
       if (themeConfig.style === 'digital') {
         // Add scanlines for sci-fi
-        ctx.fillStyle = 'rgba(0, 255, 255, 0.02)';
-        for (let y = 0; y < canvas.height; y += 4) {
+        ctx.fillStyle = 'rgba(0, 255, 255, 0.03)';
+        for (let y = 0; y < canvas.height; y += 3) {
           ctx.fillRect(0, y, canvas.width, 1);
+        }
+        // Add glitch lines
+        if (Math.random() > 0.97) {
+          const glitchY = Math.random() * canvas.height;
+          ctx.fillStyle = `rgba(0, 255, 255, 0.1)`;
+          ctx.fillRect(0, glitchY, canvas.width, 2);
         }
       } else if (themeConfig.style === 'magical') {
         // Add sparkle particles for fantasy
-        for (let i = 0; i < 20; i++) {
+        for (let i = 0; i < 30; i++) {
           const sparkleX = (Math.sin(time * 3 + i * 0.5) * 0.5 + 0.5) * canvas.width;
           const sparkleY = (Math.cos(time * 2 + i * 0.7) * 0.5 + 0.5) * canvas.height;
-          const sparkleSize = Math.sin(time * 4 + i) * 2 + 2;
-          const sparkleAlpha = Math.sin(time * 5 + i) * 0.3 + 0.3;
+          const sparkleSize = Math.sin(time * 4 + i) * 3 + 3;
+          const sparkleAlpha = Math.sin(time * 5 + i) * 0.4 + 0.4;
           
+          // Golden sparkle
           ctx.fillStyle = `rgba(255, 215, 0, ${sparkleAlpha})`;
           ctx.beginPath();
           ctx.arc(sparkleX, sparkleY, sparkleSize, 0, Math.PI * 2);
+          ctx.fill();
+          
+          // Add glow around sparkle
+          const sparkleGradient = ctx.createRadialGradient(sparkleX, sparkleY, 0, sparkleX, sparkleY, sparkleSize * 3);
+          sparkleGradient.addColorStop(0, `rgba(255, 215, 0, ${sparkleAlpha * 0.3})`);
+          sparkleGradient.addColorStop(1, 'transparent');
+          ctx.fillStyle = sparkleGradient;
+          ctx.beginPath();
+          ctx.arc(sparkleX, sparkleY, sparkleSize * 3, 0, Math.PI * 2);
           ctx.fill();
         }
       } else if (themeConfig.style === 'dark') {
@@ -179,32 +195,88 @@ export function ThemeEffects({ themeId = 'default' }: ThemeEffectsProps) {
           canvas.width * 0.5, canvas.height * 0.5, canvas.width * 0.8
         );
         shadowGradient.addColorStop(0, 'transparent');
-        shadowGradient.addColorStop(0.7, 'rgba(0, 0, 0, 0.1)');
-        shadowGradient.addColorStop(1, 'rgba(0, 0, 0, 0.3)');
+        shadowGradient.addColorStop(0.6, 'rgba(0, 0, 0, 0.15)');
+        shadowGradient.addColorStop(1, 'rgba(0, 0, 0, 0.4)');
         ctx.fillStyle = shadowGradient;
         ctx.fillRect(0, 0, canvas.width, canvas.height);
+        
+        // Occasional red flash
+        if (Math.random() > 0.995) {
+          ctx.fillStyle = 'rgba(180, 0, 0, 0.05)';
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+        }
       } else if (themeConfig.style === 'noir') {
         // Add vignette for thriller
         const vignetteGradient = ctx.createRadialGradient(
-          canvas.width * 0.5, canvas.height * 0.5, canvas.width * 0.2,
-          canvas.width * 0.5, canvas.height * 0.5, canvas.width * 0.7
+          canvas.width * 0.5, canvas.height * 0.5, canvas.width * 0.15,
+          canvas.width * 0.5, canvas.height * 0.5, canvas.width * 0.65
         );
         vignetteGradient.addColorStop(0, 'transparent');
-        vignetteGradient.addColorStop(1, 'rgba(0, 0, 0, 0.2)');
+        vignetteGradient.addColorStop(1, 'rgba(0, 0, 0, 0.25)');
         ctx.fillStyle = vignetteGradient;
         ctx.fillRect(0, 0, canvas.width, canvas.height);
+        
+        // Film grain effect
+        for (let i = 0; i < 500; i++) {
+          const grainX = Math.random() * canvas.width;
+          const grainY = Math.random() * canvas.height;
+          const grainAlpha = Math.random() * 0.03;
+          ctx.fillStyle = `rgba(255, 255, 255, ${grainAlpha})`;
+          ctx.fillRect(grainX, grainY, 1, 1);
+        }
       } else if (themeConfig.style === 'soft') {
         // Add floating hearts/bokeh for romance
-        for (let i = 0; i < 15; i++) {
+        for (let i = 0; i < 20; i++) {
           const heartX = (Math.sin(time * 0.5 + i * 1.2) * 0.4 + 0.5) * canvas.width;
-          const heartY = ((time * 0.1 + i * 0.1) % 1.2 - 0.1) * canvas.height;
-          const heartSize = 8 + Math.sin(i) * 4;
-          const heartAlpha = 0.2 + Math.sin(time + i) * 0.1;
+          const heartY = ((time * 0.08 + i * 0.1) % 1.2 - 0.1) * canvas.height;
+          const heartSize = 10 + Math.sin(i) * 5;
+          const heartAlpha = 0.25 + Math.sin(time + i) * 0.15;
           
           const rgb = hslToRgb(primaryHsl.h, primaryHsl.s, primaryHsl.l);
-          ctx.fillStyle = `rgba(${rgb[0]}, ${rgb[1]}, ${rgb[2]}, ${heartAlpha})`;
+          
+          // Soft glow
+          const glowGradient = ctx.createRadialGradient(heartX, heartY, 0, heartX, heartY, heartSize * 2.5);
+          glowGradient.addColorStop(0, `rgba(${rgb[0]}, ${rgb[1]}, ${rgb[2]}, ${heartAlpha})`);
+          glowGradient.addColorStop(1, 'transparent');
+          ctx.fillStyle = glowGradient;
+          ctx.beginPath();
+          ctx.arc(heartX, heartY, heartSize * 2.5, 0, Math.PI * 2);
+          ctx.fill();
+          
+          // Core
+          ctx.fillStyle = `rgba(${rgb[0]}, ${rgb[1]}, ${rgb[2]}, ${heartAlpha * 0.8})`;
           ctx.beginPath();
           ctx.arc(heartX, heartY, heartSize, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      } else if (themeConfig.style === 'shadowy') {
+        // Mystery fog effect
+        for (let i = 0; i < 8; i++) {
+          const fogX = (Math.sin(time * 0.3 + i * 0.8) * 0.6 + 0.5) * canvas.width;
+          const fogY = canvas.height * 0.7 + Math.sin(time * 0.5 + i) * 50;
+          const fogSize = 200 + i * 40;
+          
+          const rgb = hslToRgb(accentHsl.h, accentHsl.s * 0.3, accentHsl.l * 0.5);
+          const fogGradient = ctx.createRadialGradient(fogX, fogY, 0, fogX, fogY, fogSize);
+          fogGradient.addColorStop(0, `rgba(${rgb[0]}, ${rgb[1]}, ${rgb[2]}, 0.08)`);
+          fogGradient.addColorStop(1, 'transparent');
+          ctx.fillStyle = fogGradient;
+          ctx.beginPath();
+          ctx.arc(fogX, fogY, fogSize, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      } else if (themeConfig.style === 'earthy') {
+        // Adventure dust particles
+        for (let i = 0; i < 40; i++) {
+          const dustX = ((time * 50 + i * 30) % (canvas.width + 100)) - 50;
+          const dustY = Math.sin(time * 2 + i) * 100 + canvas.height * 0.6;
+          const dustSize = 2 + Math.random() * 2;
+          const dustAlpha = 0.15 + Math.random() * 0.1;
+          
+          const rgb = hslToRgb(primaryHsl.h, primaryHsl.s * 0.5, primaryHsl.l);
+          ctx.fillStyle = `rgba(${rgb[0]}, ${rgb[1]}, ${rgb[2]}, ${dustAlpha})`;
+          ctx.beginPath();
+          ctx.arc(dustX, dustY, dustSize, 0, Math.PI * 2);
           ctx.fill();
         }
       }
@@ -220,28 +292,26 @@ export function ThemeEffects({ themeId = 'default' }: ThemeEffectsProps) {
       window.removeEventListener('resize', resize);
       cancelAnimationFrame(animationId);
     };
-  }, [settings.animations, settings.reducedMotion, themeId, themeConfig]);
+  }, [settings.reducedMotion, themeId, themeConfig, settings.animations]);
 
-  if (!settings.experimentalFeatures) return null;
+  // Always show effects unless reducedMotion is on
+  if (settings.reducedMotion) return null;
 
   return (
     <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
       {/* Animated gradient canvas */}
       <canvas
         ref={canvasRef}
-        className={cn(
-          "absolute inset-0 opacity-70 transition-opacity duration-1000",
-          settings.reducedMotion && "opacity-30"
-        )}
+        className="absolute inset-0 opacity-80 transition-opacity duration-1000"
       />
 
-      {/* Glassmorphism overlay patterns - theme specific */}
+      {/* Glassmorphism overlay patterns - always visible */}
       <div className="absolute inset-0">
         {/* Top glow with glassmorphism */}
         <div 
           className={cn(
-            "absolute -top-32 -left-32 w-[500px] h-[500px] rounded-full blur-[100px] animate-float",
-            "bg-gradient-to-br from-primary/30 via-primary/10 to-transparent"
+            "absolute -top-32 -left-32 w-[600px] h-[600px] rounded-full blur-[120px] animate-float",
+            "bg-gradient-to-br from-primary/40 via-primary/15 to-transparent"
           )} 
           style={{ animationDuration: '12s' }}
         />
@@ -249,8 +319,8 @@ export function ThemeEffects({ themeId = 'default' }: ThemeEffectsProps) {
         {/* Bottom accent glow */}
         <div 
           className={cn(
-            "absolute -bottom-32 -right-32 w-[400px] h-[400px] rounded-full blur-[80px] animate-float",
-            "bg-gradient-to-tl from-accent/30 via-accent/10 to-transparent"
+            "absolute -bottom-32 -right-32 w-[500px] h-[500px] rounded-full blur-[100px] animate-float",
+            "bg-gradient-to-tl from-accent/40 via-accent/15 to-transparent"
           )}
           style={{ animationDuration: '15s', animationDelay: '-5s' }}
         />
@@ -259,8 +329,8 @@ export function ThemeEffects({ themeId = 'default' }: ThemeEffectsProps) {
         <div 
           className={cn(
             "absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2",
-            "w-[800px] h-[800px] rounded-full blur-[120px] animate-glow",
-            "bg-gradient-radial from-primary/15 via-primary/5 to-transparent"
+            "w-[900px] h-[900px] rounded-full blur-[150px] animate-glow",
+            "bg-gradient-radial from-primary/20 via-primary/8 to-transparent"
           )}
           style={{ animationDuration: '6s' }}
         />
@@ -268,10 +338,19 @@ export function ThemeEffects({ themeId = 'default' }: ThemeEffectsProps) {
         {/* Moving accent orb */}
         <div 
           className={cn(
-            "absolute top-1/4 right-1/4 w-[300px] h-[300px] rounded-full blur-[60px]",
-            "bg-gradient-to-br from-accent/20 to-transparent animate-float"
+            "absolute top-1/4 right-1/4 w-[400px] h-[400px] rounded-full blur-[80px]",
+            "bg-gradient-to-br from-accent/30 to-transparent animate-float"
           )}
           style={{ animationDuration: '18s', animationDelay: '-8s' }}
+        />
+        
+        {/* Additional glowing orb */}
+        <div 
+          className={cn(
+            "absolute bottom-1/3 left-1/3 w-[350px] h-[350px] rounded-full blur-[70px]",
+            "bg-gradient-to-tr from-primary/25 to-accent/10 animate-float"
+          )}
+          style={{ animationDuration: '20s', animationDelay: '-12s' }}
         />
       </div>
 
@@ -279,18 +358,18 @@ export function ThemeEffects({ themeId = 'default' }: ThemeEffectsProps) {
       <div className="absolute inset-0">
         {/* Top glass strip */}
         <div 
-          className="absolute top-0 left-0 right-0 h-24 bg-gradient-to-b from-background/80 via-background/40 to-transparent backdrop-blur-[2px]"
+          className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-background/90 via-background/50 to-transparent backdrop-blur-[3px]"
         />
         
         {/* Side glass accents */}
         <div 
-          className="absolute top-0 bottom-0 left-0 w-16 bg-gradient-to-r from-background/30 to-transparent"
+          className="absolute top-0 bottom-0 left-0 w-20 bg-gradient-to-r from-background/40 to-transparent"
         />
       </div>
 
       {/* Noise texture for glassmorphism */}
       <div 
-        className="absolute inset-0 opacity-[0.02] mix-blend-overlay"
+        className="absolute inset-0 opacity-[0.03] mix-blend-overlay"
         style={{
           backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
         }}
