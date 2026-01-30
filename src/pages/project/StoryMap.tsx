@@ -4,8 +4,8 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Map, Plus, FileText, Users, Globe, Loader2, Trash2, Search, ChevronLeft, ChevronRight } from 'lucide-react';
-import { useState, useMemo, useRef } from 'react';
+import { Map, Plus, FileText, Users, Globe, Loader2, Trash2, Search } from 'lucide-react';
+import { useState, useMemo } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import type { StoryMapNode } from '@/types/story';
@@ -43,7 +43,6 @@ export default function StoryMapPage() {
   const [selectedNode, setSelectedNode] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState<NodeType | 'all'>('all');
-  const scrollRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
   // Group nodes by type for better visualization
   const groupedNodes = useMemo(() => {
@@ -120,25 +119,8 @@ export default function StoryMapPage() {
     toast({ title: 'Node deleted' });
   };
 
-  const scrollLane = (type: string, direction: 'left' | 'right') => {
-    const container = scrollRefs.current[type];
-    if (container) {
-      const scrollAmount = 240; // Card width + gap
-      container.scrollBy({ 
-        left: direction === 'left' ? -scrollAmount : scrollAmount, 
-        behavior: 'smooth' 
-      });
-    }
-  };
-
-  const navigateToNode = (nodeId: string, nodeType: string) => {
+  const navigateToNode = (nodeId: string) => {
     setSelectedNode(nodeId);
-    setActiveCategory('all');
-    // Find the node element and scroll into view
-    const nodeElement = document.getElementById(`node-${nodeId}`);
-    if (nodeElement) {
-      nodeElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }
   };
 
   const selectedNodeData = storyMapNodes.find(n => n.id === selectedNode);
@@ -205,7 +187,7 @@ export default function StoryMapPage() {
                 return (
                   <button
                     key={node.id}
-                    onClick={() => navigateToNode(node.id, node.node_type)}
+                    onClick={() => navigateToNode(node.id)}
                     className={cn(
                       "w-full text-left p-2 rounded-lg transition-all duration-200 flex items-center gap-2",
                       config.color,
@@ -223,7 +205,7 @@ export default function StoryMapPage() {
         </ScrollArea>
       </div>
 
-      {/* Main Map Area */}
+      {/* Main Content Area */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Header */}
         <div className="p-6 border-b border-border">
@@ -254,8 +236,8 @@ export default function StoryMapPage() {
           </div>
         </div>
 
-        {/* Scrollable Content */}
-        <ScrollArea className="flex-1 p-6">
+        {/* Selected Node Display */}
+        <div className="flex-1 p-8 overflow-auto bg-gradient-to-br from-background via-background to-secondary/20">
           {storyMapNodes.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-80 border-2 border-dashed border-border rounded-xl">
               <Map className="h-16 w-16 text-muted-foreground/30 mb-4" />
@@ -265,184 +247,161 @@ export default function StoryMapPage() {
                 <Plus className="h-4 w-4" /> Create First Node
               </Button>
             </div>
-          ) : (
-            <div className="space-y-8">
-              {/* Node Type Lanes */}
-              {Object.entries(NODE_CONFIG).map(([type, config]) => {
-                const nodes = groupedNodes[type as NodeType];
-                if (nodes.length === 0) return null;
-                
+          ) : selectedNodeData ? (
+            <div className="max-w-2xl mx-auto animate-fade-in">
+              {/* Selected Node Card */}
+              {(() => {
+                const config = NODE_CONFIG[selectedNodeData.node_type as NodeType] || NODE_CONFIG.event;
                 const Icon = config.icon;
-                
                 return (
-                  <div key={type} className="relative">
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="flex items-center gap-2">
-                        <div className={cn("p-1.5 rounded", config.color)}>
-                          <Icon className="h-4 w-4" />
+                  <Card className={cn(
+                    "p-8 border-2 transition-all duration-300",
+                    config.color,
+                    "shadow-lg"
+                  )}>
+                    <div className="flex items-start justify-between mb-6">
+                      <div className="flex items-center gap-3">
+                        <div className={cn("p-3 rounded-xl", config.color)}>
+                          <Icon className="h-8 w-8" />
                         </div>
-                        <h3 className="font-medium capitalize">{type}s</h3>
-                        <Badge variant="secondary" className="text-xs">{nodes.length}</Badge>
+                        <div>
+                          <Badge className={cn("mb-2", config.color)}>
+                            {selectedNodeData.node_type}
+                          </Badge>
+                          <h2 className="font-display text-2xl font-bold">{selectedNodeData.title}</h2>
+                        </div>
                       </div>
-                      
-                      {/* Scroll Controls */}
-                      {nodes.length > 3 && (
-                        <div className="flex gap-1">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8"
-                            onClick={() => scrollLane(type, 'left')}
-                          >
-                            <ChevronLeft className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8"
-                            onClick={() => scrollLane(type, 'right')}
-                          >
-                            <ChevronRight className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      )}
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        onClick={() => handleDelete(selectedNodeData.id)}
+                        className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                      >
+                        <Trash2 className="h-5 w-5" />
+                      </Button>
                     </div>
                     
-                    <div 
-                      ref={(el) => { scrollRefs.current[type] = el; }}
-                      className="flex gap-4 overflow-x-auto pb-4 scroll-smooth"
-                      style={{ scrollbarWidth: 'thin' }}
-                    >
-                      {nodes.map((node, index) => (
-                        <Card
-                          key={node.id}
-                          id={`node-${node.id}`}
-                          onClick={() => setSelectedNode(node.id)}
-                          className={cn(
-                            "min-w-[220px] max-w-[220px] p-4 cursor-pointer transition-all duration-300 border-2 shrink-0",
-                            config.color,
-                            config.bgGlow,
-                            "hover:shadow-lg",
-                            selectedNode === node.id && "ring-2 ring-primary ring-offset-2 ring-offset-background scale-105"
-                          )}
-                        >
-                          <div className="flex items-start justify-between mb-2">
-                            <Icon className="h-5 w-5" />
-                            <span className="text-xs opacity-60">#{index + 1}</span>
-                          </div>
-                          <h4 className="font-semibold truncate mb-1">{node.title}</h4>
-                          {node.description && (
-                            <p className="text-xs opacity-70 line-clamp-3">{node.description}</p>
-                          )}
-                        </Card>
-                      ))}
+                    <div className="prose-narrative">
+                      <p className="text-lg leading-relaxed">
+                        {selectedNodeData.description || 'No description yet. Click to add one.'}
+                      </p>
                     </div>
+
+                    {/* Connections Section */}
+                    {(nodeConnections.incoming.length > 0 || nodeConnections.outgoing.length > 0) && (
+                      <div className="mt-8 pt-6 border-t border-border/50">
+                        <h4 className="text-sm font-medium text-muted-foreground mb-4">Connections</h4>
+                        <div className="grid grid-cols-2 gap-4">
+                          {nodeConnections.incoming.length > 0 && (
+                            <div>
+                              <p className="text-xs text-muted-foreground mb-2">Incoming</p>
+                              <div className="space-y-1">
+                                {nodeConnections.incoming.map(edge => {
+                                  const source = storyMapNodes.find(n => n.id === edge.source_node_id);
+                                  return source && (
+                                    <button
+                                      key={edge.id}
+                                      onClick={() => navigateToNode(source.id)}
+                                      className="w-full text-left text-sm p-2 rounded bg-background/50 hover:bg-background/80 transition-colors"
+                                    >
+                                      ← {source.title}
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          )}
+                          {nodeConnections.outgoing.length > 0 && (
+                            <div>
+                              <p className="text-xs text-muted-foreground mb-2">Outgoing</p>
+                              <div className="space-y-1">
+                                {nodeConnections.outgoing.map(edge => {
+                                  const target = storyMapNodes.find(n => n.id === edge.target_node_id);
+                                  return target && (
+                                    <button
+                                      key={edge.id}
+                                      onClick={() => navigateToNode(target.id)}
+                                      className="w-full text-left text-sm p-2 rounded bg-background/50 hover:bg-background/80 transition-colors"
+                                    >
+                                      → {target.title}
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </Card>
+                );
+              })()}
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center h-full text-center">
+              <Map className="h-20 w-20 text-muted-foreground/20 mb-6" />
+              <h3 className="font-display text-2xl font-semibold mb-2">Select a Node</h3>
+              <p className="text-muted-foreground max-w-md">
+                Choose a node from the navigator to view and edit its details
+              </p>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Stats Panel */}
+      <div className="w-72 border-l border-border bg-gradient-to-b from-primary/5 via-secondary/50 to-accent/5 backdrop-blur-sm flex flex-col">
+        <div className="p-6 border-b border-border/50">
+          <h3 className="font-semibold flex items-center gap-2">
+            <Map className="h-4 w-4 text-primary" /> Story Stats
+          </h3>
+        </div>
+        <ScrollArea className="flex-1 p-6">
+          <div className="space-y-6">
+            {/* Stats Grid */}
+            <div className="grid grid-cols-2 gap-4">
+              <Card className="p-4 bg-background/60 border-border/50 backdrop-blur-sm">
+                <p className="text-xs text-muted-foreground mb-1">Chapters</p>
+                <p className="text-2xl font-bold">{chapters.length}</p>
+              </Card>
+              <Card className="p-4 bg-background/60 border-border/50 backdrop-blur-sm">
+                <p className="text-xs text-muted-foreground mb-1">Characters</p>
+                <p className="text-2xl font-bold">{characters.length}</p>
+              </Card>
+              <Card className="p-4 bg-background/60 border-border/50 backdrop-blur-sm">
+                <p className="text-xs text-muted-foreground mb-1">Map Nodes</p>
+                <p className="text-2xl font-bold">{storyMapNodes.length}</p>
+              </Card>
+              <Card className="p-4 bg-background/60 border-border/50 backdrop-blur-sm">
+                <p className="text-xs text-muted-foreground mb-1">Connections</p>
+                <p className="text-2xl font-bold">{storyMapEdges.length}</p>
+              </Card>
+            </div>
+
+            {/* Node Type Breakdown */}
+            <div className="space-y-3">
+              <h4 className="text-sm font-medium text-muted-foreground">By Type</h4>
+              {Object.entries(NODE_CONFIG).map(([type, config]) => {
+                const count = groupedNodes[type as NodeType].length;
+                const Icon = config.icon;
+                return (
+                  <div 
+                    key={type}
+                    className={cn(
+                      "flex items-center justify-between p-3 rounded-lg border",
+                      config.color
+                    )}
+                  >
+                    <div className="flex items-center gap-2">
+                      <Icon className="h-4 w-4" />
+                      <span className="text-sm capitalize">{type}s</span>
+                    </div>
+                    <Badge variant="secondary">{count}</Badge>
                   </div>
                 );
               })}
             </div>
-          )}
-        </ScrollArea>
-      </div>
-
-      {/* Details Panel */}
-      <div className="w-80 border-l border-border bg-card/50 flex flex-col">
-        <ScrollArea className="flex-1 p-6">
-          {selectedNodeData ? (
-            <div className="animate-fade-in">
-              <div className="flex items-center justify-between mb-4">
-                <Badge className={NODE_CONFIG[selectedNodeData.node_type as NodeType]?.color || ''}>
-                  {selectedNodeData.node_type}
-                </Badge>
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  onClick={() => handleDelete(selectedNodeData.id)}
-                >
-                  <Trash2 className="h-4 w-4 text-destructive" />
-                </Button>
-              </div>
-              
-              <h3 className="font-display text-xl font-semibold mb-2">{selectedNodeData.title}</h3>
-              <p className="text-muted-foreground text-sm mb-6">
-                {selectedNodeData.description || 'No description yet'}
-              </p>
-
-              {/* Connections */}
-              <div className="space-y-4">
-                {nodeConnections.incoming.length > 0 && (
-                  <div>
-                    <h4 className="text-sm font-medium mb-2 text-muted-foreground">Incoming</h4>
-                    <div className="space-y-1">
-                      {nodeConnections.incoming.map(edge => {
-                        const source = storyMapNodes.find(n => n.id === edge.source_node_id);
-                        return source && (
-                          <button
-                            key={edge.id}
-                            onClick={() => navigateToNode(source.id, source.node_type)}
-                            className="w-full text-left text-sm p-2 rounded bg-muted/30 hover:bg-muted/50 transition-colors"
-                          >
-                            ← {source.title}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
-                
-                {nodeConnections.outgoing.length > 0 && (
-                  <div>
-                    <h4 className="text-sm font-medium mb-2 text-muted-foreground">Outgoing</h4>
-                    <div className="space-y-1">
-                      {nodeConnections.outgoing.map(edge => {
-                        const target = storyMapNodes.find(n => n.id === edge.target_node_id);
-                        return target && (
-                          <button
-                            key={edge.id}
-                            onClick={() => navigateToNode(target.id, target.node_type)}
-                            className="w-full text-left text-sm p-2 rounded bg-muted/30 hover:bg-muted/50 transition-colors"
-                          >
-                            → {target.title}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Quick Stats */}
-              <div className="mt-6 p-4 rounded-lg bg-muted/30">
-                <h4 className="text-sm font-medium mb-3">Story Stats</h4>
-                <div className="grid grid-cols-2 gap-3 text-sm">
-                  <div>
-                    <p className="text-muted-foreground">Chapters</p>
-                    <p className="font-semibold">{chapters.length}</p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground">Characters</p>
-                    <p className="font-semibold">{characters.length}</p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground">Map Nodes</p>
-                    <p className="font-semibold">{storyMapNodes.length}</p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground">Connections</p>
-                    <p className="font-semibold">{storyMapEdges.length}</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          ) : (
-            <div className="flex flex-col items-center justify-center h-full text-center">
-              <Map className="h-12 w-12 text-muted-foreground/30 mb-4" />
-              <h3 className="font-medium mb-2">Select a Node</h3>
-              <p className="text-sm text-muted-foreground">
-                Click on any node to view details and connections
-              </p>
-            </div>
-          )}
+          </div>
         </ScrollArea>
       </div>
     </div>
