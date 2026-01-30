@@ -28,64 +28,100 @@ export function ThemeEffects({ themeId = 'default' }: ThemeEffectsProps) {
 
   return (
     <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
+      {/* Deep atmospheric blur background - like grimoire.lovable.app */}
+      <div 
+        className="absolute inset-0"
+        style={{
+          background: `radial-gradient(ellipse at center, 
+            hsl(${activeSubTheme.background} / 0.3) 0%, 
+            hsl(${activeSubTheme.background} / 0.7) 50%, 
+            hsl(${activeSubTheme.background} / 0.95) 100%)`,
+        }}
+      />
+
       {/* Animated effects canvas */}
       <ThemeEffectsCanvas 
         subTheme={activeSubTheme} 
         reducedMotion={settings.reducedMotion} 
       />
 
-      {/* Seamless gradient orbs - CSS based for smooth performance */}
+      {/* Deep atmospheric blur orbs for premium feel */}
       <div className="absolute inset-0">
-        {/* Top-left glow */}
+        {/* Primary glow - large, blurred, positioned for depth */}
         <div 
-          className={cn(
-            "absolute -top-64 -left-64 w-[800px] h-[800px] rounded-full blur-[180px] animate-float",
-            "bg-gradient-to-br from-primary/25 via-primary/10 to-transparent"
-          )} 
-          style={{ animationDuration: '15s' }}
+          className="absolute rounded-full animate-float"
+          style={{
+            top: '-15%',
+            left: '-10%',
+            width: '60vw',
+            height: '60vw',
+            background: `radial-gradient(circle, hsl(${activeSubTheme.primary} / 0.15) 0%, hsl(${activeSubTheme.primary} / 0.05) 40%, transparent 70%)`,
+            filter: 'blur(80px)',
+            animationDuration: '20s',
+          }}
         />
         
-        {/* Bottom-right glow */}
+        {/* Accent glow - opposite corner */}
         <div 
-          className={cn(
-            "absolute -bottom-64 -right-64 w-[700px] h-[700px] rounded-full blur-[160px] animate-float",
-            "bg-gradient-to-tl from-accent/25 via-accent/10 to-transparent"
-          )}
-          style={{ animationDuration: '18s', animationDelay: '-6s' }}
+          className="absolute rounded-full animate-float"
+          style={{
+            bottom: '-20%',
+            right: '-15%',
+            width: '55vw',
+            height: '55vw',
+            background: `radial-gradient(circle, hsl(${activeSubTheme.accent} / 0.12) 0%, hsl(${activeSubTheme.accent} / 0.04) 40%, transparent 70%)`,
+            filter: 'blur(100px)',
+            animationDuration: '25s',
+            animationDelay: '-8s',
+          }}
         />
 
-        {/* Center ambient glow */}
+        {/* Center ambient - creates depth */}
         <div 
-          className={cn(
-            "absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2",
-            "w-[1200px] h-[1200px] rounded-full blur-[200px]",
-            "bg-gradient-radial from-primary/12 via-transparent to-transparent"
-          )}
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full"
+          style={{
+            width: '80vw',
+            height: '80vw',
+            background: `radial-gradient(circle, hsl(${activeSubTheme.primary} / 0.08) 0%, transparent 60%)`,
+            filter: 'blur(120px)',
+          }}
         />
 
-        {/* Floating accent orbs */}
+        {/* Floating secondary orbs for motion */}
         <div 
-          className={cn(
-            "absolute top-1/4 right-1/3 w-[500px] h-[500px] rounded-full blur-[120px]",
-            "bg-gradient-to-br from-accent/20 to-transparent animate-float"
-          )}
-          style={{ animationDuration: '22s', animationDelay: '-10s' }}
+          className="absolute rounded-full animate-float"
+          style={{
+            top: '20%',
+            right: '25%',
+            width: '35vw',
+            height: '35vw',
+            background: `radial-gradient(circle, hsl(${activeSubTheme.secondary} / 0.1) 0%, transparent 60%)`,
+            filter: 'blur(60px)',
+            animationDuration: '28s',
+            animationDelay: '-12s',
+          }}
         />
         
         <div 
-          className={cn(
-            "absolute bottom-1/4 left-1/4 w-[450px] h-[450px] rounded-full blur-[100px]",
-            "bg-gradient-to-tr from-primary/18 to-accent/8 animate-float"
-          )}
-          style={{ animationDuration: '25s', animationDelay: '-15s' }}
+          className="absolute rounded-full animate-float"
+          style={{
+            bottom: '25%',
+            left: '20%',
+            width: '30vw',
+            height: '30vw',
+            background: `radial-gradient(circle, hsl(${activeSubTheme.accent} / 0.08) 0%, transparent 60%)`,
+            filter: 'blur(70px)',
+            animationDuration: '32s',
+            animationDelay: '-18s',
+          }}
         />
       </div>
 
-      {/* Subtle noise texture */}
+      {/* Very subtle noise for texture - barely visible */}
       <div 
-        className="absolute inset-0 opacity-[0.015] mix-blend-overlay"
+        className="absolute inset-0 opacity-[0.02] mix-blend-overlay"
         style={{
-          backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
+          backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
         }}
       />
     </div>
