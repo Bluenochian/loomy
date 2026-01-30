@@ -416,7 +416,7 @@ export default function SettingsPage() {
                   <Switch checked={settings.debugMode} onCheckedChange={(v) => updateSetting('debugMode', v)} />
                 </div>
                 <div className="flex items-center justify-between">
-                  <div><Label>Experimental Features</Label><p className="text-xs text-muted-foreground">Try new features early</p></div>
+                  <div><Label>Experimental Features</Label><p className="text-xs text-muted-foreground">Enable glassmorphism, animated gradients, enhanced effects</p></div>
                   <Switch checked={settings.experimentalFeatures} onCheckedChange={(v) => updateSetting('experimentalFeatures', v)} />
                 </div>
                 <div className="flex items-center justify-between">

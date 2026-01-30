@@ -1,5 +1,6 @@
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { NavLink } from '@/components/NavLink';
+import { useStory } from '@/context/StoryContext';
 import { cn } from '@/lib/utils';
 import {
   LayoutDashboard,
@@ -13,10 +14,11 @@ import {
   Settings,
   ChevronLeft,
   ChevronRight,
-  Sparkles,
+  Library,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useState } from 'react';
+import { ThemedLogo } from '@/components/themes/ThemedLogo';
+import { useState, useMemo } from 'react';
 
 interface AppSidebarProps {
   projectId: string;
@@ -36,8 +38,14 @@ const navItems = [
 
 export function AppSidebar({ projectId }: AppSidebarProps) {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { currentProject } = useStory();
   const [collapsed, setCollapsed] = useState(false);
   const basePath = `/project/${projectId}`;
+
+  const currentTheme = useMemo(() => {
+    return currentProject?.theme_profile?.themeId || 'default';
+  }, [currentProject?.theme_profile?.themeId]);
 
   const isActive = (path: string) => {
     const fullPath = `${basePath}${path}`;
@@ -56,17 +64,24 @@ export function AppSidebar({ projectId }: AppSidebarProps) {
     >
       {/* Logo / Brand */}
       <div className="h-16 flex items-center justify-between px-4 border-b border-sidebar-border">
-        {!collapsed && (
-          <div className="flex items-center gap-2">
-            <Sparkles className="h-6 w-6 text-primary" />
-            <span className="font-display text-lg font-semibold gradient-text">
-              LOOMY
-            </span>
-          </div>
+        {!collapsed ? (
+          <ThemedLogo themeId={currentTheme} size="md" />
+        ) : (
+          <ThemedLogo themeId={currentTheme} size="sm" showText={false} />
         )}
-        {collapsed && (
-          <Sparkles className="h-6 w-6 text-primary mx-auto" />
-        )}
+      </div>
+
+      {/* All Projects Button */}
+      <div className="px-2 py-2 border-b border-sidebar-border">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => navigate('/projects')}
+          className={cn("w-full gap-2", collapsed ? "justify-center px-0" : "justify-start")}
+        >
+          <Library className="h-4 w-4" />
+          {!collapsed && <span>All Projects</span>}
+        </Button>
       </div>
 
       {/* Navigation */}

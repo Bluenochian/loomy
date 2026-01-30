@@ -4,9 +4,10 @@ import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Users, Loader2, Trash2, User, Heart, Swords, Star } from 'lucide-react';
+import { Plus, Users, Loader2, Trash2, User, Heart, Swords, Star, Wand2 } from 'lucide-react';
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
+import { AICharacterGenerator } from '@/components/ai/AICharacterGenerator';
 import type { Character } from '@/types/story';
 
 export default function CharactersPage() {
@@ -26,6 +27,27 @@ export default function CharactersPage() {
       toast({ title: 'Character created' });
     }
     setIsAdding(false);
+  };
+
+  const handleAICharacterGenerated = async (charData: {
+    name: string;
+    role: 'protagonist' | 'antagonist' | 'supporting' | 'minor';
+    description: string;
+    backstory: string;
+    motivations: string[];
+    traits: string[];
+  }) => {
+    const character = await addCharacter({
+      name: charData.name,
+      role: charData.role,
+      description: charData.description,
+      backstory: charData.backstory,
+      motivations: charData.motivations,
+      traits: charData.traits,
+    });
+    if (character) {
+      setSelectedCharacter(character.id);
+    }
   };
 
   const handleDeleteCharacter = async (id: string) => {
@@ -62,9 +84,12 @@ export default function CharactersPage() {
       <div className="w-80 border-r border-border p-4 overflow-y-auto">
         <div className="flex items-center justify-between mb-4">
           <h2 className="font-display text-lg font-semibold">Characters</h2>
-          <Button variant="outline" size="sm" onClick={handleAddCharacter} disabled={isAdding}>
-            {isAdding ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
-          </Button>
+          <div className="flex items-center gap-2">
+            <AICharacterGenerator onCharacterGenerated={handleAICharacterGenerated} />
+            <Button variant="outline" size="sm" onClick={handleAddCharacter} disabled={isAdding}>
+              {isAdding ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
+            </Button>
+          </div>
         </div>
 
         <div className="space-y-2">
@@ -96,6 +121,7 @@ export default function CharactersPage() {
             <div className="text-center py-8">
               <Users className="h-10 w-10 text-muted-foreground/30 mx-auto mb-3" />
               <p className="text-sm text-muted-foreground">No characters yet</p>
+              <p className="text-xs text-muted-foreground mt-1">Use AI Generate or add manually</p>
             </div>
           )}
         </div>
@@ -240,9 +266,12 @@ export default function CharactersPage() {
               <p className="text-muted-foreground mb-4">
                 Choose a character from the list or create a new one
               </p>
-              <Button onClick={handleAddCharacter} disabled={isAdding}>
-                <Plus className="h-4 w-4" /> Create Character
-              </Button>
+              <div className="flex gap-2 justify-center">
+                <AICharacterGenerator onCharacterGenerated={handleAICharacterGenerated} />
+                <Button onClick={handleAddCharacter} disabled={isAdding}>
+                  <Plus className="h-4 w-4" /> Create Manually
+                </Button>
+              </div>
             </div>
           </div>
         )}
