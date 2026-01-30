@@ -7,6 +7,7 @@ export interface AppSettings {
   reducedMotion: boolean;
   compactMode: boolean;
   showWordCount: boolean;
+  glassSidebar: boolean;
   
   // Editor
   fontSize: number;
@@ -48,6 +49,7 @@ const DEFAULT_SETTINGS: AppSettings = {
   reducedMotion: false,
   compactMode: false,
   showWordCount: true,
+  glassSidebar: true,
   
   // Editor
   fontSize: 18,

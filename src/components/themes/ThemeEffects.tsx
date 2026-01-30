@@ -299,79 +299,65 @@ export function ThemeEffects({ themeId = 'default' }: ThemeEffectsProps) {
 
   return (
     <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
-      {/* Animated gradient canvas */}
+      {/* Animated gradient canvas - seamless full screen */}
       <canvas
         ref={canvasRef}
-        className="absolute inset-0 opacity-80 transition-opacity duration-1000"
+        className="absolute inset-0 opacity-60 transition-opacity duration-1000"
       />
 
-      {/* Glassmorphism overlay patterns - always visible */}
+      {/* Seamless gradient orbs - no cuts or hard edges */}
       <div className="absolute inset-0">
-        {/* Top glow with glassmorphism */}
+        {/* Top-left glow */}
         <div 
           className={cn(
-            "absolute -top-32 -left-32 w-[600px] h-[600px] rounded-full blur-[120px] animate-float",
-            "bg-gradient-to-br from-primary/40 via-primary/15 to-transparent"
+            "absolute -top-64 -left-64 w-[800px] h-[800px] rounded-full blur-[180px] animate-float",
+            "bg-gradient-to-br from-primary/25 via-primary/10 to-transparent"
           )} 
-          style={{ animationDuration: '12s' }}
+          style={{ animationDuration: '15s' }}
         />
         
-        {/* Bottom accent glow */}
+        {/* Bottom-right glow */}
         <div 
           className={cn(
-            "absolute -bottom-32 -right-32 w-[500px] h-[500px] rounded-full blur-[100px] animate-float",
-            "bg-gradient-to-tl from-accent/40 via-accent/15 to-transparent"
+            "absolute -bottom-64 -right-64 w-[700px] h-[700px] rounded-full blur-[160px] animate-float",
+            "bg-gradient-to-tl from-accent/25 via-accent/10 to-transparent"
           )}
-          style={{ animationDuration: '15s', animationDelay: '-5s' }}
+          style={{ animationDuration: '18s', animationDelay: '-6s' }}
         />
 
-        {/* Center radial glow */}
+        {/* Center ambient glow */}
         <div 
           className={cn(
             "absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2",
-            "w-[900px] h-[900px] rounded-full blur-[150px] animate-glow",
-            "bg-gradient-radial from-primary/20 via-primary/8 to-transparent"
+            "w-[1200px] h-[1200px] rounded-full blur-[200px]",
+            "bg-gradient-radial from-primary/12 via-transparent to-transparent"
           )}
-          style={{ animationDuration: '6s' }}
         />
 
-        {/* Moving accent orb */}
+        {/* Floating accent orb 1 */}
         <div 
           className={cn(
-            "absolute top-1/4 right-1/4 w-[400px] h-[400px] rounded-full blur-[80px]",
-            "bg-gradient-to-br from-accent/30 to-transparent animate-float"
+            "absolute top-1/4 right-1/3 w-[500px] h-[500px] rounded-full blur-[120px]",
+            "bg-gradient-to-br from-accent/20 to-transparent animate-float"
           )}
-          style={{ animationDuration: '18s', animationDelay: '-8s' }}
+          style={{ animationDuration: '22s', animationDelay: '-10s' }}
         />
         
-        {/* Additional glowing orb */}
+        {/* Floating accent orb 2 */}
         <div 
           className={cn(
-            "absolute bottom-1/3 left-1/3 w-[350px] h-[350px] rounded-full blur-[70px]",
-            "bg-gradient-to-tr from-primary/25 to-accent/10 animate-float"
+            "absolute bottom-1/4 left-1/4 w-[450px] h-[450px] rounded-full blur-[100px]",
+            "bg-gradient-to-tr from-primary/18 to-accent/8 animate-float"
           )}
-          style={{ animationDuration: '20s', animationDelay: '-12s' }}
+          style={{ animationDuration: '25s', animationDelay: '-15s' }}
         />
       </div>
 
-      {/* Glass panel overlays for depth */}
-      <div className="absolute inset-0">
-        {/* Top glass strip */}
-        <div 
-          className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-background/90 via-background/50 to-transparent backdrop-blur-[3px]"
-        />
-        
-        {/* Side glass accents */}
-        <div 
-          className="absolute top-0 bottom-0 left-0 w-20 bg-gradient-to-r from-background/40 to-transparent"
-        />
-      </div>
-
-      {/* Noise texture for glassmorphism */}
+      {/* Subtle noise texture */}
       <div 
-        className="absolute inset-0 opacity-[0.03] mix-blend-overlay"
+        className="absolute inset-0 opacity-[0.015] mix-blend-overlay"
         style={{
-          backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
+          backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
         }}
       />
     </div>
