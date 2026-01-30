@@ -4,13 +4,16 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Save, Loader2 } from 'lucide-react';
+import { Save, Loader2, BarChart3 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
+import { StoryStatsCharts } from '@/components/charts/StoryStatsCharts';
+import { useAutoTheme } from '@/hooks/useAutoTheme';
 
 export default function StoryOverviewPage() {
   const { storyOverview, updateStoryOverview } = useStory();
   const { toast } = useToast();
+  useAutoTheme(); // Auto-apply theme based on genre
   const [isSaving, setIsSaving] = useState(false);
   
   const [narrativeIntent, setNarrativeIntent] = useState('');
@@ -137,6 +140,15 @@ export default function StoryOverviewPage() {
               </Badge>
             ))}
           </div>
+        </div>
+
+        {/* Story Statistics Charts */}
+        <div className="space-y-3 pt-6 border-t border-border">
+          <div className="flex items-center gap-2 mb-4">
+            <BarChart3 className="h-5 w-5 text-primary" />
+            <Label className="text-base font-medium">Story Statistics</Label>
+          </div>
+          <StoryStatsCharts />
         </div>
       </div>
     </div>
