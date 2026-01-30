@@ -2,11 +2,14 @@ import { useState } from 'react';
 import { AuthForm } from '@/components/auth/AuthForm';
 import { OnboardingForm } from '@/components/onboarding/OnboardingForm';
 import { useAuth } from '@/context/AuthContext';
+import { useLanguage } from '@/context/LanguageContext';
+import { LanguageSelector } from '@/components/LanguageSelector';
 import { Sparkles, BookOpen, Wand2, Palette, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 export default function Welcome() {
   const { user, isLoading } = useAuth();
+  const { t } = useLanguage();
   const [authMode, setAuthMode] = useState<'signin' | 'signup'>('signup');
   const [showAuth, setShowAuth] = useState(false);
 
@@ -59,6 +62,11 @@ export default function Welcome() {
   // Show landing/auth page for unauthenticated users
   return (
     <div className="min-h-screen bg-background">
+      {/* Language Selector - Top Left */}
+      <div className="fixed top-4 left-4 z-50">
+        <LanguageSelector variant="compact" />
+      </div>
+
       {/* Ambient background effects */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-primary/10 rounded-full blur-3xl animate-float" />
@@ -80,16 +88,14 @@ export default function Welcome() {
 
             {/* Headline */}
             <h1 className="font-display text-5xl lg:text-6xl font-bold mb-6 leading-tight animate-fade-in" style={{ animationDelay: '0.1s' }}>
-              Where Stories
+              {t('welcome.headline1')}
               <br />
-              <span className="gradient-text">Come Alive</span>
+              <span className="gradient-text">{t('welcome.headline2')}</span>
             </h1>
 
             {/* Description */}
             <p className="text-xl text-muted-foreground mb-8 leading-relaxed animate-fade-in" style={{ animationDelay: '0.2s' }}>
-              An AI-powered narrative canvas that understands your story, 
-              generates rich worlds, and adapts its entire interface to match 
-              your vision.
+              {t('welcome.description')}
             </p>
 
             {/* Features */}
@@ -99,9 +105,9 @@ export default function Welcome() {
                   <BookOpen className="h-5 w-5 text-primary" />
                 </div>
                 <div>
-                  <h3 className="font-semibold mb-1">Story-First Intelligence</h3>
+                  <h3 className="font-semibold mb-1">{t('welcome.feature1.title')}</h3>
                   <p className="text-sm text-muted-foreground">
-                    AI understands your narrative and generates characters, lore, and plot that feel authentic.
+                    {t('welcome.feature1.desc')}
                   </p>
                 </div>
               </div>
@@ -111,9 +117,9 @@ export default function Welcome() {
                   <Palette className="h-5 w-5 text-primary" />
                 </div>
                 <div>
-                  <h3 className="font-semibold mb-1">Living Theme System</h3>
+                  <h3 className="font-semibold mb-1">{t('welcome.feature2.title')}</h3>
                   <p className="text-sm text-muted-foreground">
-                    The interface transforms to match your story's genre and mood.
+                    {t('welcome.feature2.desc')}
                   </p>
                 </div>
               </div>
@@ -123,9 +129,9 @@ export default function Welcome() {
                   <Wand2 className="h-5 w-5 text-primary" />
                 </div>
                 <div>
-                  <h3 className="font-semibold mb-1">Guided Creation</h3>
+                  <h3 className="font-semibold mb-1">{t('welcome.feature3.title')}</h3>
                   <p className="text-sm text-muted-foreground">
-                    From concept to manuscript, with intelligent assistance at every step.
+                    {t('welcome.feature3.desc')}
                   </p>
                 </div>
               </div>
@@ -139,7 +145,7 @@ export default function Welcome() {
                 className="w-full"
                 onClick={() => setShowAuth(true)}
               >
-                Start Writing
+                {t('welcome.startWriting')}
                 <ArrowRight className="h-5 w-5" />
               </Button>
             </div>
@@ -151,12 +157,12 @@ export default function Welcome() {
           <div className="w-full max-w-sm animate-scale-in">
             <div className="text-center mb-8">
               <h2 className="font-display text-2xl font-bold mb-2">
-                {authMode === 'signup' ? 'Create Your Account' : 'Welcome Back'}
+                {authMode === 'signup' ? t('welcome.createAccount') : t('welcome.signIn')}
               </h2>
               <p className="text-muted-foreground">
                 {authMode === 'signup' 
-                  ? 'Begin your storytelling journey' 
-                  : 'Continue your story'}
+                  ? t('welcome.beginJourney')
+                  : t('welcome.continueStory')}
               </p>
             </div>
             <AuthForm mode={authMode} onToggleMode={() => setAuthMode(authMode === 'signup' ? 'signin' : 'signup')} />
