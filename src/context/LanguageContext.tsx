@@ -124,6 +124,47 @@ export type TranslationKey =
   | 'theme.horror'
   | 'theme.mystery'
   | 'theme.adventure'
+  // Sub-theme names
+  | 'subtheme.classicAmber'
+  | 'subtheme.midnightBlue'
+  | 'subtheme.forestGreen'
+  | 'subtheme.royalGlitter'
+  | 'subtheme.snowyPlains'
+  | 'subtheme.dragonFire'
+  | 'subtheme.enchantedForest'
+  | 'subtheme.potionWorkshop'
+  | 'subtheme.celestial'
+  | 'subtheme.cyberpunk'
+  | 'subtheme.deepSpace'
+  | 'subtheme.matrix'
+  | 'subtheme.neonCity'
+  | 'subtheme.alienWorld'
+  | 'subtheme.quantum'
+  | 'subtheme.grimoire'
+  | 'subtheme.ghostly'
+  | 'subtheme.darkForest'
+  | 'subtheme.vampire'
+  | 'subtheme.cosmicHorror'
+  | 'subtheme.asylum'
+  | 'subtheme.noirDetective'
+  | 'subtheme.conspiracy'
+  | 'subtheme.heist'
+  | 'subtheme.spy'
+  | 'subtheme.roseGarden'
+  | 'subtheme.starlitNight'
+  | 'subtheme.beachSunset'
+  | 'subtheme.cherryBlossom'
+  | 'subtheme.candlelit'
+  | 'subtheme.victorianFog'
+  | 'subtheme.midnightLibrary'
+  | 'subtheme.crimeScene'
+  | 'subtheme.ancientRuins'
+  | 'subtheme.jungleExpedition'
+  | 'subtheme.desertSands'
+  | 'subtheme.oceanVoyage'
+  | 'subtheme.mountainPeak'
+  | 'subtheme.treasureCave'
+  | 'settings.selectStyle'
   // Story Map
   | 'map.title'
   | 'map.addNode'
@@ -267,6 +308,47 @@ const translations: Translations = {
     'theme.horror': 'Horror',
     'theme.mystery': 'Mystery',
     'theme.adventure': 'Adventure',
+    // Sub-theme names
+    'subtheme.classicAmber': 'Classic Amber',
+    'subtheme.midnightBlue': 'Midnight Blue',
+    'subtheme.forestGreen': 'Forest Green',
+    'subtheme.royalGlitter': 'Royal Glitter',
+    'subtheme.snowyPlains': 'Snowy Plains',
+    'subtheme.dragonFire': 'Dragon Fire',
+    'subtheme.enchantedForest': 'Enchanted Forest',
+    'subtheme.potionWorkshop': 'Potion Workshop',
+    'subtheme.celestial': 'Celestial',
+    'subtheme.cyberpunk': 'Cyberpunk',
+    'subtheme.deepSpace': 'Deep Space',
+    'subtheme.matrix': 'Matrix',
+    'subtheme.neonCity': 'Neon City',
+    'subtheme.alienWorld': 'Alien World',
+    'subtheme.quantum': 'Quantum',
+    'subtheme.grimoire': 'Grimoire',
+    'subtheme.ghostly': 'Ghostly',
+    'subtheme.darkForest': 'Dark Forest',
+    'subtheme.vampire': 'Vampire',
+    'subtheme.cosmicHorror': 'Cosmic Horror',
+    'subtheme.asylum': 'Asylum',
+    'subtheme.noirDetective': 'Noir Detective',
+    'subtheme.conspiracy': 'Conspiracy',
+    'subtheme.heist': 'Heist',
+    'subtheme.spy': 'Spy',
+    'subtheme.roseGarden': 'Rose Garden',
+    'subtheme.starlitNight': 'Starlit Night',
+    'subtheme.beachSunset': 'Beach Sunset',
+    'subtheme.cherryBlossom': 'Cherry Blossom',
+    'subtheme.candlelit': 'Candlelit',
+    'subtheme.victorianFog': 'Victorian Fog',
+    'subtheme.midnightLibrary': 'Midnight Library',
+    'subtheme.crimeScene': 'Crime Scene',
+    'subtheme.ancientRuins': 'Ancient Ruins',
+    'subtheme.jungleExpedition': 'Jungle Expedition',
+    'subtheme.desertSands': 'Desert Sands',
+    'subtheme.oceanVoyage': 'Ocean Voyage',
+    'subtheme.mountainPeak': 'Mountain Peak',
+    'subtheme.treasureCave': 'Treasure Cave',
+    'settings.selectStyle': 'Select a style',
     // Story Map
     'map.title': 'Story Map',
     'map.addNode': 'Add Node',
@@ -382,6 +464,47 @@ const translations: Translations = {
     'theme.horror': 'Korku',
     'theme.mystery': 'Gizem',
     'theme.adventure': 'Macera',
+    // Turkish sub-theme translations
+    'subtheme.classicAmber': 'Klasik Amber',
+    'subtheme.midnightBlue': 'Gece Mavisi',
+    'subtheme.forestGreen': 'Orman Yeşili',
+    'subtheme.royalGlitter': 'Kraliyet Işıltısı',
+    'subtheme.snowyPlains': 'Karlı Ovalar',
+    'subtheme.dragonFire': 'Ejderha Ateşi',
+    'subtheme.enchantedForest': 'Büyülü Orman',
+    'subtheme.potionWorkshop': 'İksir Atölyesi',
+    'subtheme.celestial': 'Göksel',
+    'subtheme.cyberpunk': 'Siberpunk',
+    'subtheme.deepSpace': 'Derin Uzay',
+    'subtheme.matrix': 'Matris',
+    'subtheme.neonCity': 'Neon Şehir',
+    'subtheme.alienWorld': 'Uzaylı Dünyası',
+    'subtheme.quantum': 'Kuantum',
+    'subtheme.grimoire': 'Büyü Kitabı',
+    'subtheme.ghostly': 'Hayaletimsi',
+    'subtheme.darkForest': 'Karanlık Orman',
+    'subtheme.vampire': 'Vampir',
+    'subtheme.cosmicHorror': 'Kozmik Korku',
+    'subtheme.asylum': 'Akıl Hastanesi',
+    'subtheme.noirDetective': 'Noir Dedektif',
+    'subtheme.conspiracy': 'Komplo',
+    'subtheme.heist': 'Soygun',
+    'subtheme.spy': 'Casus',
+    'subtheme.roseGarden': 'Gül Bahçesi',
+    'subtheme.starlitNight': 'Yıldızlı Gece',
+    'subtheme.beachSunset': 'Sahil Günbatımı',
+    'subtheme.cherryBlossom': 'Kiraz Çiçeği',
+    'subtheme.candlelit': 'Mum Işığı',
+    'subtheme.victorianFog': 'Viktorya Sisi',
+    'subtheme.midnightLibrary': 'Gece Kütüphanesi',
+    'subtheme.crimeScene': 'Suç Mahalli',
+    'subtheme.ancientRuins': 'Antik Kalıntılar',
+    'subtheme.jungleExpedition': 'Orman Keşfi',
+    'subtheme.desertSands': 'Çöl Kumları',
+    'subtheme.oceanVoyage': 'Okyanus Yolculuğu',
+    'subtheme.mountainPeak': 'Dağ Zirvesi',
+    'subtheme.treasureCave': 'Hazine Mağarası',
+    'settings.selectStyle': 'Bir stil seçin',
     'map.title': 'Hikaye Haritası',
     'map.addNode': 'Düğüm Ekle',
     'map.connect': 'Bağla',

@@ -30,6 +30,7 @@ export interface NarrativeRules {
 
 export interface ThemeProfile {
   themeId?: string;
+  subThemeId?: string;
   colorPalette?: {
     primary: string;
     secondary?: string;
