@@ -83,9 +83,9 @@ export function AppSidebar({ projectId }: AppSidebarProps) {
           : "border-b border-sidebar-border"
       )}>
         {!collapsed ? (
-          <ThemedLogo themeId={currentTheme} size="md" />
+          <ThemedLogo size="md" />
         ) : (
-          <ThemedLogo themeId={currentTheme} size="sm" showText={false} />
+          <ThemedLogo size="sm" showText={false} />
         )}
       </div>
 

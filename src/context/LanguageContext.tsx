@@ -124,6 +124,10 @@ export type TranslationKey =
   | 'theme.horror'
   | 'theme.mystery'
   | 'theme.adventure'
+  | 'theme.dystopia'
+  | 'theme.utopia'
+  | 'theme.steampunk'
+  | 'theme.historical'
   // Sub-theme names
   | 'subtheme.classicAmber'
   | 'subtheme.midnightBlue'
@@ -137,7 +141,7 @@ export type TranslationKey =
   | 'subtheme.cyberpunk'
   | 'subtheme.deepSpace'
   | 'subtheme.matrix'
-  | 'subtheme.neonCity'
+  | 'subtheme.hologram'
   | 'subtheme.alienWorld'
   | 'subtheme.quantum'
   | 'subtheme.grimoire'
@@ -164,6 +168,25 @@ export type TranslationKey =
   | 'subtheme.oceanVoyage'
   | 'subtheme.mountainPeak'
   | 'subtheme.treasureCave'
+  | 'subtheme.fallout'
+  | 'subtheme.rustBelt'
+  | 'subtheme.toxicSwamp'
+  | 'subtheme.undergroundBunker'
+  | 'subtheme.bigBrother'
+  | 'subtheme.solarpunk'
+  | 'subtheme.crystalCity'
+  | 'subtheme.cloudKingdom'
+  | 'subtheme.underwaterCity'
+  | 'subtheme.harmonyGarden'
+  | 'subtheme.clockworkCity'
+  | 'subtheme.airshipFleet'
+  | 'subtheme.madScientist'
+  | 'subtheme.victorianStreet'
+  | 'subtheme.medieval'
+  | 'subtheme.ancientRome'
+  | 'subtheme.vikingNorse'
+  | 'subtheme.ancientEgypt'
+  | 'subtheme.feudalJapan'
   | 'settings.selectStyle'
   // Story Map
   | 'map.title'
@@ -321,7 +344,7 @@ const translations: Translations = {
     'subtheme.cyberpunk': 'Cyberpunk',
     'subtheme.deepSpace': 'Deep Space',
     'subtheme.matrix': 'Matrix',
-    'subtheme.neonCity': 'Neon City',
+    'subtheme.hologram': 'Hologram',
     'subtheme.alienWorld': 'Alien World',
     'subtheme.quantum': 'Quantum',
     'subtheme.grimoire': 'Grimoire',
@@ -348,6 +371,30 @@ const translations: Translations = {
     'subtheme.oceanVoyage': 'Ocean Voyage',
     'subtheme.mountainPeak': 'Mountain Peak',
     'subtheme.treasureCave': 'Treasure Cave',
+    // New themes
+    'theme.dystopia': 'Dystopia',
+    'theme.utopia': 'Utopia',
+    'theme.steampunk': 'Steampunk',
+    'theme.historical': 'Historical',
+    'subtheme.fallout': 'Nuclear Fallout',
+    'subtheme.rustBelt': 'Rust Belt',
+    'subtheme.toxicSwamp': 'Toxic Swamp',
+    'subtheme.undergroundBunker': 'Underground Bunker',
+    'subtheme.bigBrother': 'Big Brother',
+    'subtheme.solarpunk': 'Solarpunk',
+    'subtheme.crystalCity': 'Crystal City',
+    'subtheme.cloudKingdom': 'Cloud Kingdom',
+    'subtheme.underwaterCity': 'Underwater City',
+    'subtheme.harmonyGarden': 'Harmony Garden',
+    'subtheme.clockworkCity': 'Clockwork City',
+    'subtheme.airshipFleet': 'Airship Fleet',
+    'subtheme.madScientist': 'Mad Scientist',
+    'subtheme.victorianStreet': 'Victorian Street',
+    'subtheme.medieval': 'Medieval',
+    'subtheme.ancientRome': 'Ancient Rome',
+    'subtheme.vikingNorse': 'Viking Norse',
+    'subtheme.ancientEgypt': 'Ancient Egypt',
+    'subtheme.feudalJapan': 'Feudal Japan',
     'settings.selectStyle': 'Select a style',
     // Story Map
     'map.title': 'Story Map',
@@ -477,7 +524,7 @@ const translations: Translations = {
     'subtheme.cyberpunk': 'Siberpunk',
     'subtheme.deepSpace': 'Derin Uzay',
     'subtheme.matrix': 'Matris',
-    'subtheme.neonCity': 'Neon Şehir',
+    'subtheme.hologram': 'Hologram',
     'subtheme.alienWorld': 'Uzaylı Dünyası',
     'subtheme.quantum': 'Kuantum',
     'subtheme.grimoire': 'Büyü Kitabı',
@@ -504,6 +551,29 @@ const translations: Translations = {
     'subtheme.oceanVoyage': 'Okyanus Yolculuğu',
     'subtheme.mountainPeak': 'Dağ Zirvesi',
     'subtheme.treasureCave': 'Hazine Mağarası',
+    'theme.dystopia': 'Distopya',
+    'theme.utopia': 'Ütopya',
+    'theme.steampunk': 'Steampunk',
+    'theme.historical': 'Tarihi',
+    'subtheme.fallout': 'Nükleer Serpinti',
+    'subtheme.rustBelt': 'Pas Kuşağı',
+    'subtheme.toxicSwamp': 'Zehirli Bataklık',
+    'subtheme.undergroundBunker': 'Yeraltı Sığınağı',
+    'subtheme.bigBrother': 'Büyük Birader',
+    'subtheme.solarpunk': 'Solarpunk',
+    'subtheme.crystalCity': 'Kristal Şehir',
+    'subtheme.cloudKingdom': 'Bulut Krallığı',
+    'subtheme.underwaterCity': 'Sualtı Şehri',
+    'subtheme.harmonyGarden': 'Uyum Bahçesi',
+    'subtheme.clockworkCity': 'Çark Şehri',
+    'subtheme.airshipFleet': 'Hava Gemisi Filosu',
+    'subtheme.madScientist': 'Deli Bilim İnsanı',
+    'subtheme.victorianStreet': 'Viktorya Sokağı',
+    'subtheme.medieval': 'Ortaçağ',
+    'subtheme.ancientRome': 'Antik Roma',
+    'subtheme.vikingNorse': 'Viking İskandinav',
+    'subtheme.ancientEgypt': 'Antik Mısır',
+    'subtheme.feudalJapan': 'Feodal Japonya',
     'settings.selectStyle': 'Bir stil seçin',
     'map.title': 'Hikaye Haritası',
     'map.addNode': 'Düğüm Ekle',
