@@ -1,15 +1,15 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { useStory } from '@/context/StoryContext';
 import { useSettings } from '@/context/SettingsContext';
+import { useLanguage } from '@/context/LanguageContext';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { Slider } from '@/components/ui/slider';
 import { 
   Plus, BookOpen, User, Zap, MapPin, Trash2, Link2, X, Move, Save, Loader2,
-  ZoomIn, ZoomOut, Maximize2, Sparkles, RefreshCw, Eye
+  ZoomIn, ZoomOut, Maximize2, Sparkles, RefreshCw, Eye, Wand2
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
@@ -27,6 +27,7 @@ type NodeType = keyof typeof NODE_CONFIG;
 export default function StoryMapPage() {
   const { currentProject, storyMapNodes, storyMapEdges, addStoryMapNode, updateStoryMapNode, deleteStoryMapNode, addStoryMapEdge, deleteStoryMapEdge, storyOverview } = useStory();
   const { settings } = useSettings();
+  const { t } = useLanguage();
   const { toast } = useToast();
   const canvasRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -44,6 +45,7 @@ export default function StoryMapPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [zoom, setZoom] = useState(1);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [isAutoWiring, setIsAutoWiring] = useState(false);
   const [analysisResult, setAnalysisResult] = useState<any>(null);
 
   const selectedNodeData = storyMapNodes.find(n => n.id === selectedNode);
@@ -216,6 +218,79 @@ ${storyOverview?.narrative_intent ? `Intent: ${storyOverview.narrative_intent}` 
     }
   };
 
+  // AI Auto-Wire: Actually creates the connections suggested by AI
+  const autoWireWithAI = async () => {
+    if (!currentProject || storyMapNodes.length < 2) {
+      toast({ title: 'Need at least 2 nodes to auto-wire', variant: 'destructive' });
+      return;
+    }
+    setIsAutoWiring(true);
+
+    try {
+      const context = `
+Story: ${currentProject.title}
+Concept: ${currentProject.concept}
+Genre: ${currentProject.genre_influences?.join(', ') || 'General'}
+${storyOverview?.narrative_intent ? `Intent: ${storyOverview.narrative_intent}` : ''}
+      `.trim();
+
+      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-story`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+        },
+        body: JSON.stringify({
+          action: 'auto_wire_story_map',
+          context,
+          storyMapData: {
+            nodes: storyMapNodes.map(n => ({ id: n.id, title: n.title, type: n.node_type, description: n.description })),
+            edges: storyMapEdges.map(e => ({ source: e.source_node_id, target: e.target_node_id })),
+          },
+          settings: { temperature: 0.7, model: settings.aiModel },
+        }),
+      });
+
+      if (!response.ok) throw new Error('Auto-wire failed');
+      const data = await response.json();
+      
+      // Create the suggested connections
+      const connections = data.result?.connections || [];
+      let created = 0;
+      
+      for (const conn of connections) {
+        // Find nodes by title or id
+        const sourceNode = storyMapNodes.find(n => n.id === conn.sourceId || n.title === conn.sourceTitle);
+        const targetNode = storyMapNodes.find(n => n.id === conn.targetId || n.title === conn.targetTitle);
+        
+        if (sourceNode && targetNode && sourceNode.id !== targetNode.id) {
+          // Check if connection already exists
+          const exists = storyMapEdges.some(
+            e => (e.source_node_id === sourceNode.id && e.target_node_id === targetNode.id) ||
+                 (e.source_node_id === targetNode.id && e.target_node_id === sourceNode.id)
+          );
+          
+          if (!exists) {
+            await addStoryMapEdge({
+              source_node_id: sourceNode.id,
+              target_node_id: targetNode.id,
+              edge_type: conn.type || 'sequence',
+              label: conn.label,
+            });
+            created++;
+          }
+        }
+      }
+      
+      toast({ title: `Created ${created} new connections!` });
+    } catch (error) {
+      console.error('Auto-wire error:', error);
+      toast({ title: 'Auto-wire failed', variant: 'destructive' });
+    } finally {
+      setIsAutoWiring(false);
+    }
+  };
+
   return (
     <div className="h-[calc(100vh-4rem)] flex animate-fade-in" ref={containerRef}>
       {/* Canvas */}
@@ -350,7 +425,7 @@ ${storyOverview?.narrative_intent ? `Intent: ${storyOverview.narrative_intent}` 
         {storyMapNodes.length === 0 && (
           <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
             <Move className="h-16 w-16 text-muted-foreground/20 mb-4" />
-            <p className="text-muted-foreground text-lg">Add nodes from the sidebar</p>
+            <p className="text-muted-foreground text-lg">{t('map.addNode')}</p>
             <p className="text-muted-foreground text-sm">Drag to move • Double-click to edit • Click edges to delete</p>
           </div>
         )}
@@ -372,7 +447,7 @@ ${storyOverview?.narrative_intent ? `Intent: ${storyOverview.narrative_intent}` 
             <ZoomOut className="h-4 w-4" />
           </Button>
           <div className="w-px h-6 bg-border" />
-          <Button size="icon" variant="ghost" onClick={resetView} className="h-8 w-8" title="Reset view">
+          <Button size="icon" variant="ghost" onClick={resetView} className="h-8 w-8" title={t('map.resetView')}>
             <Maximize2 className="h-4 w-4" />
           </Button>
         </div>
@@ -383,7 +458,7 @@ ${storyOverview?.narrative_intent ? `Intent: ${storyOverview.narrative_intent}` 
         {/* Add Nodes */}
         <div className="p-4 border-b border-border">
           <h3 className="font-semibold mb-3 flex items-center gap-2">
-            <Plus className="h-4 w-4 text-primary" /> Add Node
+            <Plus className="h-4 w-4 text-primary" /> {t('map.addNode')}
           </h3>
           <div className="grid grid-cols-2 gap-2">
             {(Object.entries(NODE_CONFIG) as [NodeType, typeof NODE_CONFIG.chapter][]).map(([type, config]) => {
@@ -397,15 +472,15 @@ ${storyOverview?.narrative_intent ? `Intent: ${storyOverview.narrative_intent}` 
                   className={cn("gap-1.5 capitalize", config.color, config.textColor)}
                 >
                   <Icon className="h-3.5 w-3.5" />
-                  {type}
+                  {t(`map.${type}` as any) || type}
                 </Button>
               );
             })}
           </div>
         </div>
 
-        {/* AI Analysis */}
-        <div className="p-4 border-b border-border">
+        {/* AI Actions */}
+        <div className="p-4 border-b border-border space-y-2">
           <Button 
             onClick={analyzeWithAI} 
             disabled={isAnalyzing || storyMapNodes.length === 0}
@@ -415,7 +490,20 @@ ${storyOverview?.narrative_intent ? `Intent: ${storyOverview.narrative_intent}` 
             {isAnalyzing ? (
               <><Loader2 className="h-4 w-4 animate-spin" /> Analyzing...</>
             ) : (
-              <><Sparkles className="h-4 w-4" /> AI Analyze Map</>
+              <><Sparkles className="h-4 w-4" /> {t('map.aiAnalyze')}</>
+            )}
+          </Button>
+          
+          <Button 
+            onClick={autoWireWithAI} 
+            disabled={isAutoWiring || storyMapNodes.length < 2}
+            className="w-full gap-2"
+            variant="default"
+          >
+            {isAutoWiring ? (
+              <><Loader2 className="h-4 w-4 animate-spin" /> Auto-wiring...</>
+            ) : (
+              <><Wand2 className="h-4 w-4" /> {t('map.aiAutoWire')}</>
             )}
           </Button>
         </div>
@@ -424,7 +512,7 @@ ${storyOverview?.narrative_intent ? `Intent: ${storyOverview.narrative_intent}` 
         {analysisResult && (
           <div className="p-4 border-b border-border space-y-3 max-h-64 overflow-y-auto">
             <h4 className="font-semibold text-sm flex items-center gap-2">
-              <Eye className="h-4 w-4 text-primary" /> AI Insights
+              <Eye className="h-4 w-4 text-primary" /> {t('map.insights')}
             </h4>
             {analysisResult.analysis && (
               <p className="text-xs text-muted-foreground">{analysisResult.analysis}</p>
@@ -455,7 +543,7 @@ ${storyOverview?.narrative_intent ? `Intent: ${storyOverview.narrative_intent}` 
         {/* Selected Node Details */}
         {selectedNodeData && !editingNode && (
           <div className="p-4 border-b border-border space-y-3 flex-1 overflow-y-auto">
-            <h3 className="font-semibold">Selected Node</h3>
+            <h3 className="font-semibold">{t('map.selectedNode')}</h3>
             <Card className={cn("p-3", NODE_CONFIG[selectedNodeData.node_type as NodeType]?.color)}>
               <p className="font-medium">{selectedNodeData.title}</p>
               {selectedNodeData.description && (
@@ -464,7 +552,7 @@ ${storyOverview?.narrative_intent ? `Intent: ${storyOverview.narrative_intent}` 
             </Card>
             <div className="flex gap-2">
               <Button size="sm" variant="outline" onClick={() => startEditing(selectedNodeData)} className="flex-1">
-                Edit
+                {t('common.edit')}
               </Button>
               <Button 
                 size="sm" 
@@ -473,11 +561,11 @@ ${storyOverview?.narrative_intent ? `Intent: ${storyOverview.narrative_intent}` 
                 className="flex-1 gap-1"
               >
                 <Link2 className="h-3 w-3" />
-                {connectingFrom === selectedNodeData.id ? 'Cancel' : 'Connect'}
+                {connectingFrom === selectedNodeData.id ? t('common.cancel') : t('map.connect')}
               </Button>
             </div>
             <Button size="sm" variant="destructive" onClick={() => handleDeleteNode(selectedNodeData.id)} className="w-full gap-1">
-              <Trash2 className="h-3 w-3" /> Delete Node
+              <Trash2 className="h-3 w-3" /> {t('common.delete')}
             </Button>
           </div>
         )}
@@ -485,7 +573,7 @@ ${storyOverview?.narrative_intent ? `Intent: ${storyOverview.narrative_intent}` 
         {/* Editing Mode */}
         {editingNode && (
           <div className="p-4 border-b border-border space-y-3 flex-1 overflow-y-auto">
-            <h3 className="font-semibold">Edit Node</h3>
+            <h3 className="font-semibold">{t('map.editNode')}</h3>
             <Input
               value={editTitle}
               onChange={(e) => setEditTitle(e.target.value)}
@@ -501,7 +589,7 @@ ${storyOverview?.narrative_intent ? `Intent: ${storyOverview.narrative_intent}` 
             <div className="flex gap-2">
               <Button size="sm" onClick={saveEditing} disabled={isSaving} className="flex-1 gap-1">
                 {isSaving ? <Loader2 className="h-3 w-3 animate-spin" /> : <Save className="h-3 w-3" />}
-                Save
+                {t('common.save')}
               </Button>
               <Button size="sm" variant="ghost" onClick={() => setEditingNode(null)}>
                 <X className="h-3 w-3" />
@@ -512,14 +600,14 @@ ${storyOverview?.narrative_intent ? `Intent: ${storyOverview.narrative_intent}` 
 
         {/* Stats */}
         <div className="p-4 mt-auto border-t border-border">
-          <h3 className="font-semibold mb-3">Stats</h3>
+          <h3 className="font-semibold mb-3">{t('map.stats')}</h3>
           <div className="grid grid-cols-2 gap-2 text-sm">
             <div className="p-2 bg-secondary/30 rounded">
-              <p className="text-muted-foreground text-xs">Nodes</p>
+              <p className="text-muted-foreground text-xs">{t('map.nodes')}</p>
               <p className="font-bold">{storyMapNodes.length}</p>
             </div>
             <div className="p-2 bg-secondary/30 rounded">
-              <p className="text-muted-foreground text-xs">Connections</p>
+              <p className="text-muted-foreground text-xs">{t('map.connections')}</p>
               <p className="font-bold">{storyMapEdges.length}</p>
             </div>
           </div>

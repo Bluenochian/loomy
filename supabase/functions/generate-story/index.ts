@@ -7,7 +7,7 @@ const corsHeaders = {
 
 interface GenerateRequest {
   type?: 'full_generation' | 'continue_chapter' | 'expand_character' | 'expand_lore' | 'recompute_theme';
-  action?: 'generate_character' | 'analyze_story_map' | 'generate_chapter_ideas';
+  action?: 'generate_character' | 'analyze_story_map' | 'generate_chapter_ideas' | 'auto_wire_story_map';
   projectData?: {
     concept: string;
     language: string;
@@ -105,6 +105,40 @@ Analyze this story map and return JSON with:
 }`;
           break;
 
+        case 'auto_wire_story_map':
+          systemPrompt = `You are a narrative structure architect. Your job is to analyze story elements and CREATE logical connections between them based on narrative flow, character relationships, and plot structure. Return ONLY valid JSON with connection instructions.`;
+          userPrompt = `Story context:
+${context}
+
+Available nodes to connect:
+${JSON.stringify(storyMapData?.nodes || [], null, 2)}
+
+Existing connections (DO NOT recreate these):
+${JSON.stringify(storyMapData?.edges || [], null, 2)}
+
+Create NEW connections between the nodes that would improve narrative flow. Consider:
+- Chapter sequence (Chapter 1 leads to Chapter 2, etc.)
+- Character appearances in chapters
+- Events that trigger other events
+- Locations where characters appear
+
+Return JSON with the connections to CREATE (use exact node IDs from the list above):
+{
+  "connections": [
+    { 
+      "sourceId": "exact-node-id-from-list",
+      "targetId": "exact-node-id-from-list", 
+      "type": "sequence|relationship|trigger|location",
+      "label": "optional short label",
+      "reason": "brief explanation"
+    }
+  ],
+  "reasoning": "Brief explanation of the overall connection strategy"
+}
+
+IMPORTANT: Use the exact node IDs provided. Create at least 3-5 meaningful connections if nodes allow.`;
+          break;
+
         case 'generate_chapter_ideas':
           systemPrompt = `You are a creative writing assistant that generates engaging chapter content ideas. You understand narrative structure and pacing. Return ONLY valid JSON.`;
           userPrompt = `Story context:
@@ -188,6 +222,8 @@ Generate opening ideas and key beats for this chapter. Return JSON:
             motivations: ['To be discovered'],
             traits: ['Enigmatic', 'Determined'],
           };
+        } else if (action === 'auto_wire_story_map') {
+          result = { connections: [], reasoning: 'Could not parse AI response' };
         } else {
           result = { error: 'Failed to parse AI response', raw: content.slice(0, 500) };
         }
