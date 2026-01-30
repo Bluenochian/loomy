@@ -214,10 +214,8 @@ export function ThemedLogo({ size = 'md', showText = true, className }: ThemedLo
           )}
           style={{
             fontFamily,
-            background: `linear-gradient(135deg, ${primaryColor}, ${accentColor})`,
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-            backgroundClip: 'text',
+            color: primaryColor,
+            textShadow: `0 0 20px ${glowColor}, 0 0 40px ${glowColor}`,
           }}
         >
           LOOMY
