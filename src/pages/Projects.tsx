@@ -2,15 +2,21 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
+import { useSettings } from '@/context/SettingsContext';
 import { Button } from '@/components/ui/button';
+import { ThemeEffects } from '@/components/themes/ThemeEffects';
+import { ThemedLogo } from '@/components/themes/ThemedLogo';
 import { Sparkles, Plus, BookOpen, Clock, Loader2 } from 'lucide-react';
 import type { Project } from '@/types/story';
 
 export default function Projects() {
   const { user, isLoading: authLoading } = useAuth();
+  const { settings } = useSettings();
   const navigate = useNavigate();
   const [projects, setProjects] = useState<Project[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+
+  const themeId = settings.selectedSubTheme || 'default';
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -53,6 +59,9 @@ export default function Projects() {
 
   return (
     <div className="min-h-screen bg-background">
+      {/* Theme Effects Background */}
+      <ThemeEffects themeId={themeId} />
+      
       {/* Background */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-0 right-1/4 w-96 h-96 bg-primary/5 rounded-full blur-3xl" />
@@ -63,8 +72,7 @@ export default function Projects() {
         <div className="flex items-center justify-between mb-12">
           <div>
             <div className="flex items-center gap-2 mb-2">
-              <Sparkles className="h-6 w-6 text-primary" />
-              <span className="font-display text-xl font-bold gradient-text">STORYLOOM</span>
+              <ThemedLogo size="md" />
             </div>
             <h1 className="font-display text-3xl font-bold">Your Stories</h1>
           </div>

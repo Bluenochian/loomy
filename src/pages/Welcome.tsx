@@ -3,15 +3,21 @@ import { AuthForm } from '@/components/auth/AuthForm';
 import { OnboardingForm } from '@/components/onboarding/OnboardingForm';
 import { useAuth } from '@/context/AuthContext';
 import { useLanguage } from '@/context/LanguageContext';
+import { useSettings } from '@/context/SettingsContext';
 import { LanguageSelector } from '@/components/LanguageSelector';
+import { ThemeEffects } from '@/components/themes/ThemeEffects';
+import { ThemedLogo } from '@/components/themes/ThemedLogo';
 import { Sparkles, BookOpen, Wand2, Palette, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 export default function Welcome() {
   const { user, isLoading } = useAuth();
   const { t } = useLanguage();
+  const { settings } = useSettings();
   const [authMode, setAuthMode] = useState<'signin' | 'signup'>('signup');
   const [showAuth, setShowAuth] = useState(false);
+
+  const themeId = settings.selectedSubTheme || 'default';
 
   if (isLoading) {
     return (
@@ -62,6 +68,9 @@ export default function Welcome() {
   // Show landing/auth page for unauthenticated users
   return (
     <div className="min-h-screen bg-background">
+      {/* Theme Effects Background */}
+      <ThemeEffects themeId={themeId} />
+      
       {/* Language Selector - Top Left */}
       <div className="fixed top-4 left-4 z-50">
         <LanguageSelector variant="compact" />
@@ -78,12 +87,9 @@ export default function Welcome() {
         {/* Left side - Hero content */}
         <div className="flex-1 flex flex-col justify-center px-8 lg:px-16 py-12">
           <div className="max-w-xl">
-            {/* Logo */}
+            {/* Logo - Uses themed logo */}
             <div className="flex items-center gap-3 mb-8 animate-fade-in">
-              <div className="p-2 rounded-xl bg-primary/10 border border-primary/20">
-                <Sparkles className="h-8 w-8 text-primary" />
-              </div>
-              <span className="font-display text-3xl font-bold gradient-text">LOOMY</span>
+              <ThemedLogo size="lg" />
             </div>
 
             {/* Headline */}

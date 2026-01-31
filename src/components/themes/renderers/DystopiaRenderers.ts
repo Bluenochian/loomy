@@ -2,153 +2,164 @@
 import { BaseRenderer, RenderContext } from './BaseRenderer';
 
 // ═══════════════════════════════════════════════════════════════════════════
-// FALLOUT WASTELAND - Vault-Tec style with pip-boy green, radiation signs
+// FALLOUT WASTELAND - Vault-Tec Pip-Boy aesthetic with radiation and wasteland
 // ═══════════════════════════════════════════════════════════════════════════
 export class NuclearWastelandRenderer extends BaseRenderer {
   debris: Array<{ x: number; y: number; size: number; rotation: number; type: number }> = [];
-  radParticles: Array<{ x: number; y: number; speed: number; size: number }> = [];
-  scanlineOffset = 0;
-  warningFlash = 0;
+  ashParticles: Array<{ x: number; y: number; speed: number; size: number; sway: number }> = [];
+  vaultBoyGlow = 0;
+  geiger = { tick: 0, intensity: 0 };
 
   init(canvas: HTMLCanvasElement) {
     if (this.initialized) return;
     this.initialized = true;
 
-    // Debris/rubble scattered
-    for (let i = 0; i < 25; i++) {
+    // Scattered wasteland debris at bottom
+    for (let i = 0; i < 30; i++) {
       this.debris.push({
         x: Math.random() * canvas.width,
-        y: canvas.height - 20 - Math.random() * 100,
-        size: 5 + Math.random() * 15,
+        y: canvas.height - 30 - Math.random() * 120,
+        size: 8 + Math.random() * 20,
         rotation: Math.random() * Math.PI * 2,
-        type: Math.floor(Math.random() * 3)
+        type: Math.floor(Math.random() * 4)
       });
     }
 
-    // Radiation particles floating up
-    for (let i = 0; i < 40; i++) {
-      this.radParticles.push({
+    // Ash/dust particles floating
+    for (let i = 0; i < 60; i++) {
+      this.ashParticles.push({
         x: Math.random() * canvas.width,
         y: Math.random() * canvas.height,
-        speed: 0.3 + Math.random() * 0.8,
-        size: 1 + Math.random() * 3
+        speed: 0.2 + Math.random() * 0.6,
+        size: 1 + Math.random() * 3,
+        sway: Math.random() * Math.PI * 2
       });
     }
   }
 
   render(rc: RenderContext) {
-    const { ctx, canvas, time, primaryRgb } = rc;
+    const { ctx, canvas, time } = rc;
 
-    this.scanlineOffset = (this.scanlineOffset + 1) % 4;
-    this.warningFlash = Math.sin(time * 2);
+    // Pip-Boy amber/green color
+    const pipboyR = 80;
+    const pipboyG = 200;
+    const pipboyB = 120;
+    
+    this.vaultBoyGlow = 0.5 + Math.sin(time * 0.5) * 0.1;
+    this.geiger.tick++;
+    
+    // Random geiger crackle
+    if (Math.random() > 0.97) {
+      this.geiger.intensity = 0.8;
+    }
+    this.geiger.intensity *= 0.95;
 
-    // Pip-boy green tint overlay
-    const pipboyGlow = ctx.createRadialGradient(
+    // Wasteland gradient - sepia/brown tones
+    const wastelandGrad = ctx.createLinearGradient(0, 0, 0, canvas.height);
+    wastelandGrad.addColorStop(0, 'rgba(60, 40, 20, 0.15)');
+    wastelandGrad.addColorStop(0.5, 'rgba(80, 60, 30, 0.1)');
+    wastelandGrad.addColorStop(1, 'rgba(50, 35, 15, 0.2)');
+    ctx.fillStyle = wastelandGrad;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Pip-Boy screen overlay glow
+    const pipboyGrad = ctx.createRadialGradient(
       canvas.width / 2, canvas.height / 2, 0,
-      canvas.width / 2, canvas.height / 2, canvas.width * 0.7
+      canvas.width / 2, canvas.height / 2, canvas.width * 0.8
     );
-    pipboyGlow.addColorStop(0, `rgba(${primaryRgb[0]}, ${primaryRgb[1]}, 50, 0.06)`);
-    pipboyGlow.addColorStop(0.6, `rgba(${primaryRgb[0] * 0.8}, ${primaryRgb[1] * 0.6}, 30, 0.04)`);
-    pipboyGlow.addColorStop(1, 'transparent');
-    ctx.fillStyle = pipboyGlow;
+    pipboyGrad.addColorStop(0, `rgba(${pipboyR}, ${pipboyG}, ${pipboyB}, ${0.04 * this.vaultBoyGlow})`);
+    pipboyGrad.addColorStop(0.5, `rgba(${pipboyR}, ${pipboyG}, ${pipboyB}, ${0.02 * this.vaultBoyGlow})`);
+    pipboyGrad.addColorStop(1, 'transparent');
+    ctx.fillStyle = pipboyGrad;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Hazard stripes at corners
-    this.drawHazardStripes(ctx, 0, canvas.height - 40, 150, 40, primaryRgb);
-    this.drawHazardStripes(ctx, canvas.width - 150, canvas.height - 40, 150, 40, primaryRgb);
+    // Radiation warning symbol (top corners, subtle)
+    this.drawRadSymbol(ctx, 80, 80, 40, [pipboyR, pipboyG, pipboyB], 0.08 + this.geiger.intensity * 0.1);
+    this.drawRadSymbol(ctx, canvas.width - 80, 80, 40, [pipboyR, pipboyG, pipboyB], 0.08 + this.geiger.intensity * 0.1);
 
-    // Radiation warning symbol (center top, subtle)
-    this.drawRadSymbol(ctx, canvas.width / 2, canvas.height * 0.15, 60, primaryRgb, 0.08 + this.warningFlash * 0.03);
+    // Ground with cracked earth texture suggestion
+    const groundGrad = ctx.createLinearGradient(0, canvas.height - 150, 0, canvas.height);
+    groundGrad.addColorStop(0, 'transparent');
+    groundGrad.addColorStop(0.3, 'rgba(60, 45, 25, 0.15)');
+    groundGrad.addColorStop(1, 'rgba(40, 30, 15, 0.3)');
+    ctx.fillStyle = groundGrad;
+    ctx.fillRect(0, canvas.height - 150, canvas.width, 150);
 
-    // Dust/wasteland haze
-    const dustGrad = ctx.createLinearGradient(0, canvas.height, 0, canvas.height - 250);
-    dustGrad.addColorStop(0, `rgba(80, 70, 50, 0.18)`);
-    dustGrad.addColorStop(0.5, `rgba(60, 55, 40, 0.08)`);
-    dustGrad.addColorStop(1, 'transparent');
-    ctx.fillStyle = dustGrad;
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    // Ground debris
+    // Debris silhouettes
+    ctx.fillStyle = 'rgba(30, 25, 15, 0.4)';
     this.debris.forEach(d => {
       ctx.save();
       ctx.translate(d.x, d.y);
       ctx.rotate(d.rotation);
-      ctx.fillStyle = `rgba(60, 55, 45, 0.4)`;
       
       if (d.type === 0) {
-        // Rock
+        // Rusted car hull
         ctx.beginPath();
-        ctx.moveTo(-d.size / 2, d.size / 3);
-        ctx.lineTo(0, -d.size / 2);
-        ctx.lineTo(d.size / 2, d.size / 4);
-        ctx.lineTo(d.size / 3, d.size / 2);
-        ctx.lineTo(-d.size / 3, d.size / 2);
+        ctx.moveTo(-d.size, d.size * 0.3);
+        ctx.lineTo(-d.size * 0.8, -d.size * 0.2);
+        ctx.lineTo(d.size * 0.8, -d.size * 0.2);
+        ctx.lineTo(d.size, d.size * 0.3);
         ctx.closePath();
         ctx.fill();
       } else if (d.type === 1) {
-        // Metal scrap
-        ctx.fillRect(-d.size / 2, -d.size / 4, d.size, d.size / 2);
-      } else {
-        // Rubble pile
+        // Broken sign post
+        ctx.fillRect(-d.size * 0.1, -d.size, d.size * 0.2, d.size * 1.5);
+        ctx.fillRect(-d.size * 0.4, -d.size * 1.2, d.size * 0.8, d.size * 0.3);
+      } else if (d.type === 2) {
+        // Rock pile
         ctx.beginPath();
-        ctx.arc(0, 0, d.size / 2, 0, Math.PI * 2);
+        ctx.arc(0, 0, d.size * 0.5, 0, Math.PI * 2);
+        ctx.arc(-d.size * 0.3, d.size * 0.2, d.size * 0.3, 0, Math.PI * 2);
+        ctx.arc(d.size * 0.25, d.size * 0.15, d.size * 0.35, 0, Math.PI * 2);
+        ctx.fill();
+      } else {
+        // Barrel
+        ctx.beginPath();
+        ctx.ellipse(0, 0, d.size * 0.3, d.size * 0.5, 0, 0, Math.PI * 2);
         ctx.fill();
       }
       ctx.restore();
     });
 
-    // Floating radiation particles (glowing green)
-    this.radParticles.forEach(p => {
+    // Floating ash particles
+    this.ashParticles.forEach(p => {
+      p.sway += 0.02;
+      p.x += Math.sin(p.sway) * 0.4;
       p.y -= p.speed;
-      p.x += Math.sin(time * 2 + p.y * 0.02) * 0.5;
 
       if (p.y < -10) {
         p.y = canvas.height + 10;
         p.x = Math.random() * canvas.width;
       }
 
-      const glow = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.size * 4);
-      glow.addColorStop(0, `rgba(${primaryRgb[0]}, ${primaryRgb[1]}, 80, 0.5)`);
-      glow.addColorStop(0.5, `rgba(${primaryRgb[0]}, ${primaryRgb[1]}, 50, 0.2)`);
-      glow.addColorStop(1, 'transparent');
-      ctx.fillStyle = glow;
+      const ashAlpha = 0.3 + Math.sin(time + p.x * 0.01) * 0.1;
       ctx.beginPath();
-      ctx.arc(p.x, p.y, p.size * 4, 0, Math.PI * 2);
+      ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(150, 140, 120, ${ashAlpha})`;
       ctx.fill();
     });
 
-    // CRT scanlines effect
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.03)';
-    for (let y = this.scanlineOffset; y < canvas.height; y += 4) {
+    // Subtle CRT scanlines
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.02)';
+    for (let y = 0; y < canvas.height; y += 3) {
       ctx.fillRect(0, y, canvas.width, 1);
     }
 
-    // Vignette
+    // Vignette - dark and oppressive
     const vignette = ctx.createRadialGradient(
-      canvas.width / 2, canvas.height / 2, canvas.width * 0.3,
+      canvas.width / 2, canvas.height / 2, canvas.width * 0.25,
       canvas.width / 2, canvas.height / 2, canvas.width * 0.75
     );
     vignette.addColorStop(0, 'transparent');
-    vignette.addColorStop(1, 'rgba(0, 0, 0, 0.35)');
+    vignette.addColorStop(1, 'rgba(0, 0, 0, 0.45)');
     ctx.fillStyle = vignette;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
-  }
 
-  private drawHazardStripes(ctx: CanvasRenderingContext2D, x: number, y: number, width: number, height: number, rgb: [number, number, number]) {
-    ctx.save();
-    ctx.globalAlpha = 0.15;
-    const stripeWidth = 15;
-    for (let i = -height; i < width + height; i += stripeWidth * 2) {
-      ctx.beginPath();
-      ctx.moveTo(x + i, y + height);
-      ctx.lineTo(x + i + stripeWidth, y + height);
-      ctx.lineTo(x + i + stripeWidth + height, y);
-      ctx.lineTo(x + i + height, y);
-      ctx.closePath();
-      ctx.fillStyle = `rgb(${rgb[0]}, ${rgb[1]}, 0)`;
-      ctx.fill();
+    // Geiger crackle flash
+    if (this.geiger.intensity > 0.1) {
+      ctx.fillStyle = `rgba(${pipboyR}, ${pipboyG}, ${pipboyB}, ${this.geiger.intensity * 0.05})`;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
     }
-    ctx.restore();
   }
 
   private drawRadSymbol(ctx: CanvasRenderingContext2D, x: number, y: number, size: number, rgb: [number, number, number], alpha: number) {
@@ -164,7 +175,7 @@ export class NuclearWastelandRenderer extends BaseRenderer {
       ctx.moveTo(0, -size * 0.15);
       ctx.arc(0, 0, size, -Math.PI / 3, -Math.PI / 6);
       ctx.lineTo(0, -size * 0.15);
-      ctx.fillStyle = `rgb(${rgb[0]}, ${rgb[1]}, 0)`;
+      ctx.fillStyle = `rgb(${rgb[0]}, ${rgb[1]}, ${rgb[2]})`;
       ctx.fill();
       ctx.restore();
     }
@@ -172,7 +183,7 @@ export class NuclearWastelandRenderer extends BaseRenderer {
     // Center circle
     ctx.beginPath();
     ctx.arc(0, 0, size * 0.2, 0, Math.PI * 2);
-    ctx.fillStyle = `rgb(${rgb[0]}, ${rgb[1]}, 0)`;
+    ctx.fillStyle = `rgb(${rgb[0]}, ${rgb[1]}, ${rgb[2]})`;
     ctx.fill();
     
     // Inner circle (cutout)
@@ -457,7 +468,7 @@ export class BunkerEmergencyRenderer extends BaseRenderer {
       { x: canvas.width, y: canvas.height }
     ];
 
-    corners.forEach((corner, i) => {
+    corners.forEach((corner) => {
       const glow = ctx.createRadialGradient(corner.x, corner.y, 0, corner.x, corner.y, 300);
       glow.addColorStop(0, `rgba(${accentRgb[0]}, 0, 0, ${0.15 * pulse})`);
       glow.addColorStop(1, 'transparent');
@@ -482,28 +493,23 @@ export class BunkerEmergencyRenderer extends BaseRenderer {
       // Drip trail
       ctx.beginPath();
       ctx.moveTo(drip.x, drip.y);
-      ctx.lineTo(drip.x, drip.y - 10);
+      ctx.lineTo(drip.x, drip.y - 15);
       ctx.strokeStyle = 'rgba(100, 120, 140, 0.2)';
       ctx.lineWidth = 1;
       ctx.stroke();
     });
 
-    // Vent mist
-    const ventX = canvas.width * 0.1;
-    const mistGrad = ctx.createLinearGradient(ventX, 0, ventX + 100, 100);
-    mistGrad.addColorStop(0, 'rgba(150, 160, 170, 0.1)');
-    mistGrad.addColorStop(1, 'transparent');
-    ctx.fillStyle = mistGrad;
-    ctx.beginPath();
-    ctx.moveTo(ventX, 0);
-    ctx.lineTo(ventX + 80, 100);
-    ctx.lineTo(ventX + 20, 80);
-    ctx.lineTo(ventX - 20, 0);
-    ctx.fill();
+    // Concrete texture suggestion
+    ctx.fillStyle = 'rgba(80, 80, 80, 0.03)';
+    for (let i = 0; i < 50; i++) {
+      const x = (Math.sin(i * 123.45) * 0.5 + 0.5) * canvas.width;
+      const y = (Math.cos(i * 67.89) * 0.5 + 0.5) * canvas.height;
+      ctx.fillRect(x, y, 2 + Math.random() * 4, 2 + Math.random() * 4);
+    }
 
-    // Heavy vignette
+    // Vignette
     const vignette = ctx.createRadialGradient(
-      canvas.width / 2, canvas.height / 2, canvas.width * 0.3,
+      canvas.width / 2, canvas.height / 2, canvas.width * 0.2,
       canvas.width / 2, canvas.height / 2, canvas.width * 0.7
     );
     vignette.addColorStop(0, 'transparent');
@@ -514,106 +520,103 @@ export class BunkerEmergencyRenderer extends BaseRenderer {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-// SURVEILLANCE - Big Brother watching
+// SURVEILLANCE / BIG BROTHER - Watching eyes and propaganda
 // ═══════════════════════════════════════════════════════════════════════════
 export class SurveillanceRenderer extends BaseRenderer {
-  searchLightAngle = 0;
-  staticIntensity = 0;
+  searchlightAngle = 0;
+  staticNoise: Array<{ x: number; y: number; alpha: number }> = [];
   eyePosition = { x: 0, y: 0 };
 
   init(canvas: HTMLCanvasElement) {
     if (this.initialized) return;
     this.initialized = true;
-    this.eyePosition = { x: canvas.width / 2, y: canvas.height * 0.3 };
+
+    for (let i = 0; i < 100; i++) {
+      this.staticNoise.push({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        alpha: Math.random() * 0.3
+      });
+    }
   }
 
   render(rc: RenderContext) {
     const { ctx, canvas, time, accentRgb } = rc;
 
-    this.searchLightAngle += 0.01;
+    this.searchlightAngle += 0.01;
 
-    // Static noise bursts
-    if (Math.random() > 0.95) {
-      this.staticIntensity = 0.1 + Math.random() * 0.1;
-    }
-    this.staticIntensity *= 0.95;
+    // Dark oppressive overlay
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    if (this.staticIntensity > 0.01) {
-      const imageData = ctx.createImageData(canvas.width / 8, canvas.height / 8);
-      for (let i = 0; i < imageData.data.length; i += 4) {
-        const noise = Math.random() * 255;
-        imageData.data[i] = noise;
-        imageData.data[i + 1] = noise;
-        imageData.data[i + 2] = noise;
-        imageData.data[i + 3] = this.staticIntensity * 255;
-      }
-      ctx.save();
-      ctx.scale(8, 8);
-      ctx.putImageData(imageData, 0, 0);
-      ctx.restore();
-    }
-
-    // Search light sweep
-    ctx.save();
-    ctx.translate(canvas.width / 2, 0);
-    ctx.rotate(Math.sin(this.searchLightAngle) * 0.5);
-    
-    const lightGrad = ctx.createLinearGradient(0, 0, 0, canvas.height);
-    lightGrad.addColorStop(0, 'rgba(255, 255, 255, 0.1)');
-    lightGrad.addColorStop(0.3, 'rgba(255, 255, 255, 0.03)');
+    // Sweeping searchlight
+    const lightX = canvas.width / 2 + Math.cos(this.searchlightAngle) * canvas.width * 0.4;
+    const lightGrad = ctx.createRadialGradient(lightX, 0, 0, lightX, 0, canvas.height);
+    lightGrad.addColorStop(0, 'rgba(255, 255, 255, 0.08)');
+    lightGrad.addColorStop(0.3, 'rgba(255, 255, 255, 0.02)');
     lightGrad.addColorStop(1, 'transparent');
-    
-    ctx.beginPath();
-    ctx.moveTo(0, 0);
-    ctx.lineTo(-100, canvas.height);
-    ctx.lineTo(100, canvas.height);
-    ctx.closePath();
     ctx.fillStyle = lightGrad;
-    ctx.fill();
-    ctx.restore();
-
-    // The watching eye
-    const eyeSize = 80;
-    const pupilOffset = Math.sin(time * 0.5) * 10;
-
-    // Eye glow
-    const eyeGlow = ctx.createRadialGradient(
-      this.eyePosition.x, this.eyePosition.y, 0,
-      this.eyePosition.x, this.eyePosition.y, eyeSize * 2
-    );
-    eyeGlow.addColorStop(0, `rgba(${accentRgb[0]}, 0, 0, 0.1)`);
-    eyeGlow.addColorStop(1, 'transparent');
-    ctx.fillStyle = eyeGlow;
     ctx.beginPath();
-    ctx.arc(this.eyePosition.x, this.eyePosition.y, eyeSize * 2, 0, Math.PI * 2);
+    ctx.moveTo(lightX, 0);
+    ctx.lineTo(lightX - 150, canvas.height);
+    ctx.lineTo(lightX + 150, canvas.height);
+    ctx.closePath();
     ctx.fill();
 
-    // Eye white
+    // Static noise effect
+    this.staticNoise.forEach(noise => {
+      noise.x = Math.random() * canvas.width;
+      noise.y = Math.random() * canvas.height;
+      noise.alpha = Math.random() * 0.15;
+      
+      ctx.fillStyle = `rgba(255, 255, 255, ${noise.alpha})`;
+      ctx.fillRect(noise.x, noise.y, 2, 2);
+    });
+
+    // Watching eye symbol (center, very subtle)
+    this.eyePosition.x = canvas.width / 2 + Math.sin(time * 0.5) * 50;
+    this.eyePosition.y = canvas.height * 0.15;
+    
+    const eyeSize = 60;
+    ctx.save();
+    ctx.translate(this.eyePosition.x, this.eyePosition.y);
+    ctx.globalAlpha = 0.1;
+    
+    // Eye outline
     ctx.beginPath();
-    ctx.ellipse(this.eyePosition.x, this.eyePosition.y, eyeSize, eyeSize * 0.5, 0, 0, Math.PI * 2);
-    ctx.fillStyle = 'rgba(200, 200, 200, 0.15)';
-    ctx.fill();
-
+    ctx.ellipse(0, 0, eyeSize, eyeSize * 0.5, 0, 0, Math.PI * 2);
+    ctx.strokeStyle = `rgb(${accentRgb[0]}, ${accentRgb[1]}, ${accentRgb[2]})`;
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    
     // Iris
     ctx.beginPath();
-    ctx.arc(this.eyePosition.x + pupilOffset, this.eyePosition.y, eyeSize * 0.35, 0, Math.PI * 2);
-    ctx.fillStyle = `rgba(${accentRgb[0]}, ${accentRgb[1] * 0.3}, ${accentRgb[2] * 0.3}, 0.3)`;
+    ctx.arc(Math.sin(time) * 10, 0, eyeSize * 0.25, 0, Math.PI * 2);
+    ctx.fillStyle = `rgb(${accentRgb[0]}, ${accentRgb[1]}, ${accentRgb[2]})`;
     ctx.fill();
-
+    
     // Pupil
     ctx.beginPath();
-    ctx.arc(this.eyePosition.x + pupilOffset, this.eyePosition.y, eyeSize * 0.15, 0, Math.PI * 2);
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+    ctx.arc(Math.sin(time) * 10, 0, eyeSize * 0.1, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgb(0, 0, 0)';
     ctx.fill();
+    
+    ctx.restore();
 
-    // Heavy dark vignette
+    // Heavy vignette
     const vignette = ctx.createRadialGradient(
-      canvas.width / 2, canvas.height / 2, canvas.width * 0.2,
-      canvas.width / 2, canvas.height / 2, canvas.width * 0.7
+      canvas.width / 2, canvas.height / 2, canvas.width * 0.15,
+      canvas.width / 2, canvas.height / 2, canvas.width * 0.65
     );
     vignette.addColorStop(0, 'transparent');
     vignette.addColorStop(1, 'rgba(0, 0, 0, 0.6)');
     ctx.fillStyle = vignette;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Scanlines
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.03)';
+    for (let y = 0; y < canvas.height; y += 4) {
+      ctx.fillRect(0, y, canvas.width, 2);
+    }
   }
 }

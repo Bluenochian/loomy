@@ -64,15 +64,15 @@ export function AppSidebar({ projectId }: AppSidebarProps) {
       className={cn(
         'h-screen flex flex-col transition-all duration-300 ease-out-expo sticky top-0 z-10',
         collapsed ? 'w-16' : 'w-64',
-        // Glass effect - slightly more transparent
+        // Glass effect - MORE transparent
         settings.glassSidebar 
-          ? 'bg-sidebar/50 backdrop-blur-xl border-r border-white/5 shadow-xl' 
-          : 'bg-sidebar/80 backdrop-blur-sm border-r border-sidebar-border/50'
+          ? 'bg-sidebar/30 backdrop-blur-xl border-r border-white/5 shadow-xl' 
+          : 'bg-sidebar/60 backdrop-blur-sm border-r border-sidebar-border/50'
       )}
     >
       {/* Frosted glass overlay for extra effect */}
       {settings.glassSidebar && (
-        <div className="absolute inset-0 bg-gradient-to-b from-white/5 via-transparent to-white/5 pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-b from-white/3 via-transparent to-white/3 pointer-events-none" />
       )}
       
       {/* Logo / Brand */}

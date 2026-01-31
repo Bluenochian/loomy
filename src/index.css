@@ -401,20 +401,22 @@
     --accent: 270 50% 40%;
   }
 
-  /* Dark theme text visibility overrides - better contrast without changing primary */
-  [data-theme="horror"],
-  [data-subtheme*="dark"],
-  [data-subtheme*="forest"],
-  [data-subtheme*="vampire"],
-  [data-subtheme*="cosmic"],
-  [data-subtheme*="asylum"],
-  [data-subtheme*="grimoire"] {
+  /* Dark theme text visibility overrides - ONLY for dark forest and cosmic horror */
+  [data-subtheme="horror-forest"],
+  [data-subtheme="horror-cosmic"] {
     --foreground: 0 0% 92%;
-    --card-foreground: 0 0% 88%;
-    --popover-foreground: 0 0% 88%;
-    --muted-foreground: 0 0% 65%;
-    --secondary-foreground: 0 0% 85%;
-    --sidebar-foreground: 0 0% 90%;
+    --card-foreground: 0 0% 90%;
+    --popover-foreground: 0 0% 90%;
+    --muted-foreground: 0 0% 70%;
+    --secondary-foreground: 0 0% 88%;
+    --sidebar-foreground: 0 0% 92%;
+    --primary: 150 50% 45%;
+    --accent: 140 60% 50%;
+  }
+
+  [data-subtheme="horror-cosmic"] {
+    --primary: 280 60% 55%;
+    --accent: 260 70% 60%;
   }
 }
 

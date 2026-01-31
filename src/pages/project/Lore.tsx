@@ -7,6 +7,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Plus, Globe, Loader2, Trash2, Sparkles, Cpu, Crown, History, Scroll, BookOpen, Wand2 } from 'lucide-react';
 import { useState, useMemo } from 'react';
 import { useToast } from '@/hooks/use-toast';
+import { AIGenerateButton } from '@/components/ai/AIGenerateButton';
 import type { LoreEntry } from '@/types/story';
 import { cn } from '@/lib/utils';
 
@@ -118,14 +119,37 @@ export default function LorePage() {
             <h2 className="font-display text-lg font-semibold flex items-center gap-2">
               <Globe className="h-5 w-5 text-primary" /> Lore & World
             </h2>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={() => handleAdd(activeCategory === 'all' ? 'general' : activeCategory)}
-              disabled={isAdding}
-            >
-              {isAdding ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
-            </Button>
+            <div className="flex items-center gap-1">
+              <AIGenerateButton
+                type="lore"
+                context={activeCategory !== 'all' ? `Create a ${CATEGORY_CONFIG[activeCategory].label} entry for my story world.` : ''}
+                onGenerated={(content) => {
+                  // Create new entry with generated content
+                  addLoreEntry({
+                    title: 'AI Generated Entry',
+                    category: activeCategory === 'all' ? 'general' : activeCategory,
+                    content
+                  }).then((entry) => {
+                    if (entry) {
+                      setSelectedEntry(entry.id);
+                      toast({ title: 'Lore entry generated!' });
+                    }
+                  });
+                }}
+                size="icon"
+                variant="ghost"
+              >
+                <Sparkles className="h-4 w-4" />
+              </AIGenerateButton>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => handleAdd(activeCategory === 'all' ? 'general' : activeCategory)}
+                disabled={isAdding}
+              >
+                {isAdding ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
+              </Button>
+            </div>
           </div>
         </div>
 
@@ -267,12 +291,27 @@ export default function LorePage() {
             </Card>
 
             {/* Content Editor */}
-            <Textarea
-              value={selected.content || ''}
-              onChange={(e) => updateLoreEntry(selected.id, { content: e.target.value })}
-              placeholder="Describe this aspect of your world in detail..."
-              className="min-h-[400px] bg-secondary/30 font-display text-lg leading-relaxed resize-none"
-            />
+            <div className="relative">
+              <Textarea
+                value={selected.content || ''}
+                onChange={(e) => updateLoreEntry(selected.id, { content: e.target.value })}
+                placeholder="Describe this aspect of your world in detail..."
+                className="min-h-[400px] bg-secondary/30 font-display text-lg leading-relaxed resize-none"
+              />
+              <div className="absolute top-2 right-2">
+                <AIGenerateButton
+                  type="lore"
+                  context={`Expand on this ${CATEGORY_CONFIG[selected.category as Category]?.label || 'lore'} entry titled "${selected.title}": ${selected.content || ''}`}
+                  onGenerated={(content) => {
+                    updateLoreEntry(selected.id, { content: (selected.content || '') + '\n\n' + content });
+                  }}
+                  size="sm"
+                  variant="ghost"
+                >
+                  <Sparkles className="h-3 w-3" /> Expand
+                </AIGenerateButton>
+              </div>
+            </div>
 
             {/* Tags */}
             <div className="mt-4">
@@ -293,9 +332,29 @@ export default function LorePage() {
               <Globe className="h-16 w-16 text-muted-foreground/30 mx-auto mb-4" />
               <h3 className="font-display text-xl font-semibold mb-2">Build Your World</h3>
               <p className="text-muted-foreground mb-4">Create lore entries to define your story's universe</p>
-              <Button onClick={() => handleAdd('world')}>
-                <Plus className="h-4 w-4" /> Create Entry
-              </Button>
+              <div className="flex items-center justify-center gap-2">
+                <Button onClick={() => handleAdd('world')}>
+                  <Plus className="h-4 w-4" /> Create Entry
+                </Button>
+                <AIGenerateButton
+                  type="lore"
+                  context="Create an interesting world-building lore entry for my story."
+                  onGenerated={(content) => {
+                    addLoreEntry({
+                      title: 'AI Generated Entry',
+                      category: 'world',
+                      content
+                    }).then((entry) => {
+                      if (entry) {
+                        setSelectedEntry(entry.id);
+                        toast({ title: 'Lore entry generated!' });
+                      }
+                    });
+                  }}
+                >
+                  <Sparkles className="h-4 w-4" /> AI Generate
+                </AIGenerateButton>
+              </div>
             </div>
           </div>
         )}
