@@ -225,7 +225,7 @@ export default function OutlinePage() {
               name: e.target.value
             })} className="font-medium bg-transparent border-transparent hover:border-border" placeholder="Arc name..." />
                 <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => deleteArc(arc.id)}>
-                  
+                  <Trash2 className="h-4 w-4" />
                 </Button>
               </div>
               <div className="flex gap-2 mb-2">
