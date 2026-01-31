@@ -183,29 +183,7 @@ export default function OutlinePage() {
         </div>
 
         <div className="space-y-3">
-          {acts.map(act => <Card key={act.id} className="p-4">
-              <div className="flex items-start gap-3">
-                <button onClick={() => toggleAct(act.id)} className="mt-1 text-muted-foreground hover:text-foreground">
-                  {expandedActs.includes(act.id) ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
-                </button>
-                <div className="flex-1">
-                  <div className="flex items-center gap-3 mb-2">
-                    <span className="text-sm text-muted-foreground font-medium">
-                      Act {act.number}
-                    </span>
-                    <Input value={act.title} onChange={e => updateAct(act.id, {
-                  title: e.target.value
-                })} className="flex-1 h-8 bg-transparent border-transparent hover:border-border focus:border-border" placeholder="Act title..." />
-                    <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => deleteAct(act.id)}>
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                  {expandedActs.includes(act.id) && <Textarea value={act.description} onChange={e => updateAct(act.id, {
-                description: e.target.value
-              })} placeholder="What happens in this act..." className="mt-2 bg-secondary/30 min-h-[80px]" />}
-                </div>
-              </div>
-            </Card>)}
+          {acts.map(act => {})}
           {acts.length === 0 && <p className="text-center text-muted-foreground py-8">
               No acts yet. Add your first act to structure your story.
             </p>}
