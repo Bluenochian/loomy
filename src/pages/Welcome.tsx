@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { AuthForm } from '@/components/auth/AuthForm';
 import { OnboardingForm } from '@/components/onboarding/OnboardingForm';
 import { useAuth } from '@/context/AuthContext';
@@ -7,7 +7,8 @@ import { useSettings } from '@/context/SettingsContext';
 import { LanguageSelector } from '@/components/LanguageSelector';
 import { ThemeEffects } from '@/components/themes/ThemeEffects';
 import { ThemedLogo } from '@/components/themes/ThemedLogo';
-import { Sparkles, BookOpen, Wand2, Palette, ArrowRight } from 'lucide-react';
+import { ThemePreviewBadge } from '@/components/welcome/ThemePreviewBadge';
+import { Sparkles, BookOpen, Wand2, Palette, ArrowRight, Pen, Stars } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 export default function Welcome() {
@@ -67,7 +68,7 @@ export default function Welcome() {
 
   // Show landing/auth page for unauthenticated users
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background overflow-hidden">
       {/* Theme Effects Background */}
       <ThemeEffects themeId={themeId} />
       
@@ -76,11 +77,50 @@ export default function Welcome() {
         <LanguageSelector variant="compact" />
       </div>
 
-      {/* Ambient background effects */}
+      {/* Theme Preview Badge - Top Right */}
+      <ThemePreviewBadge />
+
+      {/* Animated ambient background effects */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-primary/10 rounded-full blur-3xl animate-float" />
-        <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] bg-accent/10 rounded-full blur-3xl animate-float" style={{ animationDelay: '-3s' }} />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gradient-radial from-primary/5 to-transparent rounded-full" />
+        {/* Primary floating orb */}
+        <div 
+          className="absolute w-[500px] h-[500px] bg-primary/15 rounded-full blur-3xl animate-float"
+          style={{ 
+            top: '20%', 
+            left: '15%',
+            animation: 'float 8s ease-in-out infinite'
+          }}
+        />
+        {/* Secondary floating orb */}
+        <div 
+          className="absolute w-[400px] h-[400px] bg-accent/15 rounded-full blur-3xl"
+          style={{ 
+            bottom: '15%', 
+            right: '20%',
+            animation: 'float 10s ease-in-out infinite',
+            animationDelay: '-4s'
+          }}
+        />
+        {/* Center radial glow */}
+        <div 
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-gradient-radial from-primary/8 via-primary/3 to-transparent rounded-full"
+          style={{ animation: 'pulse 6s ease-in-out infinite' }}
+        />
+        {/* Moving sparkles */}
+        <div className="absolute inset-0">
+          {[...Array(12)].map((_, i) => (
+            <div
+              key={i}
+              className="absolute w-1 h-1 bg-primary/60 rounded-full"
+              style={{
+                top: `${10 + (i * 7) % 80}%`,
+                left: `${5 + (i * 11) % 90}%`,
+                animation: `twinkle ${2 + i * 0.3}s ease-in-out infinite`,
+                animationDelay: `${i * 0.2}s`
+              }}
+            />
+          ))}
+        </div>
       </div>
 
       <div className="relative z-10 min-h-screen flex">

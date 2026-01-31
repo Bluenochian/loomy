@@ -1485,3 +1485,18 @@ export function getParentTheme(subThemeId: string): MainTheme | undefined {
   }
   return undefined;
 }
+
+export function getAllSubThemes(): { subTheme: SubTheme; parentTheme: MainTheme }[] {
+  const result: { subTheme: SubTheme; parentTheme: MainTheme }[] = [];
+  for (const theme of THEME_CONFIG) {
+    for (const subTheme of theme.subThemes) {
+      result.push({ subTheme, parentTheme: theme });
+    }
+  }
+  return result;
+}
+
+export function getRandomSubTheme(): { subTheme: SubTheme; parentTheme: MainTheme } {
+  const all = getAllSubThemes();
+  return all[Math.floor(Math.random() * all.length)];
+}
