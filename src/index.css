@@ -400,6 +400,22 @@
     --primary: 0 60% 45%;
     --accent: 270 50% 40%;
   }
+
+  /* Dark theme text visibility overrides */
+  [data-theme="horror"],
+  [data-subtheme*="dark"],
+  [data-subtheme*="forest"],
+  [data-subtheme*="vampire"],
+  [data-subtheme*="cosmic"],
+  [data-subtheme*="asylum"],
+  [data-subtheme*="grimoire"] {
+    --foreground: 40 20% 90%;
+    --card-foreground: 40 15% 88%;
+    --popover-foreground: 40 15% 88%;
+    --muted-foreground: 220 10% 65%;
+    --secondary-foreground: 40 15% 85%;
+    --sidebar-foreground: 40 15% 88%;
+  }
 }
 
 @layer utilities {

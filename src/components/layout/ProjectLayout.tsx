@@ -1,8 +1,6 @@
 import { ReactNode } from 'react';
 import { AppSidebar } from './AppSidebar';
 import { ThemeEffects } from '@/components/themes/ThemeEffects';
-import { ParticlesBackground } from '@/components/ParticlesBackground';
-import { useSettings } from '@/context/SettingsContext';
 import { useStory } from '@/context/StoryContext';
 
 interface ProjectLayoutProps {
@@ -11,7 +9,6 @@ interface ProjectLayoutProps {
 }
 
 export function ProjectLayout({ children, projectId }: ProjectLayoutProps) {
-  const { settings } = useSettings();
   const { currentProject } = useStory();
   const themeId = currentProject?.theme_profile?.themeId || 'default';
 
@@ -19,7 +16,6 @@ export function ProjectLayout({ children, projectId }: ProjectLayoutProps) {
     <div className="flex min-h-screen w-full bg-background">
       {/* Background effects - always show theme effects */}
       <ThemeEffects themeId={themeId} />
-      {settings.particles && <ParticlesBackground />}
       
       <AppSidebar projectId={projectId} />
       <main className="flex-1 overflow-y-auto relative">

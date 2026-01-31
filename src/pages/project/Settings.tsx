@@ -95,6 +95,7 @@ export default function SettingsPage() {
     root.style.setProperty('--primary-foreground', primaryLightness > 50 ? '222 25% 8%' : '40 20% 95%');
     
     root.setAttribute('data-theme', parentTheme.id);
+    root.setAttribute('data-subtheme', subTheme.id);
     
     updateSetting('selectedSubTheme', subTheme.id);
     updateProject({ 
