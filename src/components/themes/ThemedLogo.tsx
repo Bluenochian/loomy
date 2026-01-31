@@ -207,11 +207,11 @@ export function ThemedLogo({
       <div className={cn("rounded-xl bg-card/50 backdrop-blur-sm border border-primary/20 transition-all duration-500", sizeConfig.container)} style={{
       boxShadow: `0 0 ${sizeConfig.glow}px -5px ${glowColor}`
     }}>
-        <Icon className={cn("transition-colors duration-500 text-green-600", sizeConfig.icon)} style={{
+        <Icon className={cn("transition-colors duration-500 text-green-600 border-success-foreground", sizeConfig.icon)} style={{
         color: primaryColor
       }} />
       </div>
-      {showText && <span className={cn("font-bold transition-all duration-500 text-green-600", sizeConfig.text)} style={{
+      {showText && <span className={cn("font-bold transition-all duration-500 text-green-100", sizeConfig.text)} style={{
       fontFamily,
       color: primaryColor,
       textShadow: `0 0 20px ${glowColor}, 0 0 40px ${glowColor}`
