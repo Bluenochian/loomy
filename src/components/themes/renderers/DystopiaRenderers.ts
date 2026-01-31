@@ -5,41 +5,44 @@ import { BaseRenderer, RenderContext } from './BaseRenderer';
 // FALLOUT WASTELAND - Vault Door Interior looking out to wasteland sky
 // ═══════════════════════════════════════════════════════════════════════════
 export class NuclearWastelandRenderer extends BaseRenderer {
-  dustParticles: Array<{ x: number; y: number; speed: number; size: number; alpha: number }> = [];
-  vaultDoorAngle = 0;
-  lightFlicker = 0;
+  dustParticles: Array<{ x: number; y: number; speedX: number; speedY: number; size: number; alpha: number }> = [];
+  staticBackgroundDrawn = false;
+  offscreenCanvas: HTMLCanvasElement | null = null;
 
   init(canvas: HTMLCanvasElement) {
     if (this.initialized) return;
     this.initialized = true;
 
-    // Floating dust in the vault
-    for (let i = 0; i < 50; i++) {
+    // Create floating dust particles spread across the screen
+    for (let i = 0; i < 60; i++) {
       this.dustParticles.push({
         x: Math.random() * canvas.width,
         y: Math.random() * canvas.height,
-        speed: 0.1 + Math.random() * 0.3,
-        size: 1 + Math.random() * 2,
-        alpha: 0.2 + Math.random() * 0.3
+        speedX: (Math.random() - 0.5) * 0.3,
+        speedY: -0.1 - Math.random() * 0.2,
+        size: 1 + Math.random() * 2.5,
+        alpha: 0.15 + Math.random() * 0.35
       });
     }
+
+    // Create offscreen canvas for static background
+    this.offscreenCanvas = document.createElement('canvas');
+    this.offscreenCanvas.width = canvas.width;
+    this.offscreenCanvas.height = canvas.height;
   }
 
-  render(rc: RenderContext) {
-    const { ctx, canvas, time } = rc;
+  private drawStaticBackground(canvas: HTMLCanvasElement) {
+    if (!this.offscreenCanvas || this.staticBackgroundDrawn) return;
     
-    // Pip-Boy green/amber palette
-    const pipGreen = { r: 80, g: 200, b: 120 };
-    const pipAmber = { r: 255, g: 180, b: 50 };
-    
-    this.lightFlicker = 0.85 + Math.sin(time * 8) * 0.05 + Math.random() * 0.1;
+    const ctx = this.offscreenCanvas.getContext('2d');
+    if (!ctx) return;
 
-    // === WASTELAND SKY (visible through door opening) ===
+    const pipAmber = { r: 255, g: 180, b: 50 };
     const centerX = canvas.width / 2;
     const centerY = canvas.height / 2;
     const doorRadius = Math.min(canvas.width, canvas.height) * 0.35;
-    
-    // Draw the circular opening first (wasteland visible through)
+
+    // === WASTELAND SKY (visible through door opening) ===
     ctx.save();
     ctx.beginPath();
     ctx.arc(centerX, centerY, doorRadius, 0, Math.PI * 2);
@@ -47,29 +50,42 @@ export class NuclearWastelandRenderer extends BaseRenderer {
     
     // Wasteland sky gradient - amber/orange haze
     const skyGrad = ctx.createLinearGradient(0, centerY - doorRadius, 0, centerY + doorRadius);
-    skyGrad.addColorStop(0, 'rgba(180, 120, 60, 0.4)');
-    skyGrad.addColorStop(0.4, 'rgba(200, 150, 80, 0.3)');
-    skyGrad.addColorStop(0.7, 'rgba(150, 100, 50, 0.35)');
-    skyGrad.addColorStop(1, 'rgba(80, 60, 40, 0.5)');
+    skyGrad.addColorStop(0, 'rgba(180, 120, 60, 0.5)');
+    skyGrad.addColorStop(0.4, 'rgba(200, 150, 80, 0.4)');
+    skyGrad.addColorStop(0.7, 'rgba(150, 100, 50, 0.45)');
+    skyGrad.addColorStop(1, 'rgba(80, 60, 40, 0.6)');
     ctx.fillStyle = skyGrad;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     
-    // Distant wasteland silhouette (ruined buildings)
-    ctx.fillStyle = 'rgba(40, 30, 20, 0.6)';
+    // Distant wasteland silhouette (ruined buildings) - STATIC
+    ctx.fillStyle = 'rgba(40, 30, 20, 0.7)';
     const baseY = centerY + doorRadius * 0.5;
     ctx.beginPath();
     ctx.moveTo(centerX - doorRadius, baseY);
-    // Ruined cityscape silhouette
+    
+    // Ruined cityscape silhouette - deterministic
+    const buildings = [
+      { width: 25, height: 45 },
+      { width: 35, height: 70 },
+      { width: 20, height: 35 },
+      { width: 40, height: 85 },
+      { width: 30, height: 55 },
+      { width: 25, height: 40 },
+      { width: 45, height: 75 },
+      { width: 20, height: 30 },
+    ];
+    
     let x = centerX - doorRadius;
-    while (x < centerX + doorRadius) {
-      const buildingHeight = 20 + Math.random() * 60;
-      const buildingWidth = 15 + Math.random() * 30;
-      ctx.lineTo(x, baseY - buildingHeight);
-      ctx.lineTo(x + buildingWidth * 0.3, baseY - buildingHeight - 10);
-      ctx.lineTo(x + buildingWidth * 0.5, baseY - buildingHeight + 5);
-      ctx.lineTo(x + buildingWidth, baseY - buildingHeight * 0.7);
-      x += buildingWidth;
-    }
+    buildings.forEach((building, i) => {
+      const h = building.height;
+      const w = building.width;
+      ctx.lineTo(x, baseY - h);
+      ctx.lineTo(x + w * 0.3, baseY - h - 8);
+      ctx.lineTo(x + w * 0.5, baseY - h + 3);
+      ctx.lineTo(x + w, baseY - h * 0.7);
+      x += w + 5;
+    });
+    
     ctx.lineTo(centerX + doorRadius, baseY);
     ctx.lineTo(centerX + doorRadius, centerY + doorRadius);
     ctx.lineTo(centerX - doorRadius, centerY + doorRadius);
@@ -81,8 +97,8 @@ export class NuclearWastelandRenderer extends BaseRenderer {
       centerX + doorRadius * 0.3, centerY - doorRadius * 0.3, 0,
       centerX + doorRadius * 0.3, centerY - doorRadius * 0.3, doorRadius * 0.5
     );
-    sunGrad.addColorStop(0, 'rgba(255, 200, 100, 0.3)');
-    sunGrad.addColorStop(0.5, 'rgba(255, 150, 50, 0.1)');
+    sunGrad.addColorStop(0, 'rgba(255, 200, 100, 0.4)');
+    sunGrad.addColorStop(0.5, 'rgba(255, 150, 50, 0.15)');
     sunGrad.addColorStop(1, 'transparent');
     ctx.fillStyle = sunGrad;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -90,7 +106,6 @@ export class NuclearWastelandRenderer extends BaseRenderer {
     ctx.restore();
 
     // === VAULT DOOR FRAME ===
-    // Thick metallic door frame
     ctx.strokeStyle = 'rgba(60, 70, 80, 0.9)';
     ctx.lineWidth = doorRadius * 0.15;
     ctx.beginPath();
@@ -118,24 +133,22 @@ export class NuclearWastelandRenderer extends BaseRenderer {
       ctx.restore();
     }
     
-    // Vault number on door frame (subtle)
+    // Vault number "42" on door frame
     ctx.save();
-    ctx.font = `bold ${doorRadius * 0.15}px "Share Tech Mono", monospace`;
+    ctx.font = `bold ${doorRadius * 0.18}px "Share Tech Mono", monospace`;
     ctx.textAlign = 'center';
-    ctx.fillStyle = `rgba(${pipAmber.r}, ${pipAmber.g}, ${pipAmber.b}, ${0.4 * this.lightFlicker})`;
-    ctx.shadowColor = `rgba(${pipAmber.r}, ${pipAmber.g}, ${pipAmber.b}, 0.5)`;
-    ctx.shadowBlur = 10;
-    ctx.fillText('111', centerX, centerY - doorRadius - doorRadius * 0.18);
+    ctx.fillStyle = `rgba(${pipAmber.r}, ${pipAmber.g}, ${pipAmber.b}, 0.6)`;
+    ctx.shadowColor = `rgba(${pipAmber.r}, ${pipAmber.g}, ${pipAmber.b}, 0.8)`;
+    ctx.shadowBlur = 15;
+    ctx.fillText('42', centerX, centerY - doorRadius - doorRadius * 0.18);
     ctx.restore();
 
-    // === VAULT INTERIOR ELEMENTS ===
-    // Dark vault walls around the door
+    // === VAULT INTERIOR WALLS ===
     const wallGrad = ctx.createRadialGradient(centerX, centerY, doorRadius * 1.2, centerX, centerY, canvas.width);
     wallGrad.addColorStop(0, 'rgba(30, 35, 40, 0.7)');
     wallGrad.addColorStop(0.5, 'rgba(20, 25, 30, 0.85)');
     wallGrad.addColorStop(1, 'rgba(15, 18, 22, 0.95)');
     
-    // Create a mask for the walls (outside the door)
     ctx.save();
     ctx.beginPath();
     ctx.rect(0, 0, canvas.width, canvas.height);
@@ -149,41 +162,15 @@ export class NuclearWastelandRenderer extends BaseRenderer {
     const termX = canvas.width * 0.12;
     const termY = canvas.height * 0.75;
     const termGrad = ctx.createRadialGradient(termX, termY, 0, termX, termY, 150);
-    termGrad.addColorStop(0, `rgba(${pipGreen.r}, ${pipGreen.g}, ${pipGreen.b}, ${0.15 * this.lightFlicker})`);
-    termGrad.addColorStop(0.5, `rgba(${pipGreen.r}, ${pipGreen.g}, ${pipGreen.b}, ${0.05 * this.lightFlicker})`);
+    termGrad.addColorStop(0, 'rgba(80, 200, 120, 0.12)');
+    termGrad.addColorStop(0.5, 'rgba(80, 200, 120, 0.04)');
     termGrad.addColorStop(1, 'transparent');
     ctx.fillStyle = termGrad;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
-    
-    // Emergency light glow (top corners)
-    const emergencyAlpha = 0.1 + Math.sin(time * 2) * 0.05;
-    [[canvas.width * 0.1, canvas.height * 0.1], [canvas.width * 0.9, canvas.height * 0.1]].forEach(([lx, ly]) => {
-      const lightGrad = ctx.createRadialGradient(lx, ly, 0, lx, ly, 100);
-      lightGrad.addColorStop(0, `rgba(${pipAmber.r}, ${pipAmber.g}, 0, ${emergencyAlpha})`);
-      lightGrad.addColorStop(1, 'transparent');
-      ctx.fillStyle = lightGrad;
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-    });
-
-    // === DUST PARTICLES ===
-    this.dustParticles.forEach(p => {
-      p.y -= p.speed;
-      p.x += Math.sin(time + p.y * 0.01) * 0.3;
-      
-      if (p.y < -10) {
-        p.y = canvas.height + 10;
-        p.x = Math.random() * canvas.width;
-      }
-      
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-      ctx.fillStyle = `rgba(180, 160, 140, ${p.alpha * this.lightFlicker})`;
-      ctx.fill();
-    });
 
     // === CRT SCANLINES ===
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.015)';
-    for (let y = 0; y < canvas.height; y += 2) {
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.02)';
+    for (let y = 0; y < canvas.height; y += 3) {
       ctx.fillRect(0, y, canvas.width, 1);
     }
 
@@ -196,6 +183,57 @@ export class NuclearWastelandRenderer extends BaseRenderer {
     vignette.addColorStop(0.7, 'rgba(0, 0, 0, 0.3)');
     vignette.addColorStop(1, 'rgba(0, 0, 0, 0.6)');
     ctx.fillStyle = vignette;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    this.staticBackgroundDrawn = true;
+  }
+
+  render(rc: RenderContext) {
+    const { ctx, canvas, time } = rc;
+    
+    // Draw static background once
+    this.drawStaticBackground(canvas);
+    
+    // Draw cached background
+    if (this.offscreenCanvas) {
+      ctx.drawImage(this.offscreenCanvas, 0, 0);
+    }
+
+    // === ANIMATED DUST PARTICLES ===
+    const lightFlicker = 0.85 + Math.sin(time * 5) * 0.05 + Math.random() * 0.05;
+    
+    this.dustParticles.forEach(p => {
+      // Gentle floating motion
+      p.y += p.speedY;
+      p.x += p.speedX + Math.sin(time * 0.5 + p.y * 0.005) * 0.2;
+      
+      // Wrap around screen
+      if (p.y < -10) {
+        p.y = canvas.height + 10;
+        p.x = Math.random() * canvas.width;
+      }
+      if (p.x < -10) p.x = canvas.width + 10;
+      if (p.x > canvas.width + 10) p.x = -10;
+      
+      // Draw dust particle with glow
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(200, 180, 150, ${p.alpha * lightFlicker})`;
+      ctx.fill();
+      
+      // Subtle glow
+      const glow = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.size * 3);
+      glow.addColorStop(0, `rgba(255, 200, 100, ${p.alpha * 0.2 * lightFlicker})`);
+      glow.addColorStop(1, 'transparent');
+      ctx.fillStyle = glow;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.size * 3, 0, Math.PI * 2);
+      ctx.fill();
+    });
+
+    // Subtle flicker overlay for ambient effect
+    const flickerAlpha = 0.02 + Math.random() * 0.01;
+    ctx.fillStyle = `rgba(255, 180, 50, ${flickerAlpha})`;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
   }
 }

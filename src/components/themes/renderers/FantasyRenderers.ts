@@ -461,7 +461,7 @@ export class EnchantedForestRenderer extends BaseRenderer {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-// POTION BREW - Bubbling cauldrons with colorful smoke
+// POTION BREW - Bubbling cauldrons with colorful smoke (OPTIMIZED)
 // ═══════════════════════════════════════════════════════════════════════════
 export class PotionBrewRenderer extends BaseRenderer {
   bubbles: Array<{
@@ -479,21 +479,41 @@ export class PotionBrewRenderer extends BaseRenderer {
     hue: number;
     alpha: number;
     drift: number;
+    age: number;
   }> = [];
+  
+  // Performance: limit max particles
+  readonly MAX_SMOKE = 25;
+  readonly MAX_BUBBLES = 35;
 
   init(canvas: HTMLCanvasElement) {
     if (this.initialized) return;
     this.initialized = true;
 
-    for (let i = 0; i < 40; i++) {
+    // Spread bubbles across the ENTIRE screen width
+    for (let i = 0; i < this.MAX_BUBBLES; i++) {
       this.bubbles.push({
-        x: canvas.width * 0.3 + Math.random() * canvas.width * 0.4,
-        y: canvas.height + Math.random() * 100,
-        size: 4 + Math.random() * 12,
-        speed: 0.8 + Math.random() * 1.5,
+        x: Math.random() * canvas.width,
+        y: canvas.height * 0.4 + Math.random() * canvas.height * 0.6,
+        size: 3 + Math.random() * 10,
+        speed: 0.5 + Math.random() * 1,
         wobblePhase: Math.random() * Math.PI * 2,
         hue: Math.random() > 0.5 ? 280 : 120,
-        alpha: 0.3 + Math.random() * 0.4
+        alpha: 0.25 + Math.random() * 0.35
+      });
+    }
+
+    // Pre-populate some smoke spread across screen
+    for (let i = 0; i < 10; i++) {
+      this.smokeParticles.push({
+        x: Math.random() * canvas.width,
+        y: canvas.height * 0.3 + Math.random() * canvas.height * 0.5,
+        size: 40 + Math.random() * 60,
+        speed: 0.3 + Math.random() * 0.6,
+        hue: [280, 120, 320, 180][Math.floor(Math.random() * 4)],
+        alpha: 0.03 + Math.random() * 0.05,
+        drift: (Math.random() - 0.5) * 0.4,
+        age: Math.random() * 100
       });
     }
   }
@@ -501,40 +521,47 @@ export class PotionBrewRenderer extends BaseRenderer {
   render(rc: RenderContext) {
     const { ctx, canvas, primaryRgb, accentRgb, time } = rc;
 
-    // Cauldron glow from bottom center
-    const cauldronGlow = ctx.createRadialGradient(
-      canvas.width / 2, canvas.height, 0,
-      canvas.width / 2, canvas.height, canvas.height * 0.6
-    );
-    cauldronGlow.addColorStop(0, `rgba(${primaryRgb[0]}, ${primaryRgb[1]}, ${primaryRgb[2]}, 0.15)`);
-    cauldronGlow.addColorStop(0.5, `rgba(${accentRgb[0]}, ${accentRgb[1]}, ${accentRgb[2]}, 0.05)`);
-    cauldronGlow.addColorStop(1, 'transparent');
-    ctx.fillStyle = cauldronGlow;
+    // Ambient glow spread across bottom
+    const ambientGlow = ctx.createLinearGradient(0, canvas.height, 0, canvas.height - 400);
+    ambientGlow.addColorStop(0, `rgba(${primaryRgb[0]}, ${primaryRgb[1]}, ${primaryRgb[2]}, 0.12)`);
+    ambientGlow.addColorStop(0.5, `rgba(${accentRgb[0]}, ${accentRgb[1]}, ${accentRgb[2]}, 0.04)`);
+    ambientGlow.addColorStop(1, 'transparent');
+    ctx.fillStyle = ambientGlow;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Rising smoke
-    if (Math.random() > 0.7) {
+    // Spawn smoke from MULTIPLE positions across screen (not just center)
+    if (this.smokeParticles.length < this.MAX_SMOKE && Math.random() > 0.85) {
+      // Random spawn position across entire bottom
+      const spawnX = Math.random() * canvas.width;
       this.smokeParticles.push({
-        x: canvas.width / 2 + (Math.random() - 0.5) * 200,
-        y: canvas.height - 50,
-        size: 30 + Math.random() * 50,
-        speed: 0.5 + Math.random() * 1,
+        x: spawnX,
+        y: canvas.height - 30 - Math.random() * 50,
+        size: 30 + Math.random() * 40,
+        speed: 0.3 + Math.random() * 0.5,
         hue: [280, 120, 320, 180][Math.floor(Math.random() * 4)],
-        alpha: 0.08 + Math.random() * 0.08,
-        drift: (Math.random() - 0.5) * 0.5
+        alpha: 0.06 + Math.random() * 0.06,
+        drift: (Math.random() - 0.5) * 0.4,
+        age: 0
       });
     }
 
-    // Render smoke
+    // Render smoke with age-based cleanup (prevents infinite growth)
     this.smokeParticles = this.smokeParticles.filter(smoke => {
       smoke.y -= smoke.speed;
-      smoke.x += smoke.drift + Math.sin(smoke.y * 0.01) * 0.5;
-      smoke.size *= 1.005;
-      smoke.alpha *= 0.995;
+      smoke.x += smoke.drift + Math.sin(time * 0.5 + smoke.x * 0.01) * 0.3;
+      smoke.size += 0.3; // Slower growth
+      smoke.alpha *= 0.993; // Faster fade
+      smoke.age++;
 
-      if (smoke.alpha > 0.01) {
+      // Hard limit on age to prevent memory issues
+      if (smoke.age > 300 || smoke.alpha < 0.008) {
+        return false;
+      }
+
+      if (smoke.alpha > 0.008) {
         const grad = ctx.createRadialGradient(smoke.x, smoke.y, 0, smoke.x, smoke.y, smoke.size);
-        grad.addColorStop(0, `hsla(${smoke.hue}, 60%, 50%, ${smoke.alpha})`);
+        grad.addColorStop(0, `hsla(${smoke.hue}, 50%, 50%, ${smoke.alpha})`);
+        grad.addColorStop(0.7, `hsla(${smoke.hue}, 40%, 40%, ${smoke.alpha * 0.3})`);
         grad.addColorStop(1, 'transparent');
         ctx.fillStyle = grad;
         ctx.beginPath();
@@ -542,21 +569,23 @@ export class PotionBrewRenderer extends BaseRenderer {
         ctx.fill();
       }
 
-      return smoke.y > -smoke.size && smoke.alpha > 0.01;
+      return smoke.y > -smoke.size;
     });
 
-    // Bubbles
+    // Bubbles spread across entire screen
     this.bubbles.forEach(bubble => {
-      bubble.wobblePhase += 0.05;
-      bubble.x += Math.sin(bubble.wobblePhase) * 0.8;
+      bubble.wobblePhase += 0.03;
+      bubble.x += Math.sin(bubble.wobblePhase) * 0.5;
       bubble.y -= bubble.speed;
 
-      if (bubble.y < canvas.height * 0.3) {
-        bubble.y = canvas.height + 20;
-        bubble.x = canvas.width * 0.3 + Math.random() * canvas.width * 0.4;
+      // Reset at random x position when reaching top
+      if (bubble.y < canvas.height * 0.2) {
+        bubble.y = canvas.height + 10;
+        bubble.x = Math.random() * canvas.width;
+        bubble.hue = Math.random() > 0.5 ? 280 : 120;
       }
 
-      // Bubble
+      // Bubble outline
       ctx.beginPath();
       ctx.arc(bubble.x, bubble.y, bubble.size, 0, Math.PI * 2);
       ctx.strokeStyle = `hsla(${bubble.hue}, 70%, 60%, ${bubble.alpha})`;
@@ -566,12 +595,12 @@ export class PotionBrewRenderer extends BaseRenderer {
       // Highlight
       ctx.beginPath();
       ctx.arc(bubble.x - bubble.size * 0.3, bubble.y - bubble.size * 0.3, bubble.size * 0.2, 0, Math.PI * 2);
-      ctx.fillStyle = `hsla(${bubble.hue}, 60%, 80%, ${bubble.alpha * 0.8})`;
+      ctx.fillStyle = `hsla(${bubble.hue}, 60%, 80%, ${bubble.alpha * 0.7})`;
       ctx.fill();
 
-      // Inner glow
+      // Soft inner glow
       const innerGlow = ctx.createRadialGradient(bubble.x, bubble.y, 0, bubble.x, bubble.y, bubble.size);
-      innerGlow.addColorStop(0, `hsla(${bubble.hue}, 70%, 60%, ${bubble.alpha * 0.2})`);
+      innerGlow.addColorStop(0, `hsla(${bubble.hue}, 70%, 60%, ${bubble.alpha * 0.15})`);
       innerGlow.addColorStop(1, 'transparent');
       ctx.fillStyle = innerGlow;
       ctx.fill();
