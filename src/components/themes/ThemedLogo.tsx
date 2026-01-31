@@ -185,10 +185,21 @@ export function ThemedLogo({ size = 'md', showText = true, className }: ThemedLo
     ? FONT_FAMILIES[subTheme.logoFont] || FONT_FAMILIES['Playfair Display']
     : FONT_FAMILIES['Playfair Display'];
   
-  // Colors from sub-theme
-  const primaryColor = subTheme ? `hsl(${subTheme.primary})` : 'hsl(var(--primary))';
+  // Check if this is a dark theme that needs forced bright colors
+  const isDarkTheme = subThemeId?.includes('forest') || 
+                      subThemeId?.includes('vampire') || 
+                      subThemeId?.includes('cosmic') ||
+                      subThemeId?.includes('asylum') ||
+                      subThemeId?.includes('grimoire');
+  
+  // Colors from sub-theme - force bright for dark themes
+  const primaryColor = isDarkTheme 
+    ? 'hsl(120, 70%, 60%)' 
+    : (subTheme ? `hsl(${subTheme.primary})` : 'hsl(var(--primary))');
   const accentColor = subTheme ? `hsl(${subTheme.accent})` : 'hsl(var(--accent))';
-  const glowColor = subTheme ? `hsl(${subTheme.primary} / 0.4)` : 'hsl(var(--primary) / 0.4)';
+  const glowColor = isDarkTheme 
+    ? 'hsl(120, 70%, 60%, 0.5)' 
+    : (subTheme ? `hsl(${subTheme.primary} / 0.4)` : 'hsl(var(--primary) / 0.4)');
 
   return (
     <div className={cn("flex items-center gap-2", className)}>
