@@ -1,7 +1,15 @@
 import { cn } from '@/lib/utils';
-import { Sparkles, Sword, Zap, Heart, Skull, Search, Compass, BookOpen, Radiation, Flower2, Cog, History, Crown, Snowflake, Flame, FlaskConical, Star, Ghost, TreePine, Eye, Activity, Cpu, Binary, Atom, Factory, Biohazard, ShieldAlert, Sun, Gem, Cloud, Waves, Anchor, Mountain, Castle, Columns, Axe, Swords, Lock, Radar, LampDesk, BookMarked, Flashlight, Landmark, TreeDeciduous, Moon, Feather } from 'lucide-react';
+import { 
+  Sparkles, Sword, Zap, Heart, Skull, Search, Compass, BookOpen,
+  Radiation, Flower2, Cog, History, Crown, Snowflake, Flame, FlaskConical,
+  Star, Ghost, TreePine, Eye, Activity, Cpu, Binary, Atom, Factory,
+  Biohazard, ShieldAlert, Sun, Gem, Cloud, Waves, Anchor, Mountain,
+  Castle, Columns, Axe, Swords, Lock, Radar, LampDesk, BookMarked,
+  Flashlight, Landmark, TreeDeciduous, Moon, Feather
+} from 'lucide-react';
 import { getSubThemeById, getParentTheme } from '@/config/themes';
 import { useSettings } from '@/context/SettingsContext';
+
 interface ThemedLogoProps {
   size?: 'sm' | 'md' | 'lg' | 'xl';
   showText?: boolean;
@@ -18,8 +26,7 @@ const ICON_MAP: Record<string, typeof Sparkles> = {
   'star': Star,
   'ghost': Ghost,
   'tree-pine': TreePine,
-  'bat': Skull,
-  // Using Skull as bat alternative
+  'bat': Skull, // Using Skull as bat alternative
   'eye': Eye,
   'activity': Activity,
   'cpu': Cpu,
@@ -66,7 +73,7 @@ const ICON_MAP: Record<string, typeof Sparkles> = {
   'book-open': BookOpen,
   'tree-deciduous': TreeDeciduous,
   'moon': Moon,
-  'feather': Feather
+  'feather': Feather,
 };
 
 // Font families for different themes
@@ -140,33 +147,14 @@ const FONT_FAMILIES: Record<string, string> = {
   // Default
   'Playfair Display': '"Playfair Display", serif',
   'Crimson Text': '"Crimson Text", serif',
-  'Merriweather': '"Merriweather", serif'
+  'Merriweather': '"Merriweather", serif',
 };
+
 const SIZES = {
-  sm: {
-    icon: 'h-5 w-5',
-    text: 'text-lg',
-    container: 'p-1.5',
-    glow: 20
-  },
-  md: {
-    icon: 'h-6 w-6',
-    text: 'text-xl',
-    container: 'p-2',
-    glow: 25
-  },
-  lg: {
-    icon: 'h-8 w-8',
-    text: 'text-2xl',
-    container: 'p-2.5',
-    glow: 30
-  },
-  xl: {
-    icon: 'h-10 w-10',
-    text: 'text-3xl',
-    container: 'p-3',
-    glow: 40
-  }
+  sm: { icon: 'h-5 w-5', text: 'text-lg', container: 'p-1.5', glow: 20 },
+  md: { icon: 'h-6 w-6', text: 'text-xl', container: 'p-2', glow: 25 },
+  lg: { icon: 'h-8 w-8', text: 'text-2xl', container: 'p-2.5', glow: 30 },
+  xl: { icon: 'h-10 w-10', text: 'text-3xl', container: 'p-3', glow: 40 },
 };
 
 // Default theme styles when no sub-theme selected
@@ -175,48 +163,64 @@ const DEFAULT_STYLE = {
   glowColor: 'hsl(var(--primary) / 0.4)',
   textGradient: 'from-primary to-accent',
   font: '"Playfair Display", serif',
-  icon: Sparkles
+  icon: Sparkles,
 };
-export function ThemedLogo({
-  size = 'md',
-  showText = true,
-  className
-}: ThemedLogoProps) {
-  const {
-    settings
-  } = useSettings();
-  const subThemeId = settings.selectedSubTheme;
 
+export function ThemedLogo({ size = 'md', showText = true, className }: ThemedLogoProps) {
+  const { settings } = useSettings();
+  const subThemeId = settings.selectedSubTheme;
+  
   // Get sub-theme and parent theme
   const subTheme = subThemeId ? getSubThemeById(subThemeId) : null;
   const parentTheme = subThemeId ? getParentTheme(subThemeId) : null;
+  
   const sizeConfig = SIZES[size];
-
+  
   // Determine icon
   const iconName = subTheme?.logoIcon || 'sparkles';
   const Icon = ICON_MAP[iconName] || Sparkles;
-
+  
   // Determine font
-  const fontFamily = subTheme?.logoFont ? FONT_FAMILIES[subTheme.logoFont] || FONT_FAMILIES['Playfair Display'] : FONT_FAMILIES['Playfair Display'];
-
+  const fontFamily = subTheme?.logoFont 
+    ? FONT_FAMILIES[subTheme.logoFont] || FONT_FAMILIES['Playfair Display']
+    : FONT_FAMILIES['Playfair Display'];
+  
   // Colors from sub-theme - use theme colors properly
   const primaryColor = subTheme ? `hsl(${subTheme.primary})` : 'hsl(var(--primary))';
   const accentColor = subTheme ? `hsl(${subTheme.accent})` : 'hsl(var(--accent))';
   const glowColor = subTheme ? `hsl(${subTheme.primary} / 0.4)` : 'hsl(var(--primary) / 0.4)';
-  return <div className={cn("flex items-center gap-2", className)}>
-      <div className={cn("rounded-xl bg-card/50 backdrop-blur-sm border border-primary/20 transition-all duration-500", sizeConfig.container)} style={{
-      boxShadow: `0 0 ${sizeConfig.glow}px -5px ${glowColor}`
-    }}>
-        <Icon className={cn("transition-colors duration-500 text-green-600 border-success-foreground", sizeConfig.icon)} style={{
-        color: primaryColor
-      }} />
+
+  return (
+    <div className={cn("flex items-center gap-2", className)}>
+      <div 
+        className={cn(
+          "rounded-xl bg-card/50 backdrop-blur-sm border border-primary/20 transition-all duration-500",
+          sizeConfig.container
+        )}
+        style={{
+          boxShadow: `0 0 ${sizeConfig.glow}px -5px ${glowColor}`,
+        }}
+      >
+        <Icon 
+          className={cn(sizeConfig.icon, "transition-colors duration-500")} 
+          style={{ color: primaryColor }}
+        />
       </div>
-      {showText && <span className={cn("font-bold transition-all duration-500 text-green-100", sizeConfig.text)} style={{
-      fontFamily,
-      color: primaryColor,
-      textShadow: `0 0 20px ${glowColor}, 0 0 40px ${glowColor}`
-    }}>
+      {showText && (
+        <span 
+          className={cn(
+            "font-bold transition-all duration-500",
+            sizeConfig.text
+          )}
+          style={{
+            fontFamily,
+            color: primaryColor,
+            textShadow: `0 0 20px ${glowColor}, 0 0 40px ${glowColor}`,
+          }}
+        >
           LOOMY
-        </span>}
-    </div>;
+        </span>
+      )}
+    </div>
+  );
 }
