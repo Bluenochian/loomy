@@ -31,34 +31,62 @@ export default function Welcome() {
     );
   }
 
-  // If user is authenticated, show onboarding form
+  // If user is authenticated, show onboarding form with theme effects
   if (user) {
     return (
-      <div className="min-h-screen bg-background">
-        {/* Ambient background */}
-        <div className="fixed inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute top-0 left-1/4 w-96 h-96 bg-primary/5 rounded-full blur-3xl" />
-          <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-accent/5 rounded-full blur-3xl" />
+      <div className="min-h-screen bg-background overflow-hidden">
+        {/* Theme Effects Background - Same as landing page */}
+        <ThemeEffects themeId={themeId} />
+        
+        {/* Language Selector */}
+        <div className="fixed top-4 left-4 z-50">
+          <LanguageSelector variant="compact" />
         </div>
 
-        <div className="relative z-10 container max-w-3xl mx-auto px-6 py-16">
+        {/* Theme Preview Badge */}
+        <ThemePreviewBadge />
+
+        {/* Animated ambient background effects */}
+        <div className="fixed inset-0 overflow-hidden pointer-events-none">
+          <div 
+            className="absolute w-[600px] h-[600px] bg-primary/10 rounded-full blur-3xl"
+            style={{ 
+              top: '10%', 
+              left: '10%',
+              animation: 'float 12s ease-in-out infinite'
+            }}
+          />
+          <div 
+            className="absolute w-[500px] h-[500px] bg-accent/10 rounded-full blur-3xl"
+            style={{ 
+              bottom: '10%', 
+              right: '15%',
+              animation: 'float 15s ease-in-out infinite',
+              animationDelay: '-5s'
+            }}
+          />
+          <div 
+            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[900px] h-[900px] bg-gradient-radial from-primary/5 via-primary/2 to-transparent rounded-full"
+            style={{ animation: 'pulse 8s ease-in-out infinite' }}
+          />
+        </div>
+
+        <div className="relative z-10 container max-w-4xl mx-auto px-6 py-12">
           {/* Header */}
-          <div className="text-center mb-12 animate-fade-in">
-            <div className="inline-flex items-center gap-2 mb-6">
-              <Sparkles className="h-8 w-8 text-primary" />
-              <span className="font-display text-2xl font-bold gradient-text">LOOMY</span>
+          <div className="text-center mb-10 animate-fade-in">
+            <div className="inline-flex items-center gap-3 mb-6">
+              <ThemedLogo size="lg" />
             </div>
-            <h1 className="font-display text-4xl md:text-5xl font-bold mb-4 text-balance">
-              Let's Weave Your Story
+            <h1 className="font-display text-4xl md:text-5xl font-bold mb-4 text-balance gradient-text">
+              {t('welcome.letsWeave')}
             </h1>
-            <p className="text-lg text-muted-foreground max-w-xl mx-auto">
-              Tell us about the world you want to create. The more detail you provide, 
-              the richer your story foundation will be.
+            <p className="text-lg text-muted-foreground max-w-xl mx-auto leading-relaxed">
+              {t('welcome.tellUs')}
             </p>
           </div>
 
-          {/* Onboarding Form */}
-          <div className="bg-card/50 backdrop-blur-sm border border-border/50 rounded-2xl p-8 shadow-elevated animate-slide-up">
+          {/* Onboarding Form with glass effect */}
+          <div className="bg-card/60 backdrop-blur-md border border-border/50 rounded-2xl p-8 shadow-elevated animate-slide-up">
             <OnboardingForm />
           </div>
         </div>
