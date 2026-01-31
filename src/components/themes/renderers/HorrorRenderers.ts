@@ -769,68 +769,148 @@ export class CosmicHorrorRenderer extends BaseRenderer {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-// ASYLUM - Flickering fluorescent and static
+// ASYLUM - Institutional dread with subtle unease (NO FLICKERING)
 // ═══════════════════════════════════════════════════════════════════════════
 export class AsylumRenderer extends BaseRenderer {
-  flickerState = 1;
-  staticNoise: ImageData | null = null;
+  dustMotes: Array<{ x: number; y: number; vx: number; vy: number; size: number; alpha: number }> = [];
+  corridorLines: Array<{ x: number; length: number }> = [];
+  shadows: Array<{ x: number; y: number; size: number; phase: number }> = [];
 
   init(canvas: HTMLCanvasElement) {
     if (this.initialized) return;
     this.initialized = true;
+
+    // Floating dust particles in clinical light
+    for (let i = 0; i < 40; i++) {
+      this.dustMotes.push({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        vx: (Math.random() - 0.5) * 0.2,
+        vy: -0.1 - Math.random() * 0.15,
+        size: 1 + Math.random() * 2,
+        alpha: 0.2 + Math.random() * 0.3
+      });
+    }
+
+    // Floor/ceiling perspective lines
+    for (let i = 0; i < 8; i++) {
+      this.corridorLines.push({
+        x: canvas.width * (0.3 + (i / 7) * 0.4),
+        length: 50 + Math.random() * 100
+      });
+    }
+
+    // Lurking shadows that slowly shift
+    for (let i = 0; i < 5; i++) {
+      this.shadows.push({
+        x: Math.random() * canvas.width,
+        y: canvas.height * (0.6 + Math.random() * 0.4),
+        size: 80 + Math.random() * 120,
+        phase: Math.random() * Math.PI * 2
+      });
+    }
   }
 
   render(rc: RenderContext) {
     const { ctx, canvas, time } = rc;
 
-    // Flickering fluorescent effect
-    if (Math.random() > 0.95) {
-      this.flickerState = Math.random() > 0.3 ? 1 : 0.3;
-    }
-    if (Math.random() > 0.98) {
-      this.flickerState = Math.random() * 0.5;
-    }
-
-    // Sickly green-yellow light
+    // Sickly institutional light - steady, no flickering
     const lightGrad = ctx.createLinearGradient(0, 0, 0, canvas.height);
-    lightGrad.addColorStop(0, `rgba(200, 220, 180, ${0.08 * this.flickerState})`);
-    lightGrad.addColorStop(0.5, `rgba(180, 200, 160, ${0.04 * this.flickerState})`);
-    lightGrad.addColorStop(1, 'rgba(100, 120, 80, 0.02)');
+    lightGrad.addColorStop(0, 'rgba(200, 210, 180, 0.06)');
+    lightGrad.addColorStop(0.3, 'rgba(180, 190, 160, 0.04)');
+    lightGrad.addColorStop(0.7, 'rgba(150, 160, 140, 0.02)');
+    lightGrad.addColorStop(1, 'rgba(80, 90, 70, 0.03)');
     ctx.fillStyle = lightGrad;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Static noise overlay
-    const imageData = ctx.createImageData(canvas.width / 4, canvas.height / 4);
-    for (let i = 0; i < imageData.data.length; i += 4) {
-      const noise = Math.random() * 255;
-      imageData.data[i] = noise;
-      imageData.data[i + 1] = noise;
-      imageData.data[i + 2] = noise;
-      imageData.data[i + 3] = 8; // Very subtle
-    }
+    // Corridor perspective lines (subtle depth)
+    ctx.strokeStyle = 'rgba(100, 110, 90, 0.04)';
+    ctx.lineWidth = 1;
+    const vanishX = canvas.width / 2;
+    const vanishY = canvas.height * 0.4;
     
-    ctx.save();
-    ctx.scale(4, 4);
-    ctx.putImageData(imageData, 0, 0);
-    ctx.restore();
+    this.corridorLines.forEach(line => {
+      ctx.beginPath();
+      ctx.moveTo(line.x, canvas.height);
+      ctx.lineTo(vanishX, vanishY);
+      ctx.stroke();
+    });
 
-    // Scanlines
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.03)';
-    for (let y = 0; y < canvas.height; y += 3) {
-      ctx.fillRect(0, y, canvas.width, 1);
+    // Horizontal lines for floor tiles
+    for (let i = 0; i < 6; i++) {
+      const y = canvas.height - i * 40 - 20;
+      const perspectiveWidth = (canvas.height - y) / canvas.height * canvas.width * 0.8;
+      ctx.beginPath();
+      ctx.moveTo(vanishX - perspectiveWidth, y);
+      ctx.lineTo(vanishX + perspectiveWidth, y);
+      ctx.stroke();
     }
 
-    // Occasional intense flicker
-    if (this.flickerState < 0.5) {
-      ctx.fillStyle = `rgba(255, 255, 255, ${(0.5 - this.flickerState) * 0.3})`;
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-    }
+    // Slowly shifting shadows
+    this.shadows.forEach(shadow => {
+      shadow.phase += 0.003;
+      const drift = Math.sin(shadow.phase) * 10;
+      const breathe = 1 + Math.sin(shadow.phase * 0.7) * 0.1;
+      
+      const shadowGrad = ctx.createRadialGradient(
+        shadow.x + drift, shadow.y, 0,
+        shadow.x + drift, shadow.y, shadow.size * breathe
+      );
+      shadowGrad.addColorStop(0, 'rgba(30, 35, 25, 0.15)');
+      shadowGrad.addColorStop(0.5, 'rgba(40, 45, 35, 0.08)');
+      shadowGrad.addColorStop(1, 'transparent');
+      ctx.fillStyle = shadowGrad;
+      ctx.beginPath();
+      ctx.arc(shadow.x + drift, shadow.y, shadow.size * breathe, 0, Math.PI * 2);
+      ctx.fill();
+    });
 
-    // Door shadow in corner
-    const shadowGrad = ctx.createLinearGradient(0, canvas.height, canvas.width * 0.3, canvas.height * 0.7);
-    shadowGrad.addColorStop(0, 'rgba(0, 0, 0, 0.3)');
-    shadowGrad.addColorStop(1, 'transparent');
-    ctx.fillStyle = shadowGrad;
-    ctx.fillRect(0, canvas.height * 0.5, canvas.width * 0.4, canvas.height * 0.5);
+    // Floating dust motes in light beam
+    this.dustMotes.forEach(mote => {
+      mote.x += mote.vx;
+      mote.y += mote.vy;
+      
+      // Gentle horizontal drift
+      mote.vx += (Math.random() - 0.5) * 0.01;
+      mote.vx *= 0.99;
+
+      // Reset when off screen
+      if (mote.y < -10) {
+        mote.y = canvas.height + 10;
+        mote.x = Math.random() * canvas.width;
+      }
+      if (mote.x < -10) mote.x = canvas.width + 10;
+      if (mote.x > canvas.width + 10) mote.x = -10;
+
+      ctx.beginPath();
+      ctx.arc(mote.x, mote.y, mote.size, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(180, 190, 170, ${mote.alpha})`;
+      ctx.fill();
+    });
+
+    // Window light beam from top left
+    const beamGrad = ctx.createLinearGradient(0, 0, canvas.width * 0.5, canvas.height * 0.6);
+    beamGrad.addColorStop(0, 'rgba(200, 210, 180, 0.04)');
+    beamGrad.addColorStop(0.5, 'rgba(180, 190, 160, 0.02)');
+    beamGrad.addColorStop(1, 'transparent');
+    ctx.fillStyle = beamGrad;
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.lineTo(canvas.width * 0.15, 0);
+    ctx.lineTo(canvas.width * 0.5, canvas.height * 0.6);
+    ctx.lineTo(canvas.width * 0.2, canvas.height * 0.6);
+    ctx.closePath();
+    ctx.fill();
+
+    // Corner shadow for dread
+    const cornerShadow = ctx.createRadialGradient(
+      0, canvas.height, 0,
+      0, canvas.height, canvas.width * 0.4
+    );
+    cornerShadow.addColorStop(0, 'rgba(20, 25, 15, 0.25)');
+    cornerShadow.addColorStop(0.6, 'rgba(30, 35, 25, 0.1)');
+    cornerShadow.addColorStop(1, 'transparent');
+    ctx.fillStyle = cornerShadow;
+    ctx.fillRect(0, canvas.height * 0.5, canvas.width * 0.5, canvas.height * 0.5);
   }
 }

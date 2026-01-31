@@ -65,16 +65,10 @@ export class CyberpunkCityRenderer extends BaseRenderer {
     ctx.fillStyle = topGlow;
     ctx.fillRect(0, 0, canvas.width, 250);
 
-    // Holographic ads
+    // Holographic ads - no glitch/flickering
     this.holoAds.forEach(ad => {
-      ad.glitchPhase += 0.03;
-      const glitch = Math.sin(ad.glitchPhase);
-      
-      // Glitch offset
-      const glitchOffset = glitch > 0.9 ? (Math.random() - 0.5) * 10 : 0;
-      
       ctx.save();
-      ctx.translate(ad.x + glitchOffset, ad.y);
+      ctx.translate(ad.x, ad.y);
       
       // Hologram base
       ctx.fillStyle = `hsla(${ad.hue}, 80%, 50%, 0.08)`;
@@ -91,7 +85,7 @@ export class CyberpunkCityRenderer extends BaseRenderer {
       ctx.lineWidth = 2;
       ctx.strokeRect(0, 0, ad.width, ad.height);
       
-      // Random text lines (abstract)
+      // Abstract text lines (static, no glitch)
       ctx.fillStyle = `hsla(${ad.hue}, 70%, 70%, 0.2)`;
       for (let i = 0; i < 3; i++) {
         const lineWidth = 20 + Math.random() * (ad.width - 40);
@@ -101,7 +95,7 @@ export class CyberpunkCityRenderer extends BaseRenderer {
       ctx.restore();
     });
 
-    // Neon rain
+    // Neon rain (steady, no flickering)
     this.raindrops.forEach(drop => {
       drop.y += drop.speed;
       if (drop.y > canvas.height) {
@@ -122,18 +116,10 @@ export class CyberpunkCityRenderer extends BaseRenderer {
       ctx.stroke();
     });
 
-    // Scanlines overlay
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.015)';
+    // Subtle scanlines overlay (static, not distracting)
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.012)';
     for (let y = 0; y < canvas.height; y += 2) {
       ctx.fillRect(0, y, canvas.width, 1);
-    }
-
-    // Random glitch bars
-    if (Math.random() > 0.97) {
-      const barY = Math.random() * canvas.height;
-      const barHeight = 2 + Math.random() * 8;
-      ctx.fillStyle = `rgba(${accentRgb[0]}, ${accentRgb[1]}, ${accentRgb[2]}, 0.15)`;
-      ctx.fillRect(0, barY, canvas.width, barHeight);
     }
   }
 }
