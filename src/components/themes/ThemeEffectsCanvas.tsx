@@ -72,7 +72,7 @@ const RENDERER_MAP: Record<string, new () => any> = {
   jungleExpedition: Renderers.FallingLeavesRenderer,
   desertExpanse: Renderers.DesertExpanseRenderer,
   oceanVoyage: Renderers.OceanVoyageRenderer,
-  mountainPeak: Renderers.SnowfallRenderer,
+  mountainPeak: Renderers.MountainPeakRenderer,
   treasureCave: Renderers.HeistVaultRenderer,
   // Historical
   medievalCastle: Renderers.MedievalCastleRenderer,

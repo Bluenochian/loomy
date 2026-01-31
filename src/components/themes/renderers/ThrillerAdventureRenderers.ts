@@ -635,6 +635,236 @@ export class OceanVoyageRenderer extends BaseRenderer {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
+// MOUNTAIN PEAK - Majestic mountains with snow and eagles
+// ═══════════════════════════════════════════════════════════════════════════
+export class MountainPeakRenderer extends BaseRenderer {
+  snowflakes: Array<{ x: number; y: number; size: number; speed: number; drift: number }> = [];
+  eagles: Array<{ x: number; y: number; wingPhase: number; size: number; speed: number }> = [];
+  mountains: Array<{ points: Array<{ x: number; y: number }>; layer: number }> = [];
+  windStreaks: Array<{ x: number; y: number; length: number; alpha: number }> = [];
+
+  init(canvas: HTMLCanvasElement) {
+    if (this.initialized) return;
+    this.initialized = true;
+
+    // Create mountain silhouettes - multiple layers for depth
+    // Back layer - distant mountains
+    this.mountains.push({
+      layer: 0,
+      points: this.generateMountainRange(canvas, 0.55, 0.75, 0.15)
+    });
+    
+    // Middle layer
+    this.mountains.push({
+      layer: 1,
+      points: this.generateMountainRange(canvas, 0.6, 0.85, 0.25)
+    });
+    
+    // Front layer - closest mountains
+    this.mountains.push({
+      layer: 2,
+      points: this.generateMountainRange(canvas, 0.68, 1.0, 0.35)
+    });
+
+    // Snowflakes
+    for (let i = 0; i < 80; i++) {
+      this.snowflakes.push({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        size: 1 + Math.random() * 3,
+        speed: 0.5 + Math.random() * 1.5,
+        drift: (Math.random() - 0.5) * 0.5
+      });
+    }
+
+    // Eagles soaring
+    for (let i = 0; i < 3; i++) {
+      this.eagles.push({
+        x: Math.random() * canvas.width,
+        y: canvas.height * 0.15 + Math.random() * canvas.height * 0.25,
+        wingPhase: Math.random() * Math.PI * 2,
+        size: 15 + Math.random() * 10,
+        speed: 0.3 + Math.random() * 0.5
+      });
+    }
+
+    // Wind streaks
+    for (let i = 0; i < 10; i++) {
+      this.windStreaks.push({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height * 0.5,
+        length: 50 + Math.random() * 100,
+        alpha: 0.05 + Math.random() * 0.1
+      });
+    }
+  }
+
+  generateMountainRange(canvas: HTMLCanvasElement, minHeight: number, maxHeight: number, jaggedness: number): Array<{ x: number; y: number }> {
+    const points: Array<{ x: number; y: number }> = [];
+    let x = -50;
+    
+    while (x < canvas.width + 50) {
+      // Create peaks and valleys
+      const isPeak = Math.random() > 0.6;
+      const heightPercent = isPeak 
+        ? minHeight + Math.random() * (maxHeight - minHeight) * 0.4
+        : minHeight + Math.random() * (maxHeight - minHeight);
+      
+      const y = canvas.height * (1 - heightPercent);
+      points.push({ x, y });
+      
+      // Add sub-peaks for jagged look
+      if (isPeak && jaggedness > 0.2) {
+        const peakX = x + 20 + Math.random() * 40;
+        const peakY = y - (20 + Math.random() * 60) * jaggedness;
+        points.push({ x: peakX, y: peakY });
+      }
+      
+      x += 40 + Math.random() * 80;
+    }
+    
+    return points;
+  }
+
+  render(rc: RenderContext) {
+    const { ctx, canvas, time, primaryRgb, accentRgb } = rc;
+
+    // Sky gradient - cold blue
+    const skyGrad = ctx.createLinearGradient(0, 0, 0, canvas.height * 0.6);
+    skyGrad.addColorStop(0, `rgba(${primaryRgb[0] * 0.5}, ${primaryRgb[1] * 0.6}, ${primaryRgb[2]}, 0.15)`);
+    skyGrad.addColorStop(1, 'transparent');
+    ctx.fillStyle = skyGrad;
+    ctx.fillRect(0, 0, canvas.width, canvas.height * 0.6);
+
+    // Draw mountains back to front
+    this.mountains.forEach((mountain, layerIndex) => {
+      const layerAlpha = 0.15 + layerIndex * 0.15;
+      const layerBrightness = 60 - layerIndex * 15;
+      
+      ctx.beginPath();
+      ctx.moveTo(0, canvas.height);
+      
+      mountain.points.forEach((point, i) => {
+        if (i === 0) {
+          ctx.lineTo(point.x, point.y);
+        } else {
+          // Smooth curves between points
+          const prevPoint = mountain.points[i - 1];
+          const cpX = (prevPoint.x + point.x) / 2;
+          const cpY = Math.min(prevPoint.y, point.y) - 10;
+          ctx.quadraticCurveTo(cpX, cpY, point.x, point.y);
+        }
+      });
+      
+      ctx.lineTo(canvas.width, canvas.height);
+      ctx.closePath();
+      
+      // Mountain fill with gradient
+      const mountainGrad = ctx.createLinearGradient(0, canvas.height * 0.3, 0, canvas.height);
+      mountainGrad.addColorStop(0, `rgba(${layerBrightness + 40}, ${layerBrightness + 50}, ${layerBrightness + 70}, ${layerAlpha})`);
+      mountainGrad.addColorStop(0.3, `rgba(${layerBrightness + 20}, ${layerBrightness + 30}, ${layerBrightness + 50}, ${layerAlpha})`);
+      mountainGrad.addColorStop(1, `rgba(${layerBrightness}, ${layerBrightness + 10}, ${layerBrightness + 30}, ${layerAlpha})`);
+      ctx.fillStyle = mountainGrad;
+      ctx.fill();
+
+      // Snow caps on peaks (front layer only)
+      if (layerIndex === 2) {
+        mountain.points.forEach((point, i) => {
+          if (i > 0 && i < mountain.points.length - 1) {
+            const prevPoint = mountain.points[i - 1];
+            const nextPoint = mountain.points[i + 1];
+            // Check if this is a peak (lower y = higher on screen)
+            if (point.y < prevPoint.y && point.y < nextPoint.y) {
+              // Draw snow cap
+              ctx.beginPath();
+              ctx.moveTo(point.x - 25, point.y + 30);
+              ctx.lineTo(point.x, point.y);
+              ctx.lineTo(point.x + 25, point.y + 35);
+              ctx.closePath();
+              ctx.fillStyle = 'rgba(255, 255, 255, 0.25)';
+              ctx.fill();
+            }
+          }
+        });
+      }
+    });
+
+    // Wind streaks
+    this.windStreaks.forEach(streak => {
+      streak.x += 2;
+      if (streak.x > canvas.width + streak.length) {
+        streak.x = -streak.length;
+        streak.y = Math.random() * canvas.height * 0.4;
+      }
+
+      const grad = ctx.createLinearGradient(streak.x, streak.y, streak.x + streak.length, streak.y);
+      grad.addColorStop(0, 'transparent');
+      grad.addColorStop(0.5, `rgba(255, 255, 255, ${streak.alpha})`);
+      grad.addColorStop(1, 'transparent');
+      
+      ctx.strokeStyle = grad;
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(streak.x, streak.y);
+      ctx.lineTo(streak.x + streak.length, streak.y);
+      ctx.stroke();
+    });
+
+    // Snowflakes
+    this.snowflakes.forEach(snow => {
+      snow.y += snow.speed;
+      snow.x += snow.drift + Math.sin(time + snow.y * 0.01) * 0.3;
+
+      if (snow.y > canvas.height + 10) {
+        snow.y = -10;
+        snow.x = Math.random() * canvas.width;
+      }
+
+      ctx.beginPath();
+      ctx.arc(snow.x, snow.y, snow.size, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(255, 255, 255, ${0.3 + snow.size * 0.1})`;
+      ctx.fill();
+    });
+
+    // Soaring eagles
+    this.eagles.forEach(eagle => {
+      eagle.wingPhase += 0.03;
+      eagle.x += eagle.speed;
+      eagle.y += Math.sin(time * 0.5 + eagle.x * 0.005) * 0.5;
+
+      if (eagle.x > canvas.width + 50) {
+        eagle.x = -50;
+        eagle.y = canvas.height * 0.15 + Math.random() * canvas.height * 0.25;
+      }
+
+      const wingUp = Math.sin(eagle.wingPhase) * eagle.size * 0.4;
+      
+      ctx.save();
+      ctx.translate(eagle.x, eagle.y);
+      ctx.strokeStyle = 'rgba(40, 35, 30, 0.6)';
+      ctx.lineWidth = 2;
+      ctx.lineCap = 'round';
+      
+      // Eagle wings - V shape
+      ctx.beginPath();
+      ctx.moveTo(-eagle.size, wingUp);
+      ctx.quadraticCurveTo(-eagle.size * 0.3, wingUp * 0.5, 0, 0);
+      ctx.quadraticCurveTo(eagle.size * 0.3, wingUp * 0.5, eagle.size, wingUp);
+      ctx.stroke();
+      
+      ctx.restore();
+    });
+
+    // Atmospheric fog at base
+    const fogGrad = ctx.createLinearGradient(0, canvas.height - 100, 0, canvas.height);
+    fogGrad.addColorStop(0, 'transparent');
+    fogGrad.addColorStop(1, `rgba(${primaryRgb[0]}, ${primaryRgb[1]}, ${primaryRgb[2]}, 0.15)`);
+    ctx.fillStyle = fogGrad;
+    ctx.fillRect(0, canvas.height - 100, canvas.width, 100);
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
 // VIKING NORSE - Aurora and runes
 // ═══════════════════════════════════════════════════════════════════════════
 export class VikingNorseRenderer extends BaseRenderer {

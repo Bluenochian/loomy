@@ -64,10 +64,10 @@ export function AppSidebar({ projectId }: AppSidebarProps) {
       className={cn(
         'h-screen flex flex-col transition-all duration-300 ease-out-expo sticky top-0 z-10',
         collapsed ? 'w-16' : 'w-64',
-        // Glass effect when enabled
+        // Glass effect - slightly more transparent
         settings.glassSidebar 
-          ? 'bg-sidebar/70 backdrop-blur-xl border-r border-white/10 shadow-xl' 
-          : 'bg-sidebar border-r border-sidebar-border'
+          ? 'bg-sidebar/50 backdrop-blur-xl border-r border-white/5 shadow-xl' 
+          : 'bg-sidebar/80 backdrop-blur-sm border-r border-sidebar-border/50'
       )}
     >
       {/* Frosted glass overlay for extra effect */}
