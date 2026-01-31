@@ -61,6 +61,17 @@ export function useAutoTheme() {
     root.style.setProperty('--accent', theme.accent);
     root.style.setProperty('--ring', theme.primary);
     root.style.setProperty('--glow-primary', theme.primary);
+    
+    // Calculate primary-foreground based on lightness for contrast
+    const primaryParts = theme.primary.split(' ').map(p => parseFloat(p));
+    const primaryLightness = primaryParts[2] || 50;
+    root.style.setProperty('--primary-foreground', primaryLightness > 50 ? '222 25% 8%' : '40 20% 95%');
+    
+    // Accent foreground
+    const accentParts = theme.accent.split(' ').map(p => parseFloat(p));
+    const accentLightness = accentParts[2] || 50;
+    root.style.setProperty('--accent-foreground', accentLightness > 50 ? '222 25% 8%' : '40 20% 95%');
+    
     root.setAttribute('data-theme', detectedGenre);
 
   }, [currentProject?.id, currentProject?.concept, currentProject?.genre_influences]);
@@ -73,5 +84,15 @@ export function applyTheme(themeId: string) {
   root.style.setProperty('--accent', theme.accent);
   root.style.setProperty('--ring', theme.primary);
   root.style.setProperty('--glow-primary', theme.primary);
+  
+  // Calculate foreground colors for contrast
+  const primaryParts = theme.primary.split(' ').map(p => parseFloat(p));
+  const primaryLightness = primaryParts[2] || 50;
+  root.style.setProperty('--primary-foreground', primaryLightness > 50 ? '222 25% 8%' : '40 20% 95%');
+  
+  const accentParts = theme.accent.split(' ').map(p => parseFloat(p));
+  const accentLightness = accentParts[2] || 50;
+  root.style.setProperty('--accent-foreground', accentLightness > 50 ? '222 25% 8%' : '40 20% 95%');
+  
   root.setAttribute('data-theme', themeId);
 }

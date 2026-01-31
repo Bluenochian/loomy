@@ -53,11 +53,11 @@ const RENDERER_MAP: Record<string, new () => any> = {
   teslaLab: Renderers.QuantumFieldRenderer,
   victorianFog: Renderers.DustMotesRenderer,
   // Romance
-  roseGarden: Renderers.ZenGardenRenderer,
+  roseGarden: Renderers.RoseGardenRenderer,
   starlitNight: Renderers.CelestialMagicRenderer,
   beachSunset: Renderers.DesertExpanseRenderer,
-  sakuraBloom: Renderers.ZenGardenRenderer,
-  candlelitDinner: Renderers.GrimoireRenderer,
+  sakuraBloom: Renderers.SakuraBloomRenderer,
+  candlelitDinner: Renderers.CandlelitDinnerRenderer,
   // Thriller
   noirCity: Renderers.NoirCityRenderer,
   conspiracyBoard: Renderers.MysteryLibraryRenderer,
@@ -75,10 +75,10 @@ const RENDERER_MAP: Record<string, new () => any> = {
   mountainPeak: Renderers.SnowfallRenderer,
   treasureCave: Renderers.HeistVaultRenderer,
   // Historical
-  medievalCastle: Renderers.GrimoireRenderer,
-  ancientRome: Renderers.DustMotesRenderer,
+  medievalCastle: Renderers.MedievalCastleRenderer,
+  ancientRome: Renderers.AncientRomeRenderer,
   vikingNorse: Renderers.VikingNorseRenderer,
-  ancientEgypt: Renderers.DesertExpanseRenderer,
+  ancientEgypt: Renderers.AncientEgyptRenderer,
   feudalJapan: Renderers.FeudalJapanRenderer,
 };
 
