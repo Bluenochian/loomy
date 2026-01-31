@@ -401,7 +401,7 @@
     --accent: 270 50% 40%;
   }
 
-  /* Dark theme text visibility overrides - HIGH CONTRAST */
+  /* Dark theme text visibility overrides - better contrast without changing primary */
   [data-theme="horror"],
   [data-subtheme*="dark"],
   [data-subtheme*="forest"],
@@ -409,26 +409,12 @@
   [data-subtheme*="cosmic"],
   [data-subtheme*="asylum"],
   [data-subtheme*="grimoire"] {
-    --foreground: 0 0% 95%;
-    --card-foreground: 0 0% 92%;
-    --popover-foreground: 0 0% 92%;
-    --muted-foreground: 0 0% 70%;
-    --secondary-foreground: 0 0% 90%;
-    --sidebar-foreground: 0 0% 95%;
-    --primary: 120 50% 50%;
-    --primary-foreground: 0 0% 100%;
-    --accent: 140 60% 45%;
-    --accent-foreground: 0 0% 100%;
-  }
-  
-  /* Specific Dark Forest override for maximum visibility */
-  [data-subtheme="horror-forest"] {
-    --primary: 120 60% 55%;
-    --primary-foreground: 0 0% 100%;
-    --accent: 140 70% 50%;
-    --accent-foreground: 0 0% 100%;
-    --foreground: 0 0% 98%;
-    --muted-foreground: 0 0% 75%;
+    --foreground: 0 0% 92%;
+    --card-foreground: 0 0% 88%;
+    --popover-foreground: 0 0% 88%;
+    --muted-foreground: 0 0% 65%;
+    --secondary-foreground: 0 0% 85%;
+    --sidebar-foreground: 0 0% 90%;
   }
 }
 
