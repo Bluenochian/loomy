@@ -185,10 +185,27 @@ export function ThemedLogo({ size = 'md', showText = true, className }: ThemedLo
     ? FONT_FAMILIES[subTheme.logoFont] || FONT_FAMILIES['Playfair Display']
     : FONT_FAMILIES['Playfair Display'];
   
-  // Colors from sub-theme - use theme colors properly
-  const primaryColor = subTheme ? `hsl(${subTheme.primary})` : 'hsl(var(--primary))';
-  const accentColor = subTheme ? `hsl(${subTheme.accent})` : 'hsl(var(--accent))';
-  const glowColor = subTheme ? `hsl(${subTheme.primary} / 0.4)` : 'hsl(var(--primary) / 0.4)';
+  // Force high contrast for very dark themes
+  const isDarkForest = subThemeId === 'horror-forest';
+  const isCosmicHorror = subThemeId === 'horror-cosmic';
+  const needsBrightOverride = isDarkForest || isCosmicHorror;
+  
+  // Colors from sub-theme - override for dark themes
+  let primaryColor: string;
+  let glowColor: string;
+  
+  if (isDarkForest) {
+    // Bright emerald green for dark forest
+    primaryColor = 'hsl(145, 80%, 55%)';
+    glowColor = 'hsl(145, 80%, 55% / 0.5)';
+  } else if (isCosmicHorror) {
+    // Bright violet/purple for cosmic horror
+    primaryColor = 'hsl(270, 80%, 70%)';
+    glowColor = 'hsl(270, 80%, 70% / 0.5)';
+  } else {
+    primaryColor = subTheme ? `hsl(${subTheme.primary})` : 'hsl(var(--primary))';
+    glowColor = subTheme ? `hsl(${subTheme.primary} / 0.4)` : 'hsl(var(--primary) / 0.4)';
+  }
 
   return (
     <div className={cn("flex items-center gap-2", className)}>
