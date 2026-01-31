@@ -292,7 +292,7 @@ ${storyOverview?.narrative_intent ? `Intent: ${storyOverview.narrative_intent}` 
   };
 
   return (
-    <div className="h-[calc(100vh-4rem)] flex animate-fade-in" ref={containerRef}>
+    <div className="h-full min-h-[calc(100vh-4rem)] flex animate-fade-in" ref={containerRef}>
       {/* Canvas */}
       <div 
         ref={canvasRef}
@@ -598,6 +598,43 @@ ${storyOverview?.narrative_intent ? `Intent: ${storyOverview.narrative_intent}` 
           </div>
         )}
 
+        {/* Connections List */}
+        {storyMapEdges.length > 0 && (
+          <div className="p-4 border-b border-border space-y-2 max-h-48 overflow-y-auto">
+            <h3 className="font-semibold text-sm flex items-center gap-2">
+              <Link2 className="h-4 w-4 text-primary" /> {t('map.connections')} ({storyMapEdges.length})
+            </h3>
+            <div className="space-y-1">
+              {storyMapEdges.map(edge => {
+                const source = storyMapNodes.find(n => n.id === edge.source_node_id);
+                const target = storyMapNodes.find(n => n.id === edge.target_node_id);
+                if (!source || !target) return null;
+                
+                return (
+                  <div 
+                    key={edge.id} 
+                    className="flex items-center justify-between p-2 bg-secondary/30 rounded text-xs group hover:bg-secondary/50 transition-colors"
+                  >
+                    <div className="flex items-center gap-1 truncate flex-1">
+                      <span className="truncate max-w-[70px]">{source.title}</span>
+                      <span className="text-muted-foreground">→</span>
+                      <span className="truncate max-w-[70px]">{target.title}</span>
+                    </div>
+                    <Button 
+                      size="icon" 
+                      variant="ghost" 
+                      className="h-5 w-5 opacity-0 group-hover:opacity-100 transition-opacity"
+                      onClick={() => handleDeleteEdge(edge.id)}
+                    >
+                      <Trash2 className="h-3 w-3 text-destructive" />
+                    </Button>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
         {/* Stats */}
         <div className="p-4 mt-auto border-t border-border">
           <h3 className="font-semibold mb-3">{t('map.stats')}</h3>
@@ -611,6 +648,9 @@ ${storyOverview?.narrative_intent ? `Intent: ${storyOverview.narrative_intent}` 
               <p className="font-bold">{storyMapEdges.length}</p>
             </div>
           </div>
+          <p className="text-xs text-muted-foreground mt-3 text-center">
+            Click edges on canvas to delete • Select node + Connect to link
+          </p>
         </div>
       </div>
     </div>

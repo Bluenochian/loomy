@@ -2,7 +2,7 @@
 import { BaseRenderer, RenderContext } from './BaseRenderer';
 
 // ═══════════════════════════════════════════════════════════════════════════
-// CYBERPUNK CITY - Neon rain with holographic ads
+// CYBERPUNK CITY - Neon rain with cityscape silhouette
 // ═══════════════════════════════════════════════════════════════════════════
 export class CyberpunkCityRenderer extends BaseRenderer {
   raindrops: Array<{
@@ -12,13 +12,14 @@ export class CyberpunkCityRenderer extends BaseRenderer {
     color: string;
     alpha: number;
   }> = [];
-  holoAds: Array<{ x: number; y: number; width: number; height: number; hue: number; glitchPhase: number }> = [];
+  buildings: Array<{ x: number; width: number; height: number; windows: Array<{ x: number; y: number; lit: boolean; hue: number }> }> = [];
 
   init(canvas: HTMLCanvasElement) {
     if (this.initialized) return;
     this.initialized = true;
 
-    for (let i = 0; i < 300; i++) {
+    // Create rain
+    for (let i = 0; i < 200; i++) {
       const colorChoice = Math.random();
       let color = '0, 255, 255';
       if (colorChoice > 0.7) color = '255, 0, 200';
@@ -27,98 +28,144 @@ export class CyberpunkCityRenderer extends BaseRenderer {
       this.raindrops.push({
         x: Math.random() * canvas.width,
         y: Math.random() * canvas.height,
-        length: 15 + Math.random() * 45,
-        speed: 8 + Math.random() * 15,
+        length: 15 + Math.random() * 35,
+        speed: 6 + Math.random() * 12,
         color,
-        alpha: 0.1 + Math.random() * 0.25
+        alpha: 0.08 + Math.random() * 0.18
       });
     }
 
-    // Holographic ad panels
-    for (let i = 0; i < 4; i++) {
-      this.holoAds.push({
-        x: Math.random() * canvas.width * 0.8 + canvas.width * 0.1,
-        y: Math.random() * canvas.height * 0.4 + canvas.height * 0.1,
-        width: 80 + Math.random() * 120,
-        height: 40 + Math.random() * 60,
-        hue: Math.random() * 360,
-        glitchPhase: Math.random() * Math.PI * 2
-      });
+    // Create cityscape buildings at bottom
+    const buildingCount = Math.floor(canvas.width / 40) + 5;
+    let currentX = -20;
+    
+    for (let i = 0; i < buildingCount; i++) {
+      const width = 30 + Math.random() * 60;
+      const height = 80 + Math.random() * 180;
+      const windows: Array<{ x: number; y: number; lit: boolean; hue: number }> = [];
+      
+      // Add windows to building
+      const windowCols = Math.floor(width / 12);
+      const windowRows = Math.floor(height / 18);
+      
+      for (let row = 1; row < windowRows; row++) {
+        for (let col = 0; col < windowCols; col++) {
+          if (Math.random() > 0.3) { // 70% chance of window
+            windows.push({
+              x: col * 12 + 4,
+              y: row * 18 + 6,
+              lit: Math.random() > 0.4,
+              hue: Math.random() > 0.5 ? 180 : (Math.random() > 0.5 ? 320 : 45)
+            });
+          }
+        }
+      }
+      
+      this.buildings.push({ x: currentX, width, height, windows });
+      currentX += width + Math.random() * 10 - 5;
     }
   }
 
   render(rc: RenderContext) {
     const { ctx, canvas, primaryRgb, accentRgb, time } = rc;
 
-    // Neon ambient from bottom
-    const bottomGlow = ctx.createLinearGradient(0, canvas.height, 0, canvas.height - 350);
-    bottomGlow.addColorStop(0, `rgba(${primaryRgb[0]}, ${primaryRgb[1]}, ${primaryRgb[2]}, 0.12)`);
-    bottomGlow.addColorStop(0.5, `rgba(${primaryRgb[0]}, ${primaryRgb[1]}, ${primaryRgb[2]}, 0.04)`);
+    // Dark sky gradient
+    const skyGrad = ctx.createLinearGradient(0, 0, 0, canvas.height);
+    skyGrad.addColorStop(0, 'rgba(10, 5, 20, 0.1)');
+    skyGrad.addColorStop(0.6, 'rgba(20, 10, 35, 0.05)');
+    skyGrad.addColorStop(1, 'transparent');
+    ctx.fillStyle = skyGrad;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Neon ambient glow from bottom (city lights)
+    const bottomGlow = ctx.createLinearGradient(0, canvas.height, 0, canvas.height - 300);
+    bottomGlow.addColorStop(0, `rgba(${primaryRgb[0]}, ${primaryRgb[1]}, ${primaryRgb[2]}, 0.15)`);
+    bottomGlow.addColorStop(0.4, `rgba(${accentRgb[0]}, ${accentRgb[1]}, ${accentRgb[2]}, 0.06)`);
     bottomGlow.addColorStop(1, 'transparent');
     ctx.fillStyle = bottomGlow;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Top accent glow
-    const topGlow = ctx.createLinearGradient(0, 0, 0, 250);
-    topGlow.addColorStop(0, `rgba(${accentRgb[0]}, ${accentRgb[1]}, ${accentRgb[2]}, 0.08)`);
-    topGlow.addColorStop(1, 'transparent');
-    ctx.fillStyle = topGlow;
-    ctx.fillRect(0, 0, canvas.width, 250);
-
-    // Holographic ads - no glitch/flickering
-    this.holoAds.forEach(ad => {
-      ctx.save();
-      ctx.translate(ad.x, ad.y);
+    // Draw cityscape silhouette
+    this.buildings.forEach(building => {
+      const buildingBottom = canvas.height;
+      const buildingTop = canvas.height - building.height;
       
-      // Hologram base
-      ctx.fillStyle = `hsla(${ad.hue}, 80%, 50%, 0.08)`;
-      ctx.fillRect(0, 0, ad.width, ad.height);
+      // Building silhouette
+      ctx.fillStyle = 'rgba(8, 5, 15, 0.85)';
+      ctx.fillRect(building.x, buildingTop, building.width, building.height);
       
-      // Scanlines on hologram
-      ctx.fillStyle = `hsla(${ad.hue}, 80%, 70%, 0.05)`;
-      for (let y = 0; y < ad.height; y += 4) {
-        ctx.fillRect(0, y, ad.width, 1);
+      // Building edge highlight
+      ctx.strokeStyle = `rgba(${primaryRgb[0]}, ${primaryRgb[1]}, ${primaryRgb[2]}, 0.15)`;
+      ctx.lineWidth = 1;
+      ctx.strokeRect(building.x, buildingTop, building.width, building.height);
+      
+      // Draw windows
+      building.windows.forEach(window => {
+        if (window.lit) {
+          // Randomly flicker some windows (very subtle, not jarring)
+          const flicker = Math.random() > 0.995 ? 0.3 : 1;
+          
+          // Window glow
+          const windowGlow = ctx.createRadialGradient(
+            building.x + window.x + 3, buildingTop + window.y + 4, 0,
+            building.x + window.x + 3, buildingTop + window.y + 4, 8
+          );
+          windowGlow.addColorStop(0, `hsla(${window.hue}, 80%, 60%, ${0.4 * flicker})`);
+          windowGlow.addColorStop(1, 'transparent');
+          ctx.fillStyle = windowGlow;
+          ctx.fillRect(building.x + window.x - 4, buildingTop + window.y - 4, 14, 16);
+          
+          // Window itself
+          ctx.fillStyle = `hsla(${window.hue}, 70%, 70%, ${0.8 * flicker})`;
+          ctx.fillRect(building.x + window.x, buildingTop + window.y, 6, 8);
+        }
+      });
+      
+      // Occasional antenna/spire on tall buildings
+      if (building.height > 150 && Math.random() > 0.7) {
+        const antennaX = building.x + building.width / 2;
+        ctx.strokeStyle = 'rgba(80, 80, 100, 0.6)';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(antennaX, buildingTop);
+        ctx.lineTo(antennaX, buildingTop - 20);
+        ctx.stroke();
+        
+        // Blinking light on antenna
+        const blink = Math.sin(time * 3 + building.x) > 0.7;
+        if (blink) {
+          ctx.fillStyle = 'rgba(255, 50, 50, 0.8)';
+          ctx.beginPath();
+          ctx.arc(antennaX, buildingTop - 20, 2, 0, Math.PI * 2);
+          ctx.fill();
+        }
       }
-      
-      // Border glow
-      ctx.strokeStyle = `hsla(${ad.hue}, 90%, 60%, 0.3)`;
-      ctx.lineWidth = 2;
-      ctx.strokeRect(0, 0, ad.width, ad.height);
-      
-      // Abstract text lines (static, no glitch)
-      ctx.fillStyle = `hsla(${ad.hue}, 70%, 70%, 0.2)`;
-      for (let i = 0; i < 3; i++) {
-        const lineWidth = 20 + Math.random() * (ad.width - 40);
-        ctx.fillRect(10, 10 + i * 12, lineWidth, 6);
-      }
-      
-      ctx.restore();
     });
 
-    // Neon rain (steady, no flickering)
+    // Neon rain
     this.raindrops.forEach(drop => {
       drop.y += drop.speed;
-      if (drop.y > canvas.height) {
+      if (drop.y > canvas.height - 100) { // Stop above buildings
         drop.y = -drop.length;
         drop.x = Math.random() * canvas.width;
       }
 
       const grad = ctx.createLinearGradient(drop.x, drop.y, drop.x, drop.y + drop.length);
       grad.addColorStop(0, `rgba(${drop.color}, 0)`);
-      grad.addColorStop(0.2, `rgba(${drop.color}, ${drop.alpha})`);
-      grad.addColorStop(1, `rgba(${drop.color}, 0.02)`);
+      grad.addColorStop(0.3, `rgba(${drop.color}, ${drop.alpha})`);
+      grad.addColorStop(1, `rgba(${drop.color}, 0.01)`);
 
       ctx.strokeStyle = grad;
-      ctx.lineWidth = 1.5;
+      ctx.lineWidth = 1;
       ctx.beginPath();
       ctx.moveTo(drop.x, drop.y);
       ctx.lineTo(drop.x, drop.y + drop.length);
       ctx.stroke();
     });
 
-    // Subtle scanlines overlay (static, not distracting)
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.012)';
-    for (let y = 0; y < canvas.height; y += 2) {
+    // Very subtle scanlines
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.008)';
+    for (let y = 0; y < canvas.height; y += 3) {
       ctx.fillRect(0, y, canvas.width, 1);
     }
   }
