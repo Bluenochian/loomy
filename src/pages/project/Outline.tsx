@@ -148,7 +148,7 @@ export default function OutlinePage() {
           }
         });
       }}>
-          <Sparkles className="h-4 w-4" /> AI Generate Structure
+           AI Generate Structure
         </AIGenerateButton>
       </div>
 
@@ -243,7 +243,7 @@ export default function OutlinePage() {
                   <option value="rising">Rising</option>
                   <option value="climax">Climax</option>
                   <option value="falling">Falling</option>
-                  <option value="resolution">Resolution</option>
+                  
                 </select>
               </div>
               <Textarea value={arc.description} onChange={e => updateArc(arc.id, {
