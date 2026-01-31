@@ -2,197 +2,201 @@
 import { BaseRenderer, RenderContext } from './BaseRenderer';
 
 // ═══════════════════════════════════════════════════════════════════════════
-// FALLOUT WASTELAND - Vault-Tec Pip-Boy aesthetic with radiation and wasteland
+// FALLOUT WASTELAND - Vault Door Interior looking out to wasteland sky
 // ═══════════════════════════════════════════════════════════════════════════
 export class NuclearWastelandRenderer extends BaseRenderer {
-  debris: Array<{ x: number; y: number; size: number; rotation: number; type: number }> = [];
-  ashParticles: Array<{ x: number; y: number; speed: number; size: number; sway: number }> = [];
-  vaultBoyGlow = 0;
-  geiger = { tick: 0, intensity: 0 };
+  dustParticles: Array<{ x: number; y: number; speed: number; size: number; alpha: number }> = [];
+  vaultDoorAngle = 0;
+  lightFlicker = 0;
 
   init(canvas: HTMLCanvasElement) {
     if (this.initialized) return;
     this.initialized = true;
 
-    // Scattered wasteland debris at bottom
-    for (let i = 0; i < 30; i++) {
-      this.debris.push({
-        x: Math.random() * canvas.width,
-        y: canvas.height - 30 - Math.random() * 120,
-        size: 8 + Math.random() * 20,
-        rotation: Math.random() * Math.PI * 2,
-        type: Math.floor(Math.random() * 4)
-      });
-    }
-
-    // Ash/dust particles floating
-    for (let i = 0; i < 60; i++) {
-      this.ashParticles.push({
+    // Floating dust in the vault
+    for (let i = 0; i < 50; i++) {
+      this.dustParticles.push({
         x: Math.random() * canvas.width,
         y: Math.random() * canvas.height,
-        speed: 0.2 + Math.random() * 0.6,
-        size: 1 + Math.random() * 3,
-        sway: Math.random() * Math.PI * 2
+        speed: 0.1 + Math.random() * 0.3,
+        size: 1 + Math.random() * 2,
+        alpha: 0.2 + Math.random() * 0.3
       });
     }
   }
 
   render(rc: RenderContext) {
     const { ctx, canvas, time } = rc;
+    
+    // Pip-Boy green/amber palette
+    const pipGreen = { r: 80, g: 200, b: 120 };
+    const pipAmber = { r: 255, g: 180, b: 50 };
+    
+    this.lightFlicker = 0.85 + Math.sin(time * 8) * 0.05 + Math.random() * 0.1;
 
-    // Pip-Boy amber/green color
-    const pipboyR = 80;
-    const pipboyG = 200;
-    const pipboyB = 120;
+    // === WASTELAND SKY (visible through door opening) ===
+    const centerX = canvas.width / 2;
+    const centerY = canvas.height / 2;
+    const doorRadius = Math.min(canvas.width, canvas.height) * 0.35;
     
-    this.vaultBoyGlow = 0.5 + Math.sin(time * 0.5) * 0.1;
-    this.geiger.tick++;
+    // Draw the circular opening first (wasteland visible through)
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, doorRadius, 0, Math.PI * 2);
+    ctx.clip();
     
-    // Random geiger crackle
-    if (Math.random() > 0.97) {
-      this.geiger.intensity = 0.8;
+    // Wasteland sky gradient - amber/orange haze
+    const skyGrad = ctx.createLinearGradient(0, centerY - doorRadius, 0, centerY + doorRadius);
+    skyGrad.addColorStop(0, 'rgba(180, 120, 60, 0.4)');
+    skyGrad.addColorStop(0.4, 'rgba(200, 150, 80, 0.3)');
+    skyGrad.addColorStop(0.7, 'rgba(150, 100, 50, 0.35)');
+    skyGrad.addColorStop(1, 'rgba(80, 60, 40, 0.5)');
+    ctx.fillStyle = skyGrad;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
+    // Distant wasteland silhouette (ruined buildings)
+    ctx.fillStyle = 'rgba(40, 30, 20, 0.6)';
+    const baseY = centerY + doorRadius * 0.5;
+    ctx.beginPath();
+    ctx.moveTo(centerX - doorRadius, baseY);
+    // Ruined cityscape silhouette
+    let x = centerX - doorRadius;
+    while (x < centerX + doorRadius) {
+      const buildingHeight = 20 + Math.random() * 60;
+      const buildingWidth = 15 + Math.random() * 30;
+      ctx.lineTo(x, baseY - buildingHeight);
+      ctx.lineTo(x + buildingWidth * 0.3, baseY - buildingHeight - 10);
+      ctx.lineTo(x + buildingWidth * 0.5, baseY - buildingHeight + 5);
+      ctx.lineTo(x + buildingWidth, baseY - buildingHeight * 0.7);
+      x += buildingWidth;
     }
-    this.geiger.intensity *= 0.95;
-
-    // Wasteland gradient - sepia/brown tones
-    const wastelandGrad = ctx.createLinearGradient(0, 0, 0, canvas.height);
-    wastelandGrad.addColorStop(0, 'rgba(60, 40, 20, 0.15)');
-    wastelandGrad.addColorStop(0.5, 'rgba(80, 60, 30, 0.1)');
-    wastelandGrad.addColorStop(1, 'rgba(50, 35, 15, 0.2)');
-    ctx.fillStyle = wastelandGrad;
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    // Pip-Boy screen overlay glow
-    const pipboyGrad = ctx.createRadialGradient(
-      canvas.width / 2, canvas.height / 2, 0,
-      canvas.width / 2, canvas.height / 2, canvas.width * 0.8
+    ctx.lineTo(centerX + doorRadius, baseY);
+    ctx.lineTo(centerX + doorRadius, centerY + doorRadius);
+    ctx.lineTo(centerX - doorRadius, centerY + doorRadius);
+    ctx.closePath();
+    ctx.fill();
+    
+    // Sun/radiation glow in sky
+    const sunGrad = ctx.createRadialGradient(
+      centerX + doorRadius * 0.3, centerY - doorRadius * 0.3, 0,
+      centerX + doorRadius * 0.3, centerY - doorRadius * 0.3, doorRadius * 0.5
     );
-    pipboyGrad.addColorStop(0, `rgba(${pipboyR}, ${pipboyG}, ${pipboyB}, ${0.04 * this.vaultBoyGlow})`);
-    pipboyGrad.addColorStop(0.5, `rgba(${pipboyR}, ${pipboyG}, ${pipboyB}, ${0.02 * this.vaultBoyGlow})`);
-    pipboyGrad.addColorStop(1, 'transparent');
-    ctx.fillStyle = pipboyGrad;
+    sunGrad.addColorStop(0, 'rgba(255, 200, 100, 0.3)');
+    sunGrad.addColorStop(0.5, 'rgba(255, 150, 50, 0.1)');
+    sunGrad.addColorStop(1, 'transparent');
+    ctx.fillStyle = sunGrad;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
+    ctx.restore();
 
-    // Radiation warning symbol (top corners, subtle)
-    this.drawRadSymbol(ctx, 80, 80, 40, [pipboyR, pipboyG, pipboyB], 0.08 + this.geiger.intensity * 0.1);
-    this.drawRadSymbol(ctx, canvas.width - 80, 80, 40, [pipboyR, pipboyG, pipboyB], 0.08 + this.geiger.intensity * 0.1);
-
-    // Ground with cracked earth texture suggestion
-    const groundGrad = ctx.createLinearGradient(0, canvas.height - 150, 0, canvas.height);
-    groundGrad.addColorStop(0, 'transparent');
-    groundGrad.addColorStop(0.3, 'rgba(60, 45, 25, 0.15)');
-    groundGrad.addColorStop(1, 'rgba(40, 30, 15, 0.3)');
-    ctx.fillStyle = groundGrad;
-    ctx.fillRect(0, canvas.height - 150, canvas.width, 150);
-
-    // Debris silhouettes
-    ctx.fillStyle = 'rgba(30, 25, 15, 0.4)';
-    this.debris.forEach(d => {
+    // === VAULT DOOR FRAME ===
+    // Thick metallic door frame
+    ctx.strokeStyle = 'rgba(60, 70, 80, 0.9)';
+    ctx.lineWidth = doorRadius * 0.15;
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, doorRadius + doorRadius * 0.07, 0, Math.PI * 2);
+    ctx.stroke();
+    
+    // Inner door edge - metallic highlight
+    ctx.strokeStyle = 'rgba(100, 110, 120, 0.6)';
+    ctx.lineWidth = 8;
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, doorRadius - 4, 0, Math.PI * 2);
+    ctx.stroke();
+    
+    // Vault door gear teeth around edge
+    const teethCount = 24;
+    ctx.fillStyle = 'rgba(70, 80, 90, 0.8)';
+    for (let i = 0; i < teethCount; i++) {
+      const angle = (i / teethCount) * Math.PI * 2;
+      const toothX = centerX + Math.cos(angle) * (doorRadius + doorRadius * 0.12);
+      const toothY = centerY + Math.sin(angle) * (doorRadius + doorRadius * 0.12);
       ctx.save();
-      ctx.translate(d.x, d.y);
-      ctx.rotate(d.rotation);
-      
-      if (d.type === 0) {
-        // Rusted car hull
-        ctx.beginPath();
-        ctx.moveTo(-d.size, d.size * 0.3);
-        ctx.lineTo(-d.size * 0.8, -d.size * 0.2);
-        ctx.lineTo(d.size * 0.8, -d.size * 0.2);
-        ctx.lineTo(d.size, d.size * 0.3);
-        ctx.closePath();
-        ctx.fill();
-      } else if (d.type === 1) {
-        // Broken sign post
-        ctx.fillRect(-d.size * 0.1, -d.size, d.size * 0.2, d.size * 1.5);
-        ctx.fillRect(-d.size * 0.4, -d.size * 1.2, d.size * 0.8, d.size * 0.3);
-      } else if (d.type === 2) {
-        // Rock pile
-        ctx.beginPath();
-        ctx.arc(0, 0, d.size * 0.5, 0, Math.PI * 2);
-        ctx.arc(-d.size * 0.3, d.size * 0.2, d.size * 0.3, 0, Math.PI * 2);
-        ctx.arc(d.size * 0.25, d.size * 0.15, d.size * 0.35, 0, Math.PI * 2);
-        ctx.fill();
-      } else {
-        // Barrel
-        ctx.beginPath();
-        ctx.ellipse(0, 0, d.size * 0.3, d.size * 0.5, 0, 0, Math.PI * 2);
-        ctx.fill();
-      }
+      ctx.translate(toothX, toothY);
+      ctx.rotate(angle);
+      ctx.fillRect(-8, -12, 16, 24);
       ctx.restore();
+    }
+    
+    // Vault number on door frame (subtle)
+    ctx.save();
+    ctx.font = `bold ${doorRadius * 0.15}px "Share Tech Mono", monospace`;
+    ctx.textAlign = 'center';
+    ctx.fillStyle = `rgba(${pipAmber.r}, ${pipAmber.g}, ${pipAmber.b}, ${0.4 * this.lightFlicker})`;
+    ctx.shadowColor = `rgba(${pipAmber.r}, ${pipAmber.g}, ${pipAmber.b}, 0.5)`;
+    ctx.shadowBlur = 10;
+    ctx.fillText('111', centerX, centerY - doorRadius - doorRadius * 0.18);
+    ctx.restore();
+
+    // === VAULT INTERIOR ELEMENTS ===
+    // Dark vault walls around the door
+    const wallGrad = ctx.createRadialGradient(centerX, centerY, doorRadius * 1.2, centerX, centerY, canvas.width);
+    wallGrad.addColorStop(0, 'rgba(30, 35, 40, 0.7)');
+    wallGrad.addColorStop(0.5, 'rgba(20, 25, 30, 0.85)');
+    wallGrad.addColorStop(1, 'rgba(15, 18, 22, 0.95)');
+    
+    // Create a mask for the walls (outside the door)
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(0, 0, canvas.width, canvas.height);
+    ctx.arc(centerX, centerY, doorRadius + doorRadius * 0.15, 0, Math.PI * 2, true);
+    ctx.clip();
+    ctx.fillStyle = wallGrad;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.restore();
+    
+    // Pip-Boy terminal glow (bottom left corner)
+    const termX = canvas.width * 0.12;
+    const termY = canvas.height * 0.75;
+    const termGrad = ctx.createRadialGradient(termX, termY, 0, termX, termY, 150);
+    termGrad.addColorStop(0, `rgba(${pipGreen.r}, ${pipGreen.g}, ${pipGreen.b}, ${0.15 * this.lightFlicker})`);
+    termGrad.addColorStop(0.5, `rgba(${pipGreen.r}, ${pipGreen.g}, ${pipGreen.b}, ${0.05 * this.lightFlicker})`);
+    termGrad.addColorStop(1, 'transparent');
+    ctx.fillStyle = termGrad;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
+    // Emergency light glow (top corners)
+    const emergencyAlpha = 0.1 + Math.sin(time * 2) * 0.05;
+    [[canvas.width * 0.1, canvas.height * 0.1], [canvas.width * 0.9, canvas.height * 0.1]].forEach(([lx, ly]) => {
+      const lightGrad = ctx.createRadialGradient(lx, ly, 0, lx, ly, 100);
+      lightGrad.addColorStop(0, `rgba(${pipAmber.r}, ${pipAmber.g}, 0, ${emergencyAlpha})`);
+      lightGrad.addColorStop(1, 'transparent');
+      ctx.fillStyle = lightGrad;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
     });
 
-    // Floating ash particles
-    this.ashParticles.forEach(p => {
-      p.sway += 0.02;
-      p.x += Math.sin(p.sway) * 0.4;
+    // === DUST PARTICLES ===
+    this.dustParticles.forEach(p => {
       p.y -= p.speed;
-
+      p.x += Math.sin(time + p.y * 0.01) * 0.3;
+      
       if (p.y < -10) {
         p.y = canvas.height + 10;
         p.x = Math.random() * canvas.width;
       }
-
-      const ashAlpha = 0.3 + Math.sin(time + p.x * 0.01) * 0.1;
+      
       ctx.beginPath();
       ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-      ctx.fillStyle = `rgba(150, 140, 120, ${ashAlpha})`;
+      ctx.fillStyle = `rgba(180, 160, 140, ${p.alpha * this.lightFlicker})`;
       ctx.fill();
     });
 
-    // Subtle CRT scanlines
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.02)';
-    for (let y = 0; y < canvas.height; y += 3) {
+    // === CRT SCANLINES ===
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.015)';
+    for (let y = 0; y < canvas.height; y += 2) {
       ctx.fillRect(0, y, canvas.width, 1);
     }
 
-    // Vignette - dark and oppressive
+    // === VIGNETTE ===
     const vignette = ctx.createRadialGradient(
-      canvas.width / 2, canvas.height / 2, canvas.width * 0.25,
-      canvas.width / 2, canvas.height / 2, canvas.width * 0.75
+      centerX, centerY, doorRadius * 0.8,
+      centerX, centerY, canvas.width * 0.8
     );
     vignette.addColorStop(0, 'transparent');
-    vignette.addColorStop(1, 'rgba(0, 0, 0, 0.45)');
+    vignette.addColorStop(0.7, 'rgba(0, 0, 0, 0.3)');
+    vignette.addColorStop(1, 'rgba(0, 0, 0, 0.6)');
     ctx.fillStyle = vignette;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    // Geiger crackle flash
-    if (this.geiger.intensity > 0.1) {
-      ctx.fillStyle = `rgba(${pipboyR}, ${pipboyG}, ${pipboyB}, ${this.geiger.intensity * 0.05})`;
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-    }
-  }
-
-  private drawRadSymbol(ctx: CanvasRenderingContext2D, x: number, y: number, size: number, rgb: [number, number, number], alpha: number) {
-    ctx.save();
-    ctx.globalAlpha = alpha;
-    ctx.translate(x, y);
-    
-    // Three fan blades
-    for (let i = 0; i < 3; i++) {
-      ctx.save();
-      ctx.rotate((i * Math.PI * 2) / 3);
-      ctx.beginPath();
-      ctx.moveTo(0, -size * 0.15);
-      ctx.arc(0, 0, size, -Math.PI / 3, -Math.PI / 6);
-      ctx.lineTo(0, -size * 0.15);
-      ctx.fillStyle = `rgb(${rgb[0]}, ${rgb[1]}, ${rgb[2]})`;
-      ctx.fill();
-      ctx.restore();
-    }
-    
-    // Center circle
-    ctx.beginPath();
-    ctx.arc(0, 0, size * 0.2, 0, Math.PI * 2);
-    ctx.fillStyle = `rgb(${rgb[0]}, ${rgb[1]}, ${rgb[2]})`;
-    ctx.fill();
-    
-    // Inner circle (cutout)
-    ctx.beginPath();
-    ctx.arc(0, 0, size * 0.1, 0, Math.PI * 2);
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
-    ctx.fill();
-    
-    ctx.restore();
   }
 }
 
