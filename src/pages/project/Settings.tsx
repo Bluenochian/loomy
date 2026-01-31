@@ -60,6 +60,40 @@ export default function SettingsPage() {
     root.style.setProperty('--accent', subTheme.accent);
     root.style.setProperty('--ring', subTheme.primary);
     root.style.setProperty('--glow-primary', subTheme.primary);
+    root.style.setProperty('--secondary', subTheme.secondary);
+    root.style.setProperty('--background', subTheme.background);
+    
+    // Calculate foreground colors based on background lightness for proper contrast
+    const bgParts = subTheme.background.split(' ').map(p => parseFloat(p));
+    const bgLightness = bgParts[2] || 10;
+    
+    // Ensure foreground is always readable (light on dark, dark on light)
+    if (bgLightness < 30) {
+      // Dark background - use light foreground
+      root.style.setProperty('--foreground', '40 20% 92%');
+      root.style.setProperty('--card-foreground', '40 15% 90%');
+      root.style.setProperty('--popover-foreground', '40 15% 90%');
+      root.style.setProperty('--secondary-foreground', '40 15% 88%');
+      root.style.setProperty('--muted-foreground', '220 10% 60%');
+    } else {
+      // Light background - use dark foreground
+      root.style.setProperty('--foreground', '222 25% 12%');
+      root.style.setProperty('--card-foreground', '222 20% 15%');
+      root.style.setProperty('--popover-foreground', '222 20% 15%');
+      root.style.setProperty('--secondary-foreground', '222 15% 20%');
+      root.style.setProperty('--muted-foreground', '220 10% 40%');
+    }
+    
+    // Set accent-foreground based on accent color lightness
+    const accentParts = subTheme.accent.split(' ').map(p => parseFloat(p));
+    const accentLightness = accentParts[2] || 50;
+    root.style.setProperty('--accent-foreground', accentLightness > 50 ? '222 25% 8%' : '40 20% 95%');
+    
+    // Set primary-foreground based on primary color lightness
+    const primaryParts = subTheme.primary.split(' ').map(p => parseFloat(p));
+    const primaryLightness = primaryParts[2] || 50;
+    root.style.setProperty('--primary-foreground', primaryLightness > 50 ? '222 25% 8%' : '40 20% 95%');
+    
     root.setAttribute('data-theme', parentTheme.id);
     
     updateSetting('selectedSubTheme', subTheme.id);

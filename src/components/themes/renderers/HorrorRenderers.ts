@@ -315,126 +315,190 @@ export class GhostlyApparitionsRenderer extends BaseRenderer {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-// DARK FOREST - Glowing eyes and creeping shadows
+// DARK FOREST - Ominous tree silhouettes with glowing eyes and mist
 // ═══════════════════════════════════════════════════════════════════════════
 export class DarkForestRenderer extends BaseRenderer {
   eyes: Array<{ x: number; y: number; blinkPhase: number; size: number }> = [];
-  treeShadows: Array<{ x: number; sway: number }> = [];
+  trees: Array<{ x: number; height: number; trunkWidth: number; sway: number }> = [];
+  mist: Array<{ x: number; y: number; size: number; speed: number; alpha: number }> = [];
 
   init(canvas: HTMLCanvasElement) {
     if (this.initialized) return;
     this.initialized = true;
 
-    for (let i = 0; i < 15; i++) {
-      this.eyes.push({
-        x: Math.random() * canvas.width,
-        y: canvas.height * 0.3 + Math.random() * canvas.height * 0.5,
-        blinkPhase: Math.random() * Math.PI * 2,
-        size: 2 + Math.random() * 4
+    // Create proper tree silhouettes
+    for (let i = 0; i < 12; i++) {
+      this.trees.push({
+        x: (i - 1) * (canvas.width / 10) + Math.random() * 60 - 30,
+        height: canvas.height * (0.4 + Math.random() * 0.35),
+        trunkWidth: 15 + Math.random() * 25,
+        sway: Math.random() * Math.PI * 2
       });
     }
 
-    for (let i = 0; i < 8; i++) {
-      this.treeShadows.push({
-        x: i * (canvas.width / 7) - 50 + Math.random() * 100,
-        sway: Math.random() * Math.PI * 2
+    // Glowing eyes peering from darkness
+    for (let i = 0; i < 12; i++) {
+      this.eyes.push({
+        x: Math.random() * canvas.width,
+        y: canvas.height * 0.35 + Math.random() * canvas.height * 0.45,
+        blinkPhase: Math.random() * Math.PI * 2,
+        size: 2 + Math.random() * 3
+      });
+    }
+
+    // Ground mist
+    for (let i = 0; i < 15; i++) {
+      this.mist.push({
+        x: Math.random() * canvas.width,
+        y: canvas.height - 80 + Math.random() * 80,
+        size: 60 + Math.random() * 100,
+        speed: 0.2 + Math.random() * 0.4,
+        alpha: 0.1 + Math.random() * 0.15
       });
     }
   }
 
   render(rc: RenderContext) {
-    const { ctx, canvas, time, primaryRgb } = rc;
+    const { ctx, canvas, time, primaryRgb, accentRgb } = rc;
 
-    // Dense fog at bottom
-    const fog = ctx.createLinearGradient(0, canvas.height, 0, canvas.height * 0.4);
-    fog.addColorStop(0, 'rgba(20, 30, 20, 0.4)');
-    fog.addColorStop(0.5, 'rgba(15, 25, 15, 0.2)');
-    fog.addColorStop(1, 'transparent');
-    ctx.fillStyle = fog;
+    // Dark atmospheric gradient
+    const atmoGrad = ctx.createLinearGradient(0, 0, 0, canvas.height);
+    atmoGrad.addColorStop(0, 'rgba(10, 15, 10, 0.15)');
+    atmoGrad.addColorStop(0.5, 'rgba(5, 10, 5, 0.1)');
+    atmoGrad.addColorStop(1, 'rgba(15, 25, 15, 0.2)');
+    ctx.fillStyle = atmoGrad;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Tree shadows
-    this.treeShadows.forEach((tree, i) => {
-      tree.sway += 0.005;
-      const swayOffset = Math.sin(tree.sway) * 5;
-      
+    // Eerie moon glow
+    const moonX = canvas.width * 0.8;
+    const moonY = canvas.height * 0.12;
+    const moonGlow = ctx.createRadialGradient(moonX, moonY, 0, moonX, moonY, 120);
+    moonGlow.addColorStop(0, 'rgba(180, 200, 220, 0.08)');
+    moonGlow.addColorStop(0.5, 'rgba(150, 170, 190, 0.03)');
+    moonGlow.addColorStop(1, 'transparent');
+    ctx.fillStyle = moonGlow;
+    ctx.beginPath();
+    ctx.arc(moonX, moonY, 120, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Distant trees (lighter, further back)
+    this.trees.forEach((tree, i) => {
+      if (i % 2 !== 0) return;
+      tree.sway += 0.003;
+      const swayOffset = Math.sin(tree.sway) * 3;
+
       ctx.save();
       ctx.translate(tree.x + swayOffset, canvas.height);
-      
-      // Tree trunk shadow
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
-      ctx.beginPath();
-      ctx.moveTo(-20, 0);
-      ctx.lineTo(-15, -canvas.height * 0.6);
-      ctx.lineTo(15, -canvas.height * 0.6);
-      ctx.lineTo(20, 0);
-      ctx.fill();
-
-      // Branches
-      for (let b = 0; b < 4; b++) {
-        const branchY = -canvas.height * (0.3 + b * 0.1);
-        const branchLen = 40 + b * 20;
-        ctx.beginPath();
-        ctx.moveTo(0, branchY);
-        ctx.lineTo(-branchLen + swayOffset * 2, branchY - 30);
-        ctx.lineTo(-branchLen + 10 + swayOffset * 2, branchY - 25);
-        ctx.lineTo(0, branchY + 5);
-        ctx.fill();
-        ctx.beginPath();
-        ctx.moveTo(0, branchY);
-        ctx.lineTo(branchLen + swayOffset * 2, branchY - 20);
-        ctx.lineTo(branchLen - 10 + swayOffset * 2, branchY - 15);
-        ctx.lineTo(0, branchY + 5);
-        ctx.fill();
-      }
+      ctx.scale(0.7, 0.7);
+      this.drawTree(ctx, tree.height, tree.trunkWidth, 0.1);
       ctx.restore();
+    });
+
+    // Foreground trees (darker, closer)
+    this.trees.forEach((tree, i) => {
+      if (i % 2 === 0) return;
+      tree.sway += 0.004;
+      const swayOffset = Math.sin(tree.sway) * 5;
+
+      ctx.save();
+      ctx.translate(tree.x + swayOffset, canvas.height);
+      this.drawTree(ctx, tree.height, tree.trunkWidth, 0.25);
+      ctx.restore();
+    });
+
+    // Ground mist
+    this.mist.forEach(m => {
+      m.x += m.speed;
+      if (m.x > canvas.width + m.size) {
+        m.x = -m.size;
+      }
+
+      const mistGrad = ctx.createRadialGradient(m.x, m.y, 0, m.x, m.y, m.size);
+      mistGrad.addColorStop(0, `rgba(100, 120, 100, ${m.alpha})`);
+      mistGrad.addColorStop(0.6, `rgba(80, 100, 80, ${m.alpha * 0.5})`);
+      mistGrad.addColorStop(1, 'transparent');
+      ctx.fillStyle = mistGrad;
+      ctx.beginPath();
+      ctx.arc(m.x, m.y, m.size, 0, Math.PI * 2);
+      ctx.fill();
     });
 
     // Glowing eyes
     this.eyes.forEach(eye => {
-      eye.blinkPhase += 0.02;
+      eye.blinkPhase += 0.015 + Math.random() * 0.01;
       const blink = Math.sin(eye.blinkPhase);
-      
-      // Random blink
-      if (blink < -0.8) return;
+      if (blink < -0.7) return;
       
       const openness = Math.max(0, blink * 0.5 + 0.5);
       
-      // Left eye
-      const eyeGlow = ctx.createRadialGradient(eye.x, eye.y, 0, eye.x, eye.y, eye.size * 4);
-      eyeGlow.addColorStop(0, `rgba(${primaryRgb[0]}, ${primaryRgb[1]}, 50, ${0.8 * openness})`);
-      eyeGlow.addColorStop(0.5, `rgba(${primaryRgb[0]}, ${primaryRgb[1]}, 30, ${0.3 * openness})`);
+      // Eye pair glow
+      const eyeGlow = ctx.createRadialGradient(eye.x, eye.y, 0, eye.x, eye.y, eye.size * 5);
+      eyeGlow.addColorStop(0, `rgba(180, 200, 50, ${0.6 * openness})`);
+      eyeGlow.addColorStop(0.5, `rgba(150, 180, 30, ${0.2 * openness})`);
       eyeGlow.addColorStop(1, 'transparent');
       ctx.fillStyle = eyeGlow;
       ctx.beginPath();
-      ctx.arc(eye.x, eye.y, eye.size * 4, 0, Math.PI * 2);
+      ctx.arc(eye.x, eye.y, eye.size * 5, 0, Math.PI * 2);
       ctx.fill();
 
-      // Eye core
+      // Left eye
       ctx.beginPath();
-      ctx.ellipse(eye.x, eye.y, eye.size, eye.size * openness * 0.6, 0, 0, Math.PI * 2);
-      ctx.fillStyle = `rgba(255, 255, 100, ${openness})`;
+      ctx.ellipse(eye.x - eye.size * 2, eye.y, eye.size, eye.size * openness * 0.5, 0, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(255, 255, 100, ${openness * 0.9})`;
       ctx.fill();
 
-      // Right eye
-      const rightX = eye.x + eye.size * 6;
+      // Right eye  
       ctx.beginPath();
-      ctx.ellipse(rightX, eye.y, eye.size, eye.size * openness * 0.6, 0, 0, Math.PI * 2);
-      ctx.fillStyle = `rgba(255, 255, 100, ${openness})`;
+      ctx.ellipse(eye.x + eye.size * 2, eye.y, eye.size, eye.size * openness * 0.5, 0, 0, Math.PI * 2);
       ctx.fill();
     });
+  }
 
-    // Creeping mist animation
-    for (let i = 0; i < 3; i++) {
-      const mistY = canvas.height - 50 - i * 40;
-      const mistOffset = Math.sin(time * 0.3 + i) * 30;
-      const mistGrad = ctx.createLinearGradient(0, mistY - 40, 0, mistY + 40);
-      mistGrad.addColorStop(0, 'transparent');
-      mistGrad.addColorStop(0.5, `rgba(30, 50, 30, ${0.08 - i * 0.02})`);
-      mistGrad.addColorStop(1, 'transparent');
-      ctx.fillStyle = mistGrad;
-      ctx.fillRect(mistOffset - 50, mistY - 40, canvas.width + 100, 80);
+  private drawTree(ctx: CanvasRenderingContext2D, height: number, trunkWidth: number, alpha: number) {
+    // Trunk
+    ctx.fillStyle = `rgba(20, 25, 20, ${alpha})`;
+    ctx.beginPath();
+    ctx.moveTo(-trunkWidth / 2, 0);
+    ctx.lineTo(-trunkWidth / 4, -height * 0.9);
+    ctx.lineTo(trunkWidth / 4, -height * 0.9);
+    ctx.lineTo(trunkWidth / 2, 0);
+    ctx.closePath();
+    ctx.fill();
+
+    // Branches - organic shapes
+    const branchAlpha = alpha * 0.9;
+    ctx.fillStyle = `rgba(15, 20, 15, ${branchAlpha})`;
+    
+    // Left branches
+    for (let i = 0; i < 4; i++) {
+      const branchY = -height * (0.4 + i * 0.15);
+      const branchLen = 30 + i * 15;
+      ctx.beginPath();
+      ctx.moveTo(-2, branchY);
+      ctx.quadraticCurveTo(-branchLen * 0.6, branchY - 20, -branchLen, branchY - 30 - i * 5);
+      ctx.quadraticCurveTo(-branchLen * 0.8, branchY - 5, -2, branchY + 5);
+      ctx.fill();
     }
+    
+    // Right branches
+    for (let i = 0; i < 4; i++) {
+      const branchY = -height * (0.35 + i * 0.15);
+      const branchLen = 25 + i * 12;
+      ctx.beginPath();
+      ctx.moveTo(2, branchY);
+      ctx.quadraticCurveTo(branchLen * 0.6, branchY - 15, branchLen, branchY - 25 - i * 4);
+      ctx.quadraticCurveTo(branchLen * 0.8, branchY - 3, 2, branchY + 4);
+      ctx.fill();
+    }
+
+    // Crown/top of tree
+    ctx.beginPath();
+    ctx.moveTo(0, -height);
+    ctx.quadraticCurveTo(-15, -height * 0.92, -20, -height * 0.88);
+    ctx.quadraticCurveTo(-5, -height * 0.9, 0, -height * 0.85);
+    ctx.quadraticCurveTo(5, -height * 0.9, 20, -height * 0.88);
+    ctx.quadraticCurveTo(15, -height * 0.92, 0, -height);
+    ctx.fill();
   }
 }
 

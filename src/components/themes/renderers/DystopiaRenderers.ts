@@ -2,23 +2,36 @@
 import { BaseRenderer, RenderContext } from './BaseRenderer';
 
 // ═══════════════════════════════════════════════════════════════════════════
-// NUCLEAR WASTELAND - Radiation and falling ash
+// FALLOUT WASTELAND - Vault-Tec style with pip-boy green, radiation signs
 // ═══════════════════════════════════════════════════════════════════════════
 export class NuclearWastelandRenderer extends BaseRenderer {
-  ashParticles: Array<{ x: number; y: number; size: number; speed: number; drift: number }> = [];
-  radiationPulse = 0;
+  debris: Array<{ x: number; y: number; size: number; rotation: number; type: number }> = [];
+  radParticles: Array<{ x: number; y: number; speed: number; size: number }> = [];
+  scanlineOffset = 0;
+  warningFlash = 0;
 
   init(canvas: HTMLCanvasElement) {
     if (this.initialized) return;
     this.initialized = true;
 
-    for (let i = 0; i < 80; i++) {
-      this.ashParticles.push({
+    // Debris/rubble scattered
+    for (let i = 0; i < 25; i++) {
+      this.debris.push({
+        x: Math.random() * canvas.width,
+        y: canvas.height - 20 - Math.random() * 100,
+        size: 5 + Math.random() * 15,
+        rotation: Math.random() * Math.PI * 2,
+        type: Math.floor(Math.random() * 3)
+      });
+    }
+
+    // Radiation particles floating up
+    for (let i = 0; i < 40; i++) {
+      this.radParticles.push({
         x: Math.random() * canvas.width,
         y: Math.random() * canvas.height,
-        size: 1 + Math.random() * 3,
         speed: 0.3 + Math.random() * 0.8,
-        drift: (Math.random() - 0.5) * 0.3
+        size: 1 + Math.random() * 3
       });
     }
   }
@@ -26,64 +39,149 @@ export class NuclearWastelandRenderer extends BaseRenderer {
   render(rc: RenderContext) {
     const { ctx, canvas, time, primaryRgb } = rc;
 
-    this.radiationPulse += 0.02;
-    const pulse = 0.5 + Math.sin(this.radiationPulse) * 0.3;
+    this.scanlineOffset = (this.scanlineOffset + 1) % 4;
+    this.warningFlash = Math.sin(time * 2);
 
-    // Sickly yellow-green radiation glow
-    const radGlow = ctx.createRadialGradient(
+    // Pip-boy green tint overlay
+    const pipboyGlow = ctx.createRadialGradient(
       canvas.width / 2, canvas.height / 2, 0,
-      canvas.width / 2, canvas.height / 2, canvas.width * 0.6
+      canvas.width / 2, canvas.height / 2, canvas.width * 0.7
     );
-    radGlow.addColorStop(0, `rgba(${primaryRgb[0]}, ${primaryRgb[1]}, 0, ${0.08 * pulse})`);
-    radGlow.addColorStop(0.5, `rgba(${primaryRgb[0]}, ${primaryRgb[1] * 0.7}, 0, ${0.04 * pulse})`);
-    radGlow.addColorStop(1, 'transparent');
-    ctx.fillStyle = radGlow;
+    pipboyGlow.addColorStop(0, `rgba(${primaryRgb[0]}, ${primaryRgb[1]}, 50, 0.06)`);
+    pipboyGlow.addColorStop(0.6, `rgba(${primaryRgb[0] * 0.8}, ${primaryRgb[1] * 0.6}, 30, 0.04)`);
+    pipboyGlow.addColorStop(1, 'transparent');
+    ctx.fillStyle = pipboyGlow;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Hazard stripes at bottom
-    const stripeHeight = 30;
-    ctx.save();
-    ctx.globalAlpha = 0.1;
-    for (let x = -stripeHeight; x < canvas.width + stripeHeight; x += stripeHeight * 2) {
-      ctx.beginPath();
-      ctx.moveTo(x, canvas.height);
-      ctx.lineTo(x + stripeHeight, canvas.height);
-      ctx.lineTo(x + stripeHeight * 2, canvas.height - stripeHeight);
-      ctx.lineTo(x + stripeHeight, canvas.height - stripeHeight);
-      ctx.closePath();
-      ctx.fillStyle = `rgb(${primaryRgb[0]}, ${primaryRgb[1]}, 0)`;
-      ctx.fill();
-    }
-    ctx.restore();
+    // Hazard stripes at corners
+    this.drawHazardStripes(ctx, 0, canvas.height - 40, 150, 40, primaryRgb);
+    this.drawHazardStripes(ctx, canvas.width - 150, canvas.height - 40, 150, 40, primaryRgb);
 
-    // Falling ash
-    this.ashParticles.forEach(ash => {
-      ash.y += ash.speed;
-      ash.x += ash.drift + Math.sin(ash.y * 0.01) * 0.2;
+    // Radiation warning symbol (center top, subtle)
+    this.drawRadSymbol(ctx, canvas.width / 2, canvas.height * 0.15, 60, primaryRgb, 0.08 + this.warningFlash * 0.03);
 
-      if (ash.y > canvas.height + 10) {
-        ash.y = -10;
-        ash.x = Math.random() * canvas.width;
-      }
-
-      ctx.beginPath();
-      ctx.arc(ash.x, ash.y, ash.size, 0, Math.PI * 2);
-      ctx.fillStyle = `rgba(80, 70, 60, ${0.3 + Math.random() * 0.2})`;
-      ctx.fill();
-    });
-
-    // Occasional warning flash
-    if (Math.sin(this.radiationPulse * 3) > 0.95) {
-      ctx.fillStyle = `rgba(${primaryRgb[0]}, ${primaryRgb[1]}, 0, 0.05)`;
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-    }
-
-    // Dust/fog layer
-    const dustGrad = ctx.createLinearGradient(0, canvas.height, 0, canvas.height - 300);
-    dustGrad.addColorStop(0, `rgba(${primaryRgb[0] * 0.5}, ${primaryRgb[1] * 0.5}, 30, 0.15)`);
+    // Dust/wasteland haze
+    const dustGrad = ctx.createLinearGradient(0, canvas.height, 0, canvas.height - 250);
+    dustGrad.addColorStop(0, `rgba(80, 70, 50, 0.18)`);
+    dustGrad.addColorStop(0.5, `rgba(60, 55, 40, 0.08)`);
     dustGrad.addColorStop(1, 'transparent');
     ctx.fillStyle = dustGrad;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Ground debris
+    this.debris.forEach(d => {
+      ctx.save();
+      ctx.translate(d.x, d.y);
+      ctx.rotate(d.rotation);
+      ctx.fillStyle = `rgba(60, 55, 45, 0.4)`;
+      
+      if (d.type === 0) {
+        // Rock
+        ctx.beginPath();
+        ctx.moveTo(-d.size / 2, d.size / 3);
+        ctx.lineTo(0, -d.size / 2);
+        ctx.lineTo(d.size / 2, d.size / 4);
+        ctx.lineTo(d.size / 3, d.size / 2);
+        ctx.lineTo(-d.size / 3, d.size / 2);
+        ctx.closePath();
+        ctx.fill();
+      } else if (d.type === 1) {
+        // Metal scrap
+        ctx.fillRect(-d.size / 2, -d.size / 4, d.size, d.size / 2);
+      } else {
+        // Rubble pile
+        ctx.beginPath();
+        ctx.arc(0, 0, d.size / 2, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.restore();
+    });
+
+    // Floating radiation particles (glowing green)
+    this.radParticles.forEach(p => {
+      p.y -= p.speed;
+      p.x += Math.sin(time * 2 + p.y * 0.02) * 0.5;
+
+      if (p.y < -10) {
+        p.y = canvas.height + 10;
+        p.x = Math.random() * canvas.width;
+      }
+
+      const glow = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.size * 4);
+      glow.addColorStop(0, `rgba(${primaryRgb[0]}, ${primaryRgb[1]}, 80, 0.5)`);
+      glow.addColorStop(0.5, `rgba(${primaryRgb[0]}, ${primaryRgb[1]}, 50, 0.2)`);
+      glow.addColorStop(1, 'transparent');
+      ctx.fillStyle = glow;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.size * 4, 0, Math.PI * 2);
+      ctx.fill();
+    });
+
+    // CRT scanlines effect
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.03)';
+    for (let y = this.scanlineOffset; y < canvas.height; y += 4) {
+      ctx.fillRect(0, y, canvas.width, 1);
+    }
+
+    // Vignette
+    const vignette = ctx.createRadialGradient(
+      canvas.width / 2, canvas.height / 2, canvas.width * 0.3,
+      canvas.width / 2, canvas.height / 2, canvas.width * 0.75
+    );
+    vignette.addColorStop(0, 'transparent');
+    vignette.addColorStop(1, 'rgba(0, 0, 0, 0.35)');
+    ctx.fillStyle = vignette;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+  }
+
+  private drawHazardStripes(ctx: CanvasRenderingContext2D, x: number, y: number, width: number, height: number, rgb: [number, number, number]) {
+    ctx.save();
+    ctx.globalAlpha = 0.15;
+    const stripeWidth = 15;
+    for (let i = -height; i < width + height; i += stripeWidth * 2) {
+      ctx.beginPath();
+      ctx.moveTo(x + i, y + height);
+      ctx.lineTo(x + i + stripeWidth, y + height);
+      ctx.lineTo(x + i + stripeWidth + height, y);
+      ctx.lineTo(x + i + height, y);
+      ctx.closePath();
+      ctx.fillStyle = `rgb(${rgb[0]}, ${rgb[1]}, 0)`;
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  private drawRadSymbol(ctx: CanvasRenderingContext2D, x: number, y: number, size: number, rgb: [number, number, number], alpha: number) {
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.translate(x, y);
+    
+    // Three fan blades
+    for (let i = 0; i < 3; i++) {
+      ctx.save();
+      ctx.rotate((i * Math.PI * 2) / 3);
+      ctx.beginPath();
+      ctx.moveTo(0, -size * 0.15);
+      ctx.arc(0, 0, size, -Math.PI / 3, -Math.PI / 6);
+      ctx.lineTo(0, -size * 0.15);
+      ctx.fillStyle = `rgb(${rgb[0]}, ${rgb[1]}, 0)`;
+      ctx.fill();
+      ctx.restore();
+    }
+    
+    // Center circle
+    ctx.beginPath();
+    ctx.arc(0, 0, size * 0.2, 0, Math.PI * 2);
+    ctx.fillStyle = `rgb(${rgb[0]}, ${rgb[1]}, 0)`;
+    ctx.fill();
+    
+    // Inner circle (cutout)
+    ctx.beginPath();
+    ctx.arc(0, 0, size * 0.1, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+    ctx.fill();
+    
+    ctx.restore();
   }
 }
 

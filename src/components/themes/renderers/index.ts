@@ -7,3 +7,5 @@ export * from './SciFiRenderers';
 export * from './DystopiaRenderers';
 export * from './UtopiaRenderers';
 export * from './ThrillerAdventureRenderers';
+export * from './RomanceRenderers';
+export * from './HistoricalRenderers';
