@@ -3,13 +3,14 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Plus, ChevronDown, ChevronRight, Save, Loader2, Trash2 } from 'lucide-react';
+import { Plus, ChevronDown, ChevronRight, Save, Loader2, Trash2, Sparkles } from 'lucide-react';
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
+import { AIGenerateButton } from '@/components/ai/AIGenerateButton';
 import type { Act, StoryArc, Conflict } from '@/types/story';
 
 export default function OutlinePage() {
-  const { outline, updateOutline } = useStory();
+  const { outline, updateOutline, currentProject } = useStory();
   const { toast } = useToast();
   const [isSaving, setIsSaving] = useState(false);
   const [expandedActs, setExpandedActs] = useState<string[]>([]);
@@ -99,6 +100,13 @@ export default function OutlinePage() {
     toast({ title: 'Conflict added' });
   };
 
+  const updateConflict = async (conflictId: string, updates: Partial<Conflict>) => {
+    const updatedConflicts = conflicts.map(c => 
+      c.id === conflictId ? { ...c, ...updates } : c
+    );
+    await updateOutline({ conflicts: updatedConflicts });
+  };
+
   const deleteConflict = async (conflictId: string) => {
     await updateOutline({
       conflicts: conflicts.filter(c => c.id !== conflictId),
@@ -113,15 +121,55 @@ export default function OutlinePage() {
           <h1 className="font-display text-3xl font-bold mb-2">Story Outline</h1>
           <p className="text-muted-foreground">Structure your narrative with acts, arcs, and conflicts</p>
         </div>
+        <AIGenerateButton
+          type="outline"
+          context={`Story: ${currentProject?.title || 'Untitled'}. Concept: ${currentProject?.concept || ''}`}
+          onGenerated={(content) => {
+            // Parse and add generated acts
+            const newAct: Act = {
+              id: crypto.randomUUID(),
+              number: acts.length + 1,
+              title: `Generated Act ${acts.length + 1}`,
+              description: content,
+              chapters: [],
+            };
+            updateOutline({
+              structure: { acts: [...acts, newAct] },
+            });
+          }}
+        >
+          <Sparkles className="h-4 w-4" /> AI Generate Structure
+        </AIGenerateButton>
       </div>
 
       {/* Acts Section */}
       <div className="mb-10">
         <div className="flex items-center justify-between mb-4">
           <h2 className="font-display text-xl font-semibold">Acts</h2>
-          <Button variant="outline" size="sm" onClick={addAct}>
-            <Plus className="h-4 w-4" /> Add Act
-          </Button>
+          <div className="flex items-center gap-2">
+            <AIGenerateButton
+              type="outline"
+              context={`Generate content for Act ${acts.length + 1} of story: ${currentProject?.title}`}
+              onGenerated={(content) => {
+                const newAct: Act = {
+                  id: crypto.randomUUID(),
+                  number: acts.length + 1,
+                  title: `Act ${acts.length + 1}`,
+                  description: content,
+                  chapters: [],
+                };
+                updateOutline({ structure: { acts: [...acts, newAct] } });
+                toast({ title: 'Act generated!' });
+              }}
+              size="sm"
+              variant="ghost"
+            >
+              <Sparkles className="h-3 w-3" />
+            </AIGenerateButton>
+            <Button variant="outline" size="sm" onClick={addAct}>
+              <Plus className="h-4 w-4" /> Add Act
+            </Button>
+          </div>
         </div>
 
         <div className="space-y-3">
@@ -182,9 +230,30 @@ export default function OutlinePage() {
       <div className="mb-10">
         <div className="flex items-center justify-between mb-4">
           <h2 className="font-display text-xl font-semibold">Story Arcs</h2>
-          <Button variant="outline" size="sm" onClick={addArc}>
-            <Plus className="h-4 w-4" /> Add Arc
-          </Button>
+          <div className="flex items-center gap-2">
+            <AIGenerateButton
+              type="arc"
+              context={`Generate a story arc for: ${currentProject?.title}`}
+              onGenerated={(content) => {
+                const newArc: StoryArc = {
+                  id: crypto.randomUUID(),
+                  name: 'Generated Arc',
+                  description: content,
+                  type: 'subplot',
+                  status: 'setup',
+                };
+                updateOutline({ arcs: [...arcs, newArc] });
+                toast({ title: 'Arc generated!' });
+              }}
+              size="sm"
+              variant="ghost"
+            >
+              <Sparkles className="h-3 w-3" />
+            </AIGenerateButton>
+            <Button variant="outline" size="sm" onClick={addArc}>
+              <Plus className="h-4 w-4" /> Add Arc
+            </Button>
+          </div>
         </div>
 
         <div className="grid gap-3 md:grid-cols-2">
@@ -243,9 +312,29 @@ export default function OutlinePage() {
       <div>
         <div className="flex items-center justify-between mb-4">
           <h2 className="font-display text-xl font-semibold">Conflicts</h2>
-          <Button variant="outline" size="sm" onClick={addConflict}>
-            <Plus className="h-4 w-4" /> Add Conflict
-          </Button>
+          <div className="flex items-center gap-2">
+            <AIGenerateButton
+              type="conflict"
+              context={`Generate a conflict for story: ${currentProject?.title}`}
+              onGenerated={(content) => {
+                const newConflict: Conflict = {
+                  id: crypto.randomUUID(),
+                  type: 'external',
+                  description: content,
+                  characters: [],
+                };
+                updateOutline({ conflicts: [...conflicts, newConflict] });
+                toast({ title: 'Conflict generated!' });
+              }}
+              size="sm"
+              variant="ghost"
+            >
+              <Sparkles className="h-3 w-3" />
+            </AIGenerateButton>
+            <Button variant="outline" size="sm" onClick={addConflict}>
+              <Plus className="h-4 w-4" /> Add Conflict
+            </Button>
+          </div>
         </div>
 
         <div className="grid gap-3 md:grid-cols-2">
