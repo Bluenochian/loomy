@@ -229,25 +229,210 @@ export type TranslationKey =
 
 type Translations = Record<Language, Partial<Record<TranslationKey, string>>>;
 
-// Welcome translations shared between all languages
-const welcomeTranslationsEn = {
-  'welcome.headline1': 'Where Stories',
-  'welcome.headline2': 'Come Alive',
-  'welcome.description': 'An AI-powered narrative canvas that understands your story, generates rich worlds, and adapts its entire interface to match your vision.',
-  'welcome.feature1.title': 'Story-First Intelligence',
-  'welcome.feature1.desc': 'AI understands your narrative and generates characters, lore, and plot that feel authentic.',
-  'welcome.feature2.title': 'Living Theme System',
-  'welcome.feature2.desc': "The interface transforms to match your story's genre and mood.",
-  'welcome.feature3.title': 'Guided Creation',
-  'welcome.feature3.desc': 'From concept to manuscript, with intelligent assistance at every step.',
-  'welcome.startWriting': 'Start Writing',
-  'welcome.createAccount': 'Create Your Account',
-  'welcome.signIn': 'Welcome Back',
-  'welcome.beginJourney': 'Begin your storytelling journey',
-  'welcome.continueStory': 'Continue your story',
-  'welcome.letsWeave': "Let's Weave Your Story",
-  'welcome.tellUs': 'Tell us about the world you want to create.',
+// Welcome translations for each language
+type WelcomeTranslation = {
+  'welcome.headline1': string;
+  'welcome.headline2': string;
+  'welcome.description': string;
+  'welcome.feature1.title': string;
+  'welcome.feature1.desc': string;
+  'welcome.feature2.title': string;
+  'welcome.feature2.desc': string;
+  'welcome.feature3.title': string;
+  'welcome.feature3.desc': string;
+  'welcome.startWriting': string;
+  'welcome.createAccount': string;
+  'welcome.signIn': string;
+  'welcome.beginJourney': string;
+  'welcome.continueStory': string;
+  'welcome.letsWeave': string;
+  'welcome.tellUs': string;
 };
+
+const welcomeTranslations: Record<Language, WelcomeTranslation> = {
+  en: {
+    'welcome.headline1': 'Where Stories',
+    'welcome.headline2': 'Come Alive',
+    'welcome.description': 'An AI-powered narrative canvas that understands your story, generates rich worlds, and adapts its entire interface to match your vision.',
+    'welcome.feature1.title': 'Story-First Intelligence',
+    'welcome.feature1.desc': 'AI understands your narrative and generates characters, lore, and plot that feel authentic.',
+    'welcome.feature2.title': 'Living Theme System',
+    'welcome.feature2.desc': "The interface transforms to match your story's genre and mood.",
+    'welcome.feature3.title': 'Guided Creation',
+    'welcome.feature3.desc': 'From concept to manuscript, with intelligent assistance at every step.',
+    'welcome.startWriting': 'Start Writing',
+    'welcome.createAccount': 'Create Your Account',
+    'welcome.signIn': 'Welcome Back',
+    'welcome.beginJourney': 'Begin your storytelling journey',
+    'welcome.continueStory': 'Continue your story',
+    'welcome.letsWeave': "Let's Weave Your Story",
+    'welcome.tellUs': 'Tell us about the world you want to create.',
+  },
+  tr: {
+    'welcome.headline1': 'Hikayelerin',
+    'welcome.headline2': 'Hayat Bulduğu Yer',
+    'welcome.description': 'Hikayenizi anlayan, zengin dünyalar yaratan ve tüm arayüzünü vizyonunuza uyarlayan yapay zeka destekli bir anlatı tuvali.',
+    'welcome.feature1.title': 'Hikaye Odaklı Zeka',
+    'welcome.feature1.desc': 'Yapay zeka anlatınızı anlar ve otantik hissettiren karakterler, dünya ve olay örgüsü üretir.',
+    'welcome.feature2.title': 'Canlı Tema Sistemi',
+    'welcome.feature2.desc': 'Arayüz, hikayenizin türüne ve ruh haline uyum sağlar.',
+    'welcome.feature3.title': 'Rehberli Yaratım',
+    'welcome.feature3.desc': 'Konseptten manüskriye, her adımda akıllı yardım.',
+    'welcome.startWriting': 'Yazmaya Başla',
+    'welcome.createAccount': 'Hesabını Oluştur',
+    'welcome.signIn': 'Tekrar Hoş Geldin',
+    'welcome.beginJourney': 'Hikaye anlatıcılığı yolculuğuna başla',
+    'welcome.continueStory': 'Hikayene devam et',
+    'welcome.letsWeave': 'Hikayeni Örelim',
+    'welcome.tellUs': 'Yaratmak istediğin dünyayı anlat.',
+  },
+  es: {
+    'welcome.headline1': 'Donde las Historias',
+    'welcome.headline2': 'Cobran Vida',
+    'welcome.description': 'Un lienzo narrativo impulsado por IA que comprende tu historia, genera mundos ricos y adapta toda su interfaz a tu visión.',
+    'welcome.feature1.title': 'Inteligencia Narrativa',
+    'welcome.feature1.desc': 'La IA comprende tu narrativa y genera personajes, lore y trama auténticos.',
+    'welcome.feature2.title': 'Sistema de Temas Vivo',
+    'welcome.feature2.desc': 'La interfaz se transforma para coincidir con el género y tono de tu historia.',
+    'welcome.feature3.title': 'Creación Guiada',
+    'welcome.feature3.desc': 'Del concepto al manuscrito, con asistencia inteligente en cada paso.',
+    'welcome.startWriting': 'Empezar a Escribir',
+    'welcome.createAccount': 'Crear Cuenta',
+    'welcome.signIn': 'Bienvenido de Nuevo',
+    'welcome.beginJourney': 'Comienza tu viaje narrativo',
+    'welcome.continueStory': 'Continúa tu historia',
+    'welcome.letsWeave': 'Tejamos Tu Historia',
+    'welcome.tellUs': 'Cuéntanos sobre el mundo que quieres crear.',
+  },
+  fr: {
+    'welcome.headline1': 'Où les Histoires',
+    'welcome.headline2': 'Prennent Vie',
+    'welcome.description': 'Un canevas narratif alimenté par IA qui comprend votre histoire, génère des mondes riches et adapte toute son interface à votre vision.',
+    'welcome.feature1.title': 'Intelligence Narrative',
+    'welcome.feature1.desc': "L'IA comprend votre récit et génère des personnages, un lore et une intrigue authentiques.",
+    'welcome.feature2.title': 'Système de Thèmes Vivant',
+    'welcome.feature2.desc': "L'interface se transforme pour correspondre au genre et à l'ambiance de votre histoire.",
+    'welcome.feature3.title': 'Création Guidée',
+    'welcome.feature3.desc': 'Du concept au manuscrit, avec une assistance intelligente à chaque étape.',
+    'welcome.startWriting': 'Commencer à Écrire',
+    'welcome.createAccount': 'Créer un Compte',
+    'welcome.signIn': 'Bon Retour',
+    'welcome.beginJourney': 'Commencez votre voyage narratif',
+    'welcome.continueStory': 'Continuez votre histoire',
+    'welcome.letsWeave': 'Tissons Votre Histoire',
+    'welcome.tellUs': 'Parlez-nous du monde que vous voulez créer.',
+  },
+  de: {
+    'welcome.headline1': 'Wo Geschichten',
+    'welcome.headline2': 'Lebendig Werden',
+    'welcome.description': 'Eine KI-gestützte Erzählleinwand, die Ihre Geschichte versteht, reiche Welten generiert und ihre gesamte Oberfläche an Ihre Vision anpasst.',
+    'welcome.feature1.title': 'Narrative Intelligenz',
+    'welcome.feature1.desc': 'KI versteht Ihre Erzählung und generiert authentische Charaktere, Lore und Handlung.',
+    'welcome.feature2.title': 'Lebendiges Themensystem',
+    'welcome.feature2.desc': 'Die Oberfläche passt sich dem Genre und der Stimmung Ihrer Geschichte an.',
+    'welcome.feature3.title': 'Geführte Kreation',
+    'welcome.feature3.desc': 'Vom Konzept zum Manuskript, mit intelligenter Unterstützung bei jedem Schritt.',
+    'welcome.startWriting': 'Mit dem Schreiben beginnen',
+    'welcome.createAccount': 'Konto erstellen',
+    'welcome.signIn': 'Willkommen zurück',
+    'welcome.beginJourney': 'Beginnen Sie Ihre Erzählreise',
+    'welcome.continueStory': 'Setzen Sie Ihre Geschichte fort',
+    'welcome.letsWeave': 'Weben wir Ihre Geschichte',
+    'welcome.tellUs': 'Erzählen Sie uns von der Welt, die Sie erschaffen möchten.',
+  },
+  it: {
+    'welcome.headline1': 'Dove le Storie',
+    'welcome.headline2': 'Prendono Vita',
+    'welcome.description': "Una tela narrativa alimentata dall'IA che comprende la tua storia, genera mondi ricchi e adatta tutta la sua interfaccia alla tua visione.",
+    'welcome.feature1.title': 'Intelligenza Narrativa',
+    'welcome.feature1.desc': "L'IA comprende la tua narrativa e genera personaggi, lore e trama autentici.",
+    'welcome.feature2.title': 'Sistema di Temi Vivente',
+    'welcome.feature2.desc': "L'interfaccia si trasforma per adattarsi al genere e all'atmosfera della tua storia.",
+    'welcome.feature3.title': 'Creazione Guidata',
+    'welcome.feature3.desc': 'Dal concetto al manoscritto, con assistenza intelligente ad ogni passo.',
+    'welcome.startWriting': 'Inizia a Scrivere',
+    'welcome.createAccount': 'Crea Account',
+    'welcome.signIn': 'Bentornato',
+    'welcome.beginJourney': 'Inizia il tuo viaggio narrativo',
+    'welcome.continueStory': 'Continua la tua storia',
+    'welcome.letsWeave': 'Tessiamo la Tua Storia',
+    'welcome.tellUs': 'Parlaci del mondo che vuoi creare.',
+  },
+  pt: {
+    'welcome.headline1': 'Onde as Histórias',
+    'welcome.headline2': 'Ganham Vida',
+    'welcome.description': 'Uma tela narrativa alimentada por IA que entende sua história, gera mundos ricos e adapta toda sua interface à sua visão.',
+    'welcome.feature1.title': 'Inteligência Narrativa',
+    'welcome.feature1.desc': 'A IA entende sua narrativa e gera personagens, lore e enredo autênticos.',
+    'welcome.feature2.title': 'Sistema de Temas Vivo',
+    'welcome.feature2.desc': 'A interface se transforma para combinar com o gênero e tom da sua história.',
+    'welcome.feature3.title': 'Criação Guiada',
+    'welcome.feature3.desc': 'Do conceito ao manuscrito, com assistência inteligente em cada passo.',
+    'welcome.startWriting': 'Começar a Escrever',
+    'welcome.createAccount': 'Criar Conta',
+    'welcome.signIn': 'Bem-vindo de Volta',
+    'welcome.beginJourney': 'Comece sua jornada narrativa',
+    'welcome.continueStory': 'Continue sua história',
+    'welcome.letsWeave': 'Vamos Tecer Sua História',
+    'welcome.tellUs': 'Conte-nos sobre o mundo que você quer criar.',
+  },
+  ru: {
+    'welcome.headline1': 'Где Истории',
+    'welcome.headline2': 'Оживают',
+    'welcome.description': 'Нарративное полотно на базе ИИ, которое понимает вашу историю, создаёт богатые миры и адаптирует весь интерфейс под ваше видение.',
+    'welcome.feature1.title': 'Нарративный Интеллект',
+    'welcome.feature1.desc': 'ИИ понимает ваше повествование и создаёт аутентичных персонажей, лор и сюжет.',
+    'welcome.feature2.title': 'Живая Система Тем',
+    'welcome.feature2.desc': 'Интерфейс трансформируется в соответствии с жанром и настроением вашей истории.',
+    'welcome.feature3.title': 'Управляемое Творчество',
+    'welcome.feature3.desc': 'От концепции до рукописи, с интеллектуальной помощью на каждом шагу.',
+    'welcome.startWriting': 'Начать Писать',
+    'welcome.createAccount': 'Создать Аккаунт',
+    'welcome.signIn': 'С Возвращением',
+    'welcome.beginJourney': 'Начните своё повествовательное путешествие',
+    'welcome.continueStory': 'Продолжите свою историю',
+    'welcome.letsWeave': 'Сплетём Вашу Историю',
+    'welcome.tellUs': 'Расскажите нам о мире, который вы хотите создать.',
+  },
+  zh: {
+    'welcome.headline1': '故事',
+    'welcome.headline2': '在此绽放',
+    'welcome.description': '一个AI驱动的叙事画布，理解您的故事，创造丰富的世界，并使整个界面适应您的愿景。',
+    'welcome.feature1.title': '叙事智能',
+    'welcome.feature1.desc': 'AI理解您的叙事，生成真实的角色、世界观和情节。',
+    'welcome.feature2.title': '活态主题系统',
+    'welcome.feature2.desc': '界面会根据您故事的类型和氛围进行转换。',
+    'welcome.feature3.title': '引导式创作',
+    'welcome.feature3.desc': '从概念到手稿，每一步都有智能辅助。',
+    'welcome.startWriting': '开始写作',
+    'welcome.createAccount': '创建账户',
+    'welcome.signIn': '欢迎回来',
+    'welcome.beginJourney': '开始您的叙事之旅',
+    'welcome.continueStory': '继续您的故事',
+    'welcome.letsWeave': '让我们编织您的故事',
+    'welcome.tellUs': '告诉我们您想创造的世界。',
+  },
+  ja: {
+    'welcome.headline1': '物語が',
+    'welcome.headline2': '息づく場所',
+    'welcome.description': 'あなたの物語を理解し、豊かな世界を生成し、ビジョンに合わせてインターフェース全体を適応させるAI搭載のナラティブキャンバス。',
+    'welcome.feature1.title': 'ストーリーファースト知能',
+    'welcome.feature1.desc': 'AIがあなたの物語を理解し、本物のキャラクター、世界観、プロットを生成します。',
+    'welcome.feature2.title': 'リビングテーマシステム',
+    'welcome.feature2.desc': 'インターフェースがあなたの物語のジャンルとムードに合わせて変化します。',
+    'welcome.feature3.title': 'ガイド付き創作',
+    'welcome.feature3.desc': 'コンセプトから原稿まで、各ステップでインテリジェントなアシスタンス。',
+    'welcome.startWriting': '執筆を始める',
+    'welcome.createAccount': 'アカウントを作成',
+    'welcome.signIn': 'おかえりなさい',
+    'welcome.beginJourney': 'ストーリーテリングの旅を始めましょう',
+    'welcome.continueStory': '物語を続ける',
+    'welcome.letsWeave': 'あなたの物語を紡ぎましょう',
+    'welcome.tellUs': '創りたい世界について教えてください。',
+  },
+};
+
+const welcomeTranslationsEn = welcomeTranslations.en;
 
 const translations: Translations = {
   en: {
@@ -436,7 +621,7 @@ const translations: Translations = {
     'export.download': 'Download',
   },
   tr: {
-    ...welcomeTranslationsEn, // Fallback to English for welcome
+    ...welcomeTranslations.tr,
     'nav.overview': 'Hikaye Özeti',
     'nav.outline': 'Taslak',
     'nav.chapters': 'Bölümler',
@@ -610,7 +795,7 @@ const translations: Translations = {
     'export.download': 'İndir',
   },
   es: {
-    ...welcomeTranslationsEn,
+    ...welcomeTranslations.es,
     'nav.overview': 'Vista General',
     'nav.outline': 'Esquema',
     'nav.chapters': 'Capítulos',
@@ -711,7 +896,7 @@ const translations: Translations = {
     'export.download': 'Descargar',
   },
   fr: {
-    ...welcomeTranslationsEn,
+    ...welcomeTranslations.fr,
     'nav.overview': 'Aperçu',
     'nav.outline': 'Plan',
     'nav.chapters': 'Chapitres',
@@ -812,7 +997,7 @@ const translations: Translations = {
     'export.download': 'Télécharger',
   },
   de: {
-    ...welcomeTranslationsEn,
+    ...welcomeTranslations.de,
     'nav.overview': 'Überblick',
     'nav.outline': 'Gliederung',
     'nav.chapters': 'Kapitel',
@@ -913,7 +1098,7 @@ const translations: Translations = {
     'export.download': 'Herunterladen',
   },
   it: {
-    ...welcomeTranslationsEn,
+    ...welcomeTranslations.it,
     'nav.overview': 'Panoramica',
     'nav.outline': 'Schema',
     'nav.chapters': 'Capitoli',
@@ -1014,7 +1199,7 @@ const translations: Translations = {
     'export.download': 'Scarica',
   },
   pt: {
-    ...welcomeTranslationsEn,
+    ...welcomeTranslations.pt,
     'nav.overview': 'Visão Geral',
     'nav.outline': 'Esboço',
     'nav.chapters': 'Capítulos',
@@ -1115,7 +1300,7 @@ const translations: Translations = {
     'export.download': 'Baixar',
   },
   ru: {
-    ...welcomeTranslationsEn,
+    ...welcomeTranslations.ru,
     'nav.overview': 'Обзор',
     'nav.outline': 'План',
     'nav.chapters': 'Главы',
@@ -1216,7 +1401,7 @@ const translations: Translations = {
     'export.download': 'Скачать',
   },
   zh: {
-    ...welcomeTranslationsEn,
+    ...welcomeTranslations.zh,
     'nav.overview': '故事概述',
     'nav.outline': '大纲',
     'nav.chapters': '章节',
@@ -1317,7 +1502,7 @@ const translations: Translations = {
     'export.download': '下载',
   },
   ja: {
-    ...welcomeTranslationsEn,
+    ...welcomeTranslations.ja,
     'nav.overview': '概要',
     'nav.outline': 'アウトライン',
     'nav.chapters': '章',

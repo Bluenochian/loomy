@@ -183,10 +183,44 @@ export default function OutlinePage() {
         </div>
 
         <div className="space-y-3">
-          {acts.map(act => {})}
-          {acts.length === 0 && <p className="text-center text-muted-foreground py-8">
+          {acts.map(act => (
+            <Card key={act.id} className="p-4 bg-card/50">
+              <div className="flex items-start gap-3">
+                <button 
+                  onClick={() => toggleAct(act.id)}
+                  className="mt-1 text-muted-foreground hover:text-foreground"
+                >
+                  {expandedActs.includes(act.id) ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                </button>
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-xs font-mono text-muted-foreground">Act {act.number}</span>
+                    <Input
+                      value={act.title}
+                      onChange={(e) => updateAct(act.id, { title: e.target.value })}
+                      className="font-semibold bg-transparent border-none h-auto p-0 text-lg"
+                    />
+                  </div>
+                  {expandedActs.includes(act.id) && (
+                    <Textarea
+                      value={act.description || ''}
+                      onChange={(e) => updateAct(act.id, { description: e.target.value })}
+                      placeholder="Describe what happens in this act..."
+                      className="min-h-[100px] bg-secondary/30"
+                    />
+                  )}
+                </div>
+                <Button variant="ghost" size="icon" onClick={() => deleteAct(act.id)} className="text-destructive hover:text-destructive">
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+            </Card>
+          ))}
+          {acts.length === 0 && (
+            <p className="text-center text-muted-foreground py-8">
               No acts yet. Add your first act to structure your story.
-            </p>}
+            </p>
+          )}
         </div>
       </div>
 
