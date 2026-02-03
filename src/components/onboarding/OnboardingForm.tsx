@@ -91,7 +91,7 @@ export function OnboardingForm() {
   const steps = [
     { id: 'concept', label: t('onboarding.concept'), icon: Feather },
     { id: 'style', label: t('onboarding.writingStyle'), icon: Pen },
-    { id: 'settings', label: 'Settings', icon: Gauge },
+    { id: 'settings', label: t('onboarding.settings'), icon: Gauge },
   ];
 
   const toggleArrayItem = (array: string[], setArray: (arr: string[]) => void, item: string) => {
@@ -570,15 +570,27 @@ export function OnboardingForm() {
 
       {/* Navigation */}
       <div className="flex justify-between items-center pt-6 border-t border-border/50">
-        <Button
-          variant="ghost"
-          onClick={() => setCurrentStep(Math.max(0, currentStep - 1))}
-          disabled={currentStep === 0}
-          className="gap-2"
-        >
-          <ChevronLeft className="h-4 w-4" />
-          Back
-        </Button>
+        <div className="flex items-center gap-2">
+          {currentStep === 0 ? (
+            <Button
+              variant="ghost"
+              onClick={() => window.location.href = '/projects'}
+              className="gap-2"
+            >
+              <ChevronLeft className="h-4 w-4" />
+              {t('onboarding.backToProjects')}
+            </Button>
+          ) : (
+            <Button
+              variant="ghost"
+              onClick={() => setCurrentStep(Math.max(0, currentStep - 1))}
+              className="gap-2"
+            >
+              <ChevronLeft className="h-4 w-4" />
+              {t('common.back')}
+            </Button>
+          )}
+        </div>
 
         {currentStep < steps.length - 1 ? (
           <Button
@@ -587,7 +599,7 @@ export function OnboardingForm() {
             disabled={!canProceed()}
             className="gap-2"
           >
-            Next
+            {t('onboarding.next')}
             <ChevronRight className="h-4 w-4" />
           </Button>
         ) : (
@@ -615,3 +627,4 @@ export function OnboardingForm() {
     </div>
   );
 }
+

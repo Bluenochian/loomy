@@ -1,5 +1,6 @@
 import { useStory } from '@/context/StoryContext';
 import { useSettings } from '@/context/SettingsContext';
+import { useLanguage } from '@/context/LanguageContext';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -8,10 +9,26 @@ import { Badge } from '@/components/ui/badge';
 import { Plus, FileText, Loader2, Trash2, Sparkles, Wand2 } from 'lucide-react';
 import { useState, useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
+import { ChapterSyncButton } from '@/components/chapters/ChapterSyncButton';
 
 export default function ChaptersPage() {
-  const { chapters, addChapter, updateChapter, deleteChapter, currentProject, characters, loreEntries, outline, storyMapNodes, storyOverview } = useStory();
+  const { 
+    chapters, 
+    addChapter, 
+    updateChapter, 
+    deleteChapter, 
+    currentProject, 
+    characters, 
+    loreEntries, 
+    outline, 
+    storyMapNodes, 
+    storyOverview,
+    addCharacter,
+    addLoreEntry,
+    updateStoryOverview,
+  } = useStory();
   const { settings } = useSettings();
+  const { t } = useLanguage();
   const { toast } = useToast();
   const [selectedChapterId, setSelectedChapterId] = useState<string | null>(null);
   const [isAdding, setIsAdding] = useState(false);
@@ -21,10 +38,10 @@ export default function ChaptersPage() {
 
   const handleAddChapter = async () => {
     setIsAdding(true);
-    const chapter = await addChapter({ title: `Chapter ${chapters.length + 1}`, chapter_number: chapters.length + 1 });
+    const chapter = await addChapter({ title: `${t('chapters.title')} ${chapters.length + 1}`, chapter_number: chapters.length + 1 });
     if (chapter) {
       setSelectedChapterId(chapter.id);
-      toast({ title: 'Chapter created' });
+      toast({ title: t('chapters.addChapter') });
     }
     setIsAdding(false);
   };
@@ -32,7 +49,7 @@ export default function ChaptersPage() {
   const handleDeleteChapter = async (id: string) => {
     await deleteChapter(id);
     if (selectedChapterId === id) setSelectedChapterId(null);
-    toast({ title: 'Chapter deleted' });
+    toast({ title: t('common.delete') });
   };
 
   const generateDraft = useCallback(async () => {
@@ -59,6 +76,7 @@ export default function ChaptersPage() {
             chapterTitle: selected.title, chapterNumber: selected.chapter_number,
             previousChapterSummary: prevChapter?.content?.slice(0, 500),
             narrativeIntent: storyOverview?.narrative_intent, stakes: storyOverview?.stakes,
+            language: currentProject.language,
           },
           settings: { useLore: settings.aiUseLore, useOutline: settings.aiUseOutline, useStoryMap: settings.aiUseStoryMap, useCharacters: settings.aiUseCharacters, temperature: settings.aiTemperature, model: settings.aiModel },
         }),
@@ -86,13 +104,13 @@ export default function ChaptersPage() {
           } catch {}
         }
       }
-      toast({ title: 'Draft generated!' });
+      toast({ title: t('chapters.generateDraft') + '!' });
     } catch (e) {
-      toast({ title: 'Failed', variant: 'destructive' });
+      toast({ title: t('auth.failed'), variant: 'destructive' });
     } finally {
       setIsGeneratingDraft(false);
     }
-  }, [currentProject, selected, chapters, characters, loreEntries, outline, storyMapNodes, storyOverview, settings, updateChapter, toast]);
+  }, [currentProject, selected, chapters, characters, loreEntries, outline, storyMapNodes, storyOverview, settings, updateChapter, toast, t]);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -107,7 +125,7 @@ export default function ChaptersPage() {
     <div className="flex h-[calc(100vh-4rem)] animate-fade-in">
       <div className="w-80 border-r border-border p-4 overflow-y-auto">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="font-display text-lg font-semibold">Chapters</h2>
+          <h2 className="font-display text-lg font-semibold">{t('chapters.title')}</h2>
           <Button variant="outline" size="sm" onClick={handleAddChapter} disabled={isAdding}>
             {isAdding ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
           </Button>
@@ -118,25 +136,36 @@ export default function ChaptersPage() {
               <div className="flex items-start justify-between gap-2">
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium truncate">{ch.chapter_number}. {ch.title}</p>
-                  <p className="text-xs text-muted-foreground mt-1">{ch.word_count || 0} words</p>
+                  <p className="text-xs text-muted-foreground mt-1">{ch.word_count || 0} {t('chapters.words')}</p>
                 </div>
                 <Badge variant="outline" className={`text-xs ${getStatusColor(ch.status)}`}>{ch.status}</Badge>
               </div>
             </button>
           ))}
-          {chapters.length === 0 && <div className="text-center py-8"><FileText className="h-10 w-10 text-muted-foreground/30 mx-auto mb-3" /><p className="text-sm text-muted-foreground">No chapters yet</p></div>}
+          {chapters.length === 0 && <div className="text-center py-8"><FileText className="h-10 w-10 text-muted-foreground/30 mx-auto mb-3" /><p className="text-sm text-muted-foreground">{t('chapters.title')}</p></div>}
         </div>
       </div>
 
       <div className="flex-1 p-6 overflow-y-auto">
-        {selected ? (
+        {selected && currentProject ? (
           <div className="max-w-3xl mx-auto">
             <div className="flex items-start justify-between mb-6">
               <div className="flex-1">
                 <Input value={selected.title} onChange={(e) => updateChapter(selected.id, { title: e.target.value })} className="text-2xl font-display font-bold bg-transparent border-transparent hover:border-border h-auto py-1" placeholder="Chapter title..." />
-                <p className="text-sm text-muted-foreground mt-1">Chapter {selected.chapter_number}</p>
+                <p className="text-sm text-muted-foreground mt-1">{t('map.chapter')} {selected.chapter_number}</p>
               </div>
               <div className="flex items-center gap-2">
+                {/* Sync Button */}
+                <ChapterSyncButton
+                  chapter={selected}
+                  project={currentProject}
+                  storyOverview={storyOverview}
+                  characters={characters}
+                  loreEntries={loreEntries}
+                  onAddCharacter={addCharacter}
+                  onAddLoreEntry={addLoreEntry}
+                  onUpdateStoryOverview={updateStoryOverview}
+                />
                 <select value={selected.status} onChange={(e) => updateChapter(selected.id, { status: e.target.value as any })} className="text-sm px-3 py-2 rounded-lg bg-secondary border-none">
                   <option value="draft">Draft</option><option value="in_progress">In Progress</option><option value="complete">Complete</option><option value="revision">Revision</option>
                 </select>
@@ -144,7 +173,7 @@ export default function ChaptersPage() {
               </div>
             </div>
             <div className="mb-6">
-              <label className="text-sm font-medium text-muted-foreground mb-2 block">Chapter Intent</label>
+              <label className="text-sm font-medium text-muted-foreground mb-2 block">{t('overview.narrativeIntent')}</label>
               <Input value={selected.intent || ''} onChange={(e) => updateChapter(selected.id, { intent: e.target.value })} placeholder="What should this chapter accomplish?" className="bg-secondary/30" />
             </div>
             {(!selected.content || selected.content.length < 50) && settings.aiEnabled && (
@@ -152,25 +181,25 @@ export default function ChaptersPage() {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div className="p-2 rounded-lg bg-primary/20"><Wand2 className="h-5 w-5 text-primary" /></div>
-                    <div><p className="font-medium">Generate Opening Draft</p><p className="text-xs text-muted-foreground">AI writes based on your story context</p></div>
+                    <div><p className="font-medium">{t('chapters.generateDraft')}</p><p className="text-xs text-muted-foreground">AI writes based on your story context</p></div>
                   </div>
-                  <Button onClick={generateDraft} disabled={isGeneratingDraft}>{isGeneratingDraft ? <><Loader2 className="h-4 w-4 animate-spin" /> Writing...</> : <><Sparkles className="h-4 w-4" /> Generate</>}</Button>
+                  <Button onClick={generateDraft} disabled={isGeneratingDraft}>{isGeneratingDraft ? <><Loader2 className="h-4 w-4 animate-spin" /> {t('common.loading')}</> : <><Sparkles className="h-4 w-4" /> {t('chapters.generateDraft')}</>}</Button>
                 </div>
               </Card>
             )}
             <div>
               <label className="text-sm font-medium text-muted-foreground mb-2 block">Content</label>
               <Textarea value={selected.content || ''} onChange={(e) => { const c = e.target.value; updateChapter(selected.id, { content: c, word_count: c.trim() ? c.trim().split(/\s+/).length : 0 }); }} placeholder="Begin writing..." className="min-h-[500px] bg-secondary/30 font-display text-lg leading-relaxed resize-none" />
-              <p className="text-sm text-muted-foreground mt-2 text-right">{selected.word_count || 0} words</p>
+              <p className="text-sm text-muted-foreground mt-2 text-right">{selected.word_count || 0} {t('chapters.words')}</p>
             </div>
           </div>
         ) : (
           <div className="flex items-center justify-center h-full">
             <div className="text-center">
               <FileText className="h-16 w-16 text-muted-foreground/30 mx-auto mb-4" />
-              <h3 className="font-display text-xl font-semibold mb-2">Select a Chapter</h3>
-              <p className="text-muted-foreground mb-4">Choose a chapter or create a new one</p>
-              <Button onClick={handleAddChapter} disabled={isAdding}><Plus className="h-4 w-4" /> Create Chapter</Button>
+              <h3 className="font-display text-xl font-semibold mb-2">{t('chapters.title')}</h3>
+              <p className="text-muted-foreground mb-4">{t('chapters.addChapter')}</p>
+              <Button onClick={handleAddChapter} disabled={isAdding}><Plus className="h-4 w-4" /> {t('chapters.addChapter')}</Button>
             </div>
           </div>
         )}

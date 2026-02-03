@@ -166,7 +166,17 @@ export default function SettingsPage() {
                 </div>
                 <div>
                   <Label>{t('settings.storyLanguage')}</Label>
-                  <Input value={currentProject.language} onChange={(e) => updateProject({ language: e.target.value })} className="mt-2 bg-secondary/30" placeholder="English" />
+                  <Select value={currentProject.language} onValueChange={(v) => updateProject({ language: v })}>
+                    <SelectTrigger className="mt-2 bg-secondary/30">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {['English', 'Turkish', 'Spanish', 'French', 'German', 'Italian', 'Portuguese', 'Russian', 'Japanese', 'Chinese', 'Korean', 'Arabic'].map((lang) => (
+                        <SelectItem key={lang} value={lang}>{lang}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground mt-1">AI will generate content in this language</p>
                 </div>
                 <div>
                   <Label>{t('settings.tone')} ({currentProject.tone_value < 0.3 ? 'Hopeful' : currentProject.tone_value > 0.7 ? 'Dark' : 'Balanced'})</Label>

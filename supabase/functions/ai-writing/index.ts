@@ -6,7 +6,7 @@ const corsHeaders = {
 };
 
 interface WritingRequest {
-  action: 'continue' | 'rewrite' | 'expand' | 'summarize' | 'dialogue' | 'describe' | 'draft';
+  action: 'continue' | 'rewrite' | 'expand' | 'summarize' | 'dialogue' | 'describe' | 'draft' | 'sync-chapter';
   content: string;
   context: {
     storyTitle: string;
@@ -21,6 +21,15 @@ interface WritingRequest {
     previousChapterSummary?: string;
     narrativeIntent?: string;
     stakes?: string;
+    existingCharacterNames?: string[];
+    existingLoreTitles?: string[];
+    currentSetting?: string;
+    currentThemes?: string[];
+    extractCharacters?: boolean;
+    extractLore?: boolean;
+    updateSetting?: boolean;
+    updateThemes?: boolean;
+    language?: string;
   };
   instructions?: string;
   settings?: {
@@ -179,6 +188,81 @@ ${instructions ? `Focus: ${instructions}` : ''}
 
 Write an immersive, sensory-rich description in 2-3 paragraphs.`;
         break;
+
+      case 'sync-chapter':
+        // Special handling for chapter sync - return JSON instead of streaming
+        const syncSystemPrompt = `You are analyzing a chapter to extract story elements. Respond ONLY with valid JSON.
+
+## INSTRUCTIONS:
+Analyze the provided chapter text and extract:
+1. New characters mentioned (exclude existing: ${context.existingCharacterNames?.join(', ') || 'none'})
+2. World/lore elements (locations, items, concepts, magic systems, technology - exclude existing: ${context.existingLoreTitles?.join(', ') || 'none'})
+3. Setting details that expand the world
+4. Thematic elements discovered
+
+${context.language && context.language !== 'English' ? `IMPORTANT: All extracted content should be in ${context.language}.` : ''}
+
+Current story themes: ${context.currentThemes?.join(', ') || 'none yet'}
+Current setting: ${context.currentSetting || 'not described yet'}`;
+
+        const syncUserPrompt = `Analyze this chapter (Chapter ${context.chapterNumber}: "${context.chapterTitle}") and extract story elements:
+
+${content}
+
+Respond with this exact JSON structure:
+{
+  "characters": [
+    { "name": "Character Name", "role": "protagonist|antagonist|supporting|minor", "description": "Brief description", "traits": ["trait1", "trait2"] }
+  ],
+  "loreEntries": [
+    { "title": "Entry Title", "category": "world|magic|technology|culture|history|rules|general", "content": "Description of this element", "tags": ["tag1", "tag2"] }
+  ],
+  "settingUpdates": "New setting details discovered in this chapter (or empty string if none)",
+  "themeUpdates": ["theme1", "theme2"]
+}
+
+Only include NEW elements not already in the existing lists. If nothing new found, use empty arrays/strings.`;
+
+        const syncResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${LOVABLE_API_KEY}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            model: settings?.model || "google/gemini-3-flash-preview",
+            messages: [
+              { role: "system", content: syncSystemPrompt },
+              { role: "user", content: syncUserPrompt },
+            ],
+            temperature: 0.3,
+            max_tokens: 2000,
+          }),
+        });
+
+        if (!syncResponse.ok) {
+          const errorText = await syncResponse.text();
+          console.error("AI sync error:", syncResponse.status, errorText);
+          throw new Error(`AI gateway error: ${syncResponse.status}`);
+        }
+
+        const syncData = await syncResponse.json();
+        const responseText = syncData.choices?.[0]?.message?.content || '{}';
+        
+        // Parse and validate JSON
+        let parsedResponse;
+        try {
+          // Clean the response - remove markdown code blocks if present
+          const cleanedText = responseText.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+          parsedResponse = JSON.parse(cleanedText);
+        } catch (e) {
+          console.error("Failed to parse sync response:", responseText);
+          parsedResponse = { characters: [], loreEntries: [], settingUpdates: '', themeUpdates: [] };
+        }
+
+        return new Response(JSON.stringify(parsedResponse), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
     }
 
     const modelToUse = settings?.model || "google/gemini-3-flash-preview";

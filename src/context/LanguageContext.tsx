@@ -242,6 +242,27 @@ export type TranslationKey =
   | 'chapters.addChapter'
   | 'chapters.generateDraft'
   | 'chapters.words'
+  | 'chapters.syncProject'
+  | 'chapters.syncProjectTitle'
+  | 'chapters.syncProjectDesc'
+  | 'chapters.syncExtractCharacters'
+  | 'chapters.syncExtractLore'
+  | 'chapters.syncUpdateSetting'
+  | 'chapters.syncUpdateThemes'
+  | 'chapters.syncNeedsContent'
+  | 'chapters.syncNeedsContentDesc'
+  | 'chapters.syncComplete'
+  | 'chapters.syncCompleteDesc'
+  | 'chapters.syncFailed'
+  | 'chapters.syncFailedDesc'
+  | 'chapters.syncResults'
+  | 'chapters.syncCharactersAdded'
+  | 'chapters.syncLoreAdded'
+  | 'chapters.syncSettingUpdated'
+  | 'chapters.syncThemesUpdated'
+  | 'chapters.syncNoChanges'
+  | 'chapters.syncing'
+  | 'chapters.startSync'
   // Characters
   | 'characters.title'
   | 'characters.addCharacter'
@@ -254,6 +275,23 @@ export type TranslationKey =
   | 'overview.timePeriod'
   | 'overview.themes'
   | 'overview.stats'
+  // Auth
+  | 'auth.displayName'
+  | 'auth.yourName'
+  | 'auth.email'
+  | 'auth.password'
+  | 'auth.createAccount'
+  | 'auth.signIn'
+  | 'auth.haveAccount'
+  | 'auth.noAccount'
+  | 'auth.accountCreated'
+  | 'auth.checkEmail'
+  | 'auth.failed'
+  | 'auth.tryAgain'
+  // Onboarding additional
+  | 'onboarding.next'
+  | 'onboarding.backToProjects'
+  | 'onboarding.settings'
   // Export
   | 'export.title'
   | 'export.format'
@@ -667,6 +705,27 @@ const translations: Translations = {
     'chapters.addChapter': 'Add Chapter',
     'chapters.generateDraft': 'Generate Draft',
     'chapters.words': 'words',
+    'chapters.syncProject': 'Sync Project',
+    'chapters.syncProjectTitle': 'Sync Project from Chapter',
+    'chapters.syncProjectDesc': 'AI will analyze this chapter and extract characters, locations, lore and themes to enrich your project.',
+    'chapters.syncExtractCharacters': 'Extract new characters',
+    'chapters.syncExtractLore': 'Extract world & lore entries',
+    'chapters.syncUpdateSetting': 'Update setting description',
+    'chapters.syncUpdateThemes': 'Discover new themes',
+    'chapters.syncNeedsContent': 'Chapter needs content',
+    'chapters.syncNeedsContentDesc': 'Write at least 100 characters before syncing.',
+    'chapters.syncComplete': 'Sync complete!',
+    'chapters.syncCompleteDesc': 'Added {characters} characters and {lore} lore entries.',
+    'chapters.syncFailed': 'Sync failed',
+    'chapters.syncFailedDesc': 'Could not analyze chapter. Please try again.',
+    'chapters.syncResults': 'Sync Results',
+    'chapters.syncCharactersAdded': 'characters added',
+    'chapters.syncLoreAdded': 'lore entries added',
+    'chapters.syncSettingUpdated': 'Setting updated',
+    'chapters.syncThemesUpdated': 'Themes updated',
+    'chapters.syncNoChanges': 'No new elements found',
+    'chapters.syncing': 'Syncing...',
+    'chapters.startSync': 'Start Sync',
     // Characters
     'characters.title': 'Characters',
     'characters.addCharacter': 'Add Character',
@@ -679,6 +738,23 @@ const translations: Translations = {
     'overview.timePeriod': 'Time Period',
     'overview.themes': 'Central Themes',
     'overview.stats': 'Story Statistics',
+    // Auth
+    'auth.displayName': 'Display Name',
+    'auth.yourName': 'Your name',
+    'auth.email': 'Email',
+    'auth.password': 'Password',
+    'auth.createAccount': 'Create Account',
+    'auth.signIn': 'Sign In',
+    'auth.haveAccount': 'Already have an account? Sign in',
+    'auth.noAccount': "Don't have an account? Sign up",
+    'auth.accountCreated': 'Account created!',
+    'auth.checkEmail': 'Please check your email to verify your account.',
+    'auth.failed': 'Authentication failed',
+    'auth.tryAgain': 'Please try again',
+    // Onboarding additional
+    'onboarding.next': 'Next',
+    'onboarding.backToProjects': 'Back to Projects',
+    'onboarding.settings': 'Settings',
     // Export
     'export.title': 'Export Story',
     'export.format': 'Format',
@@ -876,6 +952,27 @@ const translations: Translations = {
     'chapters.addChapter': 'Bölüm Ekle',
     'chapters.generateDraft': 'Taslak Oluştur',
     'chapters.words': 'kelime',
+    'chapters.syncProject': 'Projeyi Senkronize Et',
+    'chapters.syncProjectTitle': 'Bölümden Proje Senkronizasyonu',
+    'chapters.syncProjectDesc': 'Yapay zeka bu bölümü analiz edip karakterleri, mekanları, dünya bilgilerini ve temaları çıkaracak.',
+    'chapters.syncExtractCharacters': 'Yeni karakterleri çıkar',
+    'chapters.syncExtractLore': 'Dünya ve gelenek girdilerini çıkar',
+    'chapters.syncUpdateSetting': 'Mekan açıklamasını güncelle',
+    'chapters.syncUpdateThemes': 'Yeni temaları keşfet',
+    'chapters.syncNeedsContent': 'Bölümün içeriğe ihtiyacı var',
+    'chapters.syncNeedsContentDesc': 'Senkronizasyondan önce en az 100 karakter yazın.',
+    'chapters.syncComplete': 'Senkronizasyon tamamlandı!',
+    'chapters.syncCompleteDesc': '{characters} karakter ve {lore} gelenek girdisi eklendi.',
+    'chapters.syncFailed': 'Senkronizasyon başarısız',
+    'chapters.syncFailedDesc': 'Bölüm analiz edilemedi. Lütfen tekrar deneyin.',
+    'chapters.syncResults': 'Senkronizasyon Sonuçları',
+    'chapters.syncCharactersAdded': 'karakter eklendi',
+    'chapters.syncLoreAdded': 'gelenek girdisi eklendi',
+    'chapters.syncSettingUpdated': 'Mekan güncellendi',
+    'chapters.syncThemesUpdated': 'Temalar güncellendi',
+    'chapters.syncNoChanges': 'Yeni öğe bulunamadı',
+    'chapters.syncing': 'Senkronize ediliyor...',
+    'chapters.startSync': 'Senkronizasyonu Başlat',
     'characters.title': 'Karakterler',
     'characters.addCharacter': 'Karakter Ekle',
     'characters.aiGenerate': 'Yapay Zeka Oluştur',
@@ -886,6 +983,23 @@ const translations: Translations = {
     'overview.timePeriod': 'Zaman Dilimi',
     'overview.themes': 'Ana Temalar',
     'overview.stats': 'Hikaye İstatistikleri',
+    // Auth Turkish
+    'auth.displayName': 'Görünen Ad',
+    'auth.yourName': 'Adınız',
+    'auth.email': 'E-posta',
+    'auth.password': 'Şifre',
+    'auth.createAccount': 'Hesap Oluştur',
+    'auth.signIn': 'Giriş Yap',
+    'auth.haveAccount': 'Zaten hesabınız var mı? Giriş yapın',
+    'auth.noAccount': 'Hesabınız yok mu? Kayıt olun',
+    'auth.accountCreated': 'Hesap oluşturuldu!',
+    'auth.checkEmail': 'Hesabınızı doğrulamak için e-postanızı kontrol edin.',
+    'auth.failed': 'Kimlik doğrulama başarısız',
+    'auth.tryAgain': 'Lütfen tekrar deneyin',
+    // Onboarding additional Turkish
+    'onboarding.next': 'İleri',
+    'onboarding.backToProjects': 'Projelere Dön',
+    'onboarding.settings': 'Ayarlar',
     'export.title': 'Hikayeyi Dışa Aktar',
     'export.format': 'Format',
     'export.download': 'İndir',

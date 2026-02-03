@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
+import { useLanguage } from '@/context/LanguageContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -14,6 +15,7 @@ interface AuthFormProps {
 
 export function AuthForm({ mode, onToggleMode }: AuthFormProps) {
   const { signIn, signUp } = useAuth();
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const { toast } = useToast();
   
@@ -31,8 +33,8 @@ export function AuthForm({ mode, onToggleMode }: AuthFormProps) {
         const { error } = await signUp(email, password, displayName);
         if (error) throw error;
         toast({
-          title: 'Account created!',
-          description: 'Please check your email to verify your account.',
+          title: t('auth.accountCreated'),
+          description: t('auth.checkEmail'),
         });
       } else {
         const { error } = await signIn(email, password);
@@ -41,8 +43,8 @@ export function AuthForm({ mode, onToggleMode }: AuthFormProps) {
       }
     } catch (error) {
       toast({
-        title: 'Authentication failed',
-        description: error instanceof Error ? error.message : 'Please try again',
+        title: t('auth.failed'),
+        description: error instanceof Error ? error.message : t('auth.tryAgain'),
         variant: 'destructive',
       });
     } finally {
@@ -55,7 +57,7 @@ export function AuthForm({ mode, onToggleMode }: AuthFormProps) {
       {mode === 'signup' && (
         <div className="space-y-2">
           <Label htmlFor="displayName" className="text-sm font-medium text-foreground/80">
-            Display Name
+            {t('auth.displayName')}
           </Label>
           <div className="relative">
             <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -64,7 +66,7 @@ export function AuthForm({ mode, onToggleMode }: AuthFormProps) {
               type="text"
               value={displayName}
               onChange={(e) => setDisplayName(e.target.value)}
-              placeholder="Your name"
+              placeholder={t('auth.yourName')}
               className="pl-10 bg-secondary/50 border-border/50 focus:border-primary/50"
             />
           </div>
@@ -73,7 +75,7 @@ export function AuthForm({ mode, onToggleMode }: AuthFormProps) {
 
       <div className="space-y-2">
         <Label htmlFor="email" className="text-sm font-medium text-foreground/80">
-          Email
+          {t('auth.email')}
         </Label>
         <div className="relative">
           <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -91,7 +93,7 @@ export function AuthForm({ mode, onToggleMode }: AuthFormProps) {
 
       <div className="space-y-2">
         <Label htmlFor="password" className="text-sm font-medium text-foreground/80">
-          Password
+          {t('auth.password')}
         </Label>
         <div className="relative">
           <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -120,7 +122,7 @@ export function AuthForm({ mode, onToggleMode }: AuthFormProps) {
         ) : (
           <>
             <Sparkles className="h-4 w-4" />
-            {mode === 'signup' ? 'Create Account' : 'Sign In'}
+            {mode === 'signup' ? t('auth.createAccount') : t('auth.signIn')}
           </>
         )}
       </Button>
@@ -132,8 +134,8 @@ export function AuthForm({ mode, onToggleMode }: AuthFormProps) {
           className="text-sm text-muted-foreground hover:text-primary transition-colors"
         >
           {mode === 'signup' 
-            ? 'Already have an account? Sign in' 
-            : "Don't have an account? Sign up"}
+            ? t('auth.haveAccount')
+            : t('auth.noAccount')}
         </button>
       </div>
     </form>
