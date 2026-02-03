@@ -198,17 +198,20 @@ export const GENRE_OPTIONS = [
 
 export type GenreOption = typeof GENRE_OPTIONS[number];
 
-// Language options
+// Language options for AI-generated story content
 export const LANGUAGE_OPTIONS = [
   'English',
+  'Turkish',
   'Spanish',
   'French',
   'German',
   'Italian',
   'Portuguese',
+  'Russian',
   'Japanese',
   'Chinese',
   'Korean',
+  'Arabic',
 ] as const;
 
 export type LanguageOption = typeof LANGUAGE_OPTIONS[number];
