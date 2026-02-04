@@ -15,50 +15,66 @@ import { useToast } from '@/hooks/use-toast';
 import { GENRE_OPTIONS, LANGUAGE_OPTIONS } from '@/types/story';
 import { Loader2, Sparkles, X, Feather, Globe, Palette, Pen, Eye, Users, BookOpen, Gauge, AlertTriangle, Lightbulb, ChevronRight, ChevronLeft } from 'lucide-react';
 
-// Writing style options
+// Writing style options - Expanded for professional authors
 const WRITING_STYLE_OPTIONS = [
   'Descriptive', 'Action-Packed', 'Dialogue-Heavy', 'Introspective',
-  'Poetic', 'Cinematic', 'Minimalist', 'Immersive'
+  'Poetic', 'Cinematic', 'Minimalist', 'Immersive', 'Atmospheric',
+  'Punchy', 'Lyrical', 'Sparse', 'Rich Prose', 'Stream of Consciousness',
+  'Epistolary', 'Journal Style', 'Documentary', 'Satirical'
 ];
 
-// POV options
+// POV options - Expanded for professional authors
 const POV_OPTIONS = [
   { value: 'first', label: 'First Person (I/Me)' },
+  { value: 'first-unreliable', label: 'First Person Unreliable' },
   { value: 'third-limited', label: 'Third Person Limited' },
+  { value: 'third-deep', label: 'Third Person Deep' },
   { value: 'third-omniscient', label: 'Third Person Omniscient' },
+  { value: 'third-objective', label: 'Third Person Objective' },
   { value: 'second', label: 'Second Person (You)' },
   { value: 'multiple', label: 'Multiple POV' },
+  { value: 'alternating', label: 'Alternating POV' },
+  { value: 'epistolary', label: 'Epistolary/Documents' },
 ];
 
-// Target audience options
+// Target audience options - Expanded
 const AUDIENCE_OPTIONS = [
-  { value: 'general', label: 'General Audience' },
+  { value: 'middle-grade', label: 'Middle Grade (8-12)' },
   { value: 'young-adult', label: 'Young Adult (13-18)' },
   { value: 'new-adult', label: 'New Adult (18-25)' },
-  { value: 'adult', label: 'Adult' },
+  { value: 'adult', label: 'Adult General' },
+  { value: 'adult-literary', label: 'Adult Literary' },
+  { value: 'adult-commercial', label: 'Adult Commercial' },
   { value: 'mature', label: 'Mature (18+)' },
-  { value: 'children', label: 'Children (8-12)' },
+  { value: 'crossover', label: 'Crossover/All Ages' },
 ];
 
 // Pacing options
 const PACING_OPTIONS = [
   { value: 'slow', icon: '🐢', label: 'Slow & Contemplative' },
+  { value: 'slow-burn', icon: '🕯️', label: 'Slow Burn' },
   { value: 'medium', icon: '🦊', label: 'Balanced' },
   { value: 'fast', icon: '🐆', label: 'Fast-Paced' },
+  { value: 'breakneck', icon: '⚡', label: 'Breakneck' },
   { value: 'variable', icon: '🌊', label: 'Variable/Dynamic' },
 ];
 
-// Content warning options
+// Content warning options - Expanded
 const CONTENT_WARNING_OPTIONS = [
-  'Violence', 'Gore', 'Death', 'Trauma',
-  'Mental Health', 'Substance Use', 'Strong Language', 'Sexual Content'
+  'Violence', 'Gore', 'Death', 'Trauma', 'Abuse',
+  'Mental Health', 'Substance Use', 'Strong Language', 'Sexual Content',
+  'Self-Harm', 'Suicide', 'War', 'Torture', 'Child Endangerment',
+  'Body Horror', 'Medical Procedures', 'Grief', 'Eating Disorders'
 ];
 
-// Theme influence options
+// Theme influence options - Expanded for deeper storytelling
 const THEME_INFLUENCE_OPTIONS = [
   'Redemption', 'Coming of Age', 'Good vs Evil', 'Love Conquers All',
   'Power Corrupts', 'Identity', 'Survival', 'Sacrifice',
-  'Revenge', 'Hope', 'Betrayal', 'Freedom'
+  'Revenge', 'Hope', 'Betrayal', 'Freedom', 'Justice',
+  'Found Family', 'Loss & Grief', 'Moral Ambiguity', 'Class Struggle',
+  'Nature vs Technology', 'Fate vs Free Will', 'Isolation', 'Legacy',
+  'Truth & Deception', 'Memory', 'Time', 'War & Peace', 'Humanity'
 ];
 
 export function OnboardingForm() {

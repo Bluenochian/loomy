@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from '@/context/LanguageContext';
 import { useSettings } from '@/context/SettingsContext';
+import { supabase } from '@/integrations/supabase/client';
 import { Loader2, RefreshCw, Sparkles, Users, Globe, BookOpen, MapPin } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from '@/components/ui/dialog';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -42,6 +43,37 @@ interface ExtractedData {
   }>;
   settingUpdates: string;
   themeUpdates: string[];
+}
+
+// Helper function to record timeline entries
+async function recordTimelineEntry(
+  projectId: string,
+  chapterId: string,
+  chapterNumber: number,
+  elementType: string,
+  elementId: string | null,
+  elementName: string,
+  changeType: string,
+  previousState: any,
+  newState: any,
+  description: string
+) {
+  try {
+    await supabase.from('element_timeline').insert({
+      project_id: projectId,
+      chapter_id: chapterId,
+      chapter_number: chapterNumber,
+      element_type: elementType,
+      element_id: elementId,
+      element_name: elementName,
+      change_type: changeType,
+      previous_state: previousState,
+      new_state: newState,
+      description: description,
+    });
+  } catch (error) {
+    console.error('Failed to record timeline entry:', error);
+  }
 }
 
 export function ChapterSyncButton({
@@ -133,7 +165,7 @@ export function ChapterSyncButton({
       let settingUpdated = false;
       let themesUpdated = false;
 
-      // Add new characters
+      // Add new characters and record timeline entries
       if (syncOptions.extractCharacters && data.characters?.length > 0) {
         for (const char of data.characters) {
           // Skip if character already exists
@@ -145,11 +177,27 @@ export function ChapterSyncButton({
             description: char.description,
             traits: char.traits,
           });
-          if (result) charactersAdded++;
+          
+          if (result) {
+            charactersAdded++;
+            // Record timeline entry for new character
+            await recordTimelineEntry(
+              project.id,
+              chapter.id,
+              chapter.chapter_number,
+              'character',
+              result.id,
+              char.name,
+              'introduced',
+              null,
+              { role: char.role, description: char.description, traits: char.traits },
+              `Character "${char.name}" introduced in Chapter ${chapter.chapter_number}: ${chapter.title}`
+            );
+          }
         }
       }
 
-      // Add new lore entries
+      // Add new lore entries and record timeline entries
       if (syncOptions.extractLore && data.loreEntries?.length > 0) {
         for (const lore of data.loreEntries) {
           // Skip if lore already exists
@@ -162,11 +210,27 @@ export function ChapterSyncButton({
             tags: lore.tags,
             is_canon: true,
           });
-          if (result) loreAdded++;
+          
+          if (result) {
+            loreAdded++;
+            // Record timeline entry for new lore
+            await recordTimelineEntry(
+              project.id,
+              chapter.id,
+              chapter.chapter_number,
+              'lore',
+              result.id,
+              lore.title,
+              'introduced',
+              null,
+              { category: lore.category, content: lore.content, tags: lore.tags },
+              `Lore entry "${lore.title}" discovered in Chapter ${chapter.chapter_number}: ${chapter.title}`
+            );
+          }
         }
       }
 
-      // Update story setting
+      // Update story setting and record timeline entry
       if (syncOptions.updateSetting && data.settingUpdates) {
         const currentSetting = storyOverview?.setting_description || '';
         const updatedSetting = currentSetting 
@@ -175,9 +239,23 @@ export function ChapterSyncButton({
         
         await onUpdateStoryOverview({ setting_description: updatedSetting });
         settingUpdated = true;
+        
+        // Record timeline entry for setting update
+        await recordTimelineEntry(
+          project.id,
+          chapter.id,
+          chapter.chapter_number,
+          'setting',
+          null,
+          'Story Setting',
+          'updated',
+          { description: currentSetting },
+          { description: updatedSetting },
+          `Setting expanded in Chapter ${chapter.chapter_number}: ${chapter.title}`
+        );
       }
 
-      // Update themes
+      // Update themes and record timeline entries
       if (syncOptions.updateThemes && data.themeUpdates?.length > 0) {
         const currentThemes = storyOverview?.central_themes || [];
         const newThemes = data.themeUpdates.filter(t => !currentThemes.includes(t));
@@ -187,6 +265,22 @@ export function ChapterSyncButton({
             central_themes: [...currentThemes, ...newThemes] 
           });
           themesUpdated = true;
+          
+          // Record timeline entry for each new theme
+          for (const theme of newThemes) {
+            await recordTimelineEntry(
+              project.id,
+              chapter.id,
+              chapter.chapter_number,
+              'theme',
+              null,
+              theme,
+              'introduced',
+              null,
+              { theme },
+              `Theme "${theme}" emerged in Chapter ${chapter.chapter_number}: ${chapter.title}`
+            );
+          }
         }
       }
 

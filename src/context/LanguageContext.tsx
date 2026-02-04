@@ -57,6 +57,17 @@ export type TranslationKey =
   | 'nav.settings'
   | 'nav.allProjects'
   | 'nav.collapse'
+  // Projects page
+  | 'projects.yourStories'
+  | 'projects.newStory'
+  | 'projects.noStories'
+  | 'projects.createFirst'
+  | 'projects.createFirstButton'
+  | 'projects.updated'
+  | 'projects.signOut'
+  | 'projects.status.draft'
+  | 'projects.status.in_progress'
+  | 'projects.status.completed'
   // Common
   | 'common.save'
   | 'common.cancel'
@@ -288,6 +299,8 @@ export type TranslationKey =
   | 'auth.checkEmail'
   | 'auth.failed'
   | 'auth.tryAgain'
+  | 'auth.continueWithGoogle'
+  | 'auth.orContinueWith'
   // Onboarding additional
   | 'onboarding.next'
   | 'onboarding.backToProjects'
@@ -519,6 +532,17 @@ const translations: Translations = {
     'nav.settings': 'Settings',
     'nav.allProjects': 'All Projects',
     'nav.collapse': 'Collapse',
+    // Projects page
+    'projects.yourStories': 'Your Stories',
+    'projects.newStory': 'New Story',
+    'projects.noStories': 'No stories yet',
+    'projects.createFirst': 'Create your first story and begin weaving your narrative.',
+    'projects.createFirstButton': 'Create Your First Story',
+    'projects.updated': 'Updated',
+    'projects.signOut': 'Sign Out',
+    'projects.status.draft': 'Draft',
+    'projects.status.in_progress': 'In Progress',
+    'projects.status.completed': 'Completed',
     // Common
     'common.save': 'Save',
     'common.cancel': 'Cancel',
@@ -751,6 +775,8 @@ const translations: Translations = {
     'auth.checkEmail': 'Please check your email to verify your account.',
     'auth.failed': 'Authentication failed',
     'auth.tryAgain': 'Please try again',
+    'auth.continueWithGoogle': 'Continue with Google',
+    'auth.orContinueWith': 'or continue with email',
     // Onboarding additional
     'onboarding.next': 'Next',
     'onboarding.backToProjects': 'Back to Projects',
@@ -762,6 +788,17 @@ const translations: Translations = {
   },
   tr: {
     ...welcomeTranslations.tr,
+    // Projects Turkish
+    'projects.yourStories': 'Hikayeleriniz',
+    'projects.newStory': 'Yeni Hikaye',
+    'projects.noStories': 'Henüz hikaye yok',
+    'projects.createFirst': 'İlk hikayenizi oluşturun ve anlatınızı örmeye başlayın.',
+    'projects.createFirstButton': 'İlk Hikayenizi Oluşturun',
+    'projects.updated': 'Güncellendi',
+    'projects.signOut': 'Çıkış Yap',
+    'projects.status.draft': 'Taslak',
+    'projects.status.in_progress': 'Devam Ediyor',
+    'projects.status.completed': 'Tamamlandı',
     'nav.overview': 'Hikaye Özeti',
     'nav.outline': 'Taslak',
     'nav.chapters': 'Bölümler',
@@ -996,6 +1033,8 @@ const translations: Translations = {
     'auth.checkEmail': 'Hesabınızı doğrulamak için e-postanızı kontrol edin.',
     'auth.failed': 'Kimlik doğrulama başarısız',
     'auth.tryAgain': 'Lütfen tekrar deneyin',
+    'auth.continueWithGoogle': 'Google ile Devam Et',
+    'auth.orContinueWith': 'veya e-posta ile devam edin',
     // Onboarding additional Turkish
     'onboarding.next': 'İleri',
     'onboarding.backToProjects': 'Projelere Dön',
@@ -1006,6 +1045,17 @@ const translations: Translations = {
   },
   es: {
     ...welcomeTranslations.es,
+    // Projects Spanish
+    'projects.yourStories': 'Tus Historias',
+    'projects.newStory': 'Nueva Historia',
+    'projects.noStories': 'Aún no hay historias',
+    'projects.createFirst': 'Crea tu primera historia y comienza a tejer tu narrativa.',
+    'projects.createFirstButton': 'Crea Tu Primera Historia',
+    'projects.updated': 'Actualizado',
+    'projects.signOut': 'Cerrar Sesión',
+    'projects.status.draft': 'Borrador',
+    'projects.status.in_progress': 'En Progreso',
+    'projects.status.completed': 'Completado',
     'nav.overview': 'Vista General',
     'nav.outline': 'Esquema',
     'nav.chapters': 'Capítulos',
@@ -1025,6 +1075,9 @@ const translations: Translations = {
     'common.search': 'Buscar',
     'common.create': 'Crear',
     'common.back': 'Volver',
+    // Auth Spanish
+    'auth.continueWithGoogle': 'Continuar con Google',
+    'auth.orContinueWith': 'o continuar con email',
     // Onboarding Spanish
     'onboarding.optional': 'opcional',
     'onboarding.concept': 'Tu Concepto de Historia',
@@ -1139,6 +1192,19 @@ const translations: Translations = {
   },
   fr: {
     ...welcomeTranslations.fr,
+    // Projects French
+    'projects.yourStories': 'Vos Histoires',
+    'projects.newStory': 'Nouvelle Histoire',
+    'projects.noStories': 'Pas encore d\'histoires',
+    'projects.createFirst': 'Créez votre première histoire et commencez à tisser votre récit.',
+    'projects.createFirstButton': 'Créer Votre Première Histoire',
+    'projects.updated': 'Mis à jour',
+    'projects.signOut': 'Se Déconnecter',
+    'projects.status.draft': 'Brouillon',
+    'projects.status.in_progress': 'En Cours',
+    'projects.status.completed': 'Terminé',
+    'auth.continueWithGoogle': 'Continuer avec Google',
+    'auth.orContinueWith': 'ou continuer avec email',
     'nav.overview': 'Aperçu',
     'nav.outline': 'Plan',
     'nav.chapters': 'Chapitres',
@@ -1272,6 +1338,19 @@ const translations: Translations = {
   },
   de: {
     ...welcomeTranslations.de,
+    // Projects German
+    'projects.yourStories': 'Ihre Geschichten',
+    'projects.newStory': 'Neue Geschichte',
+    'projects.noStories': 'Noch keine Geschichten',
+    'projects.createFirst': 'Erstellen Sie Ihre erste Geschichte und beginnen Sie, Ihre Erzählung zu weben.',
+    'projects.createFirstButton': 'Erste Geschichte Erstellen',
+    'projects.updated': 'Aktualisiert',
+    'projects.signOut': 'Abmelden',
+    'projects.status.draft': 'Entwurf',
+    'projects.status.in_progress': 'In Bearbeitung',
+    'projects.status.completed': 'Abgeschlossen',
+    'auth.continueWithGoogle': 'Mit Google fortfahren',
+    'auth.orContinueWith': 'oder mit E-Mail fortfahren',
     'nav.overview': 'Überblick',
     'nav.outline': 'Gliederung',
     'nav.chapters': 'Kapitel',
@@ -1405,6 +1484,19 @@ const translations: Translations = {
   },
   it: {
     ...welcomeTranslations.it,
+    // Projects Italian
+    'projects.yourStories': 'Le Tue Storie',
+    'projects.newStory': 'Nuova Storia',
+    'projects.noStories': 'Ancora nessuna storia',
+    'projects.createFirst': 'Crea la tua prima storia e inizia a tessere la tua narrativa.',
+    'projects.createFirstButton': 'Crea La Tua Prima Storia',
+    'projects.updated': 'Aggiornato',
+    'projects.signOut': 'Esci',
+    'projects.status.draft': 'Bozza',
+    'projects.status.in_progress': 'In Corso',
+    'projects.status.completed': 'Completato',
+    'auth.continueWithGoogle': 'Continua con Google',
+    'auth.orContinueWith': 'o continua con email',
     'nav.overview': 'Panoramica',
     'nav.outline': 'Schema',
     'nav.chapters': 'Capitoli',

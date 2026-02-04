@@ -2,15 +2,18 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
+import { useLanguage } from '@/context/LanguageContext';
 import { useSettings } from '@/context/SettingsContext';
+import { LanguageSelector } from '@/components/LanguageSelector';
 import { Button } from '@/components/ui/button';
 import { ThemeEffects } from '@/components/themes/ThemeEffects';
 import { ThemedLogo } from '@/components/themes/ThemedLogo';
-import { Sparkles, Plus, BookOpen, Clock, Loader2 } from 'lucide-react';
+import { Sparkles, Plus, BookOpen, Clock, Loader2, LogOut, User } from 'lucide-react';
 import type { Project } from '@/types/story';
 
 export default function Projects() {
-  const { user, isLoading: authLoading } = useAuth();
+  const { user, isLoading: authLoading, signOut } = useAuth();
+  const { t } = useLanguage();
   const { settings } = useSettings();
   const navigate = useNavigate();
   const [projects, setProjects] = useState<Project[]>([]);
@@ -49,6 +52,11 @@ export default function Projects() {
     }
   }, [user]);
 
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/');
+  };
+
   if (authLoading || isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -62,6 +70,11 @@ export default function Projects() {
       {/* Theme Effects Background */}
       <ThemeEffects themeId={themeId} />
       
+      {/* Language Selector */}
+      <div className="fixed top-4 left-4 z-50">
+        <LanguageSelector variant="compact" />
+      </div>
+
       {/* Background */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-0 right-1/4 w-96 h-96 bg-primary/5 rounded-full blur-3xl" />
@@ -74,25 +87,31 @@ export default function Projects() {
             <div className="flex items-center gap-2 mb-2">
               <ThemedLogo size="md" />
             </div>
-            <h1 className="font-display text-3xl font-bold">Your Stories</h1>
+            <h1 className="font-display text-3xl font-bold">{t('projects.yourStories')}</h1>
           </div>
-          <Button variant="hero" onClick={() => navigate('/')}>
-            <Plus className="h-4 w-4" />
-            New Story
-          </Button>
+          <div className="flex items-center gap-3">
+            <Button variant="ghost" size="sm" onClick={handleSignOut} className="gap-2">
+              <LogOut className="h-4 w-4" />
+              <span className="hidden sm:inline">{t('projects.signOut')}</span>
+            </Button>
+            <Button variant="hero" onClick={() => navigate('/')}>
+              <Plus className="h-4 w-4" />
+              {t('projects.newStory')}
+            </Button>
+          </div>
         </div>
 
         {/* Projects Grid */}
         {projects.length === 0 ? (
           <div className="text-center py-24">
             <BookOpen className="h-16 w-16 text-muted-foreground/30 mx-auto mb-6" />
-            <h2 className="font-display text-2xl font-semibold mb-2">No stories yet</h2>
+            <h2 className="font-display text-2xl font-semibold mb-2">{t('projects.noStories')}</h2>
             <p className="text-muted-foreground mb-8">
-              Create your first story and begin weaving your narrative.
+              {t('projects.createFirst')}
             </p>
             <Button variant="hero" onClick={() => navigate('/')}>
               <Sparkles className="h-4 w-4" />
-              Create Your First Story
+              {t('projects.createFirstButton')}
             </Button>
           </div>
         ) : (
@@ -108,7 +127,7 @@ export default function Projects() {
                     <BookOpen className="h-5 w-5 text-primary" />
                   </div>
                   <span className="text-xs text-muted-foreground capitalize px-2 py-1 rounded-full bg-secondary">
-                    {project.status}
+                    {t(`projects.status.${project.status}` as any) || project.status}
                   </span>
                 </div>
                 <h3 className="font-display text-lg font-semibold mb-2 group-hover:text-primary transition-colors">
@@ -120,7 +139,7 @@ export default function Projects() {
                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
                   <Clock className="h-3 w-3" />
                   <span>
-                    Updated {new Date(project.updated_at).toLocaleDateString()}
+                    {t('projects.updated')} {new Date(project.updated_at).toLocaleDateString()}
                   </span>
                 </div>
               </button>
