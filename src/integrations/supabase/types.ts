@@ -114,6 +114,66 @@ export type Database = {
           },
         ]
       }
+      element_timeline: {
+        Row: {
+          change_type: string
+          chapter_id: string | null
+          chapter_number: number | null
+          created_at: string
+          description: string | null
+          element_id: string | null
+          element_name: string
+          element_type: string
+          id: string
+          new_state: Json | null
+          previous_state: Json | null
+          project_id: string
+        }
+        Insert: {
+          change_type: string
+          chapter_id?: string | null
+          chapter_number?: number | null
+          created_at?: string
+          description?: string | null
+          element_id?: string | null
+          element_name: string
+          element_type: string
+          id?: string
+          new_state?: Json | null
+          previous_state?: Json | null
+          project_id: string
+        }
+        Update: {
+          change_type?: string
+          chapter_id?: string | null
+          chapter_number?: number | null
+          created_at?: string
+          description?: string | null
+          element_id?: string | null
+          element_name?: string
+          element_type?: string
+          id?: string
+          new_state?: Json | null
+          previous_state?: Json | null
+          project_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "element_timeline_chapter_id_fkey"
+            columns: ["chapter_id"]
+            isOneToOne: false
+            referencedRelation: "chapters"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "element_timeline_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       lore_entries: {
         Row: {
           category: string

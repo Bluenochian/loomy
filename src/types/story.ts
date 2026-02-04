@@ -180,8 +180,9 @@ export interface StoryMapEdge {
   created_at: string;
 }
 
-// Genre definitions for UI
+// Genre definitions for UI - Expanded for professional authors
 export const GENRE_OPTIONS = [
+  // Major genres
   'Fantasy',
   'Sci-Fi',
   'Thriller',
@@ -192,8 +193,43 @@ export const GENRE_OPTIONS = [
   'Literary Fiction',
   'Historical',
   'Dystopian',
+  // Sub-genres and fusion genres
   'Urban Fantasy',
   'Space Opera',
+  'Epic Fantasy',
+  'Dark Fantasy',
+  'Cozy Mystery',
+  'Psychological Thriller',
+  'Romantic Suspense',
+  'Paranormal Romance',
+  'Cyberpunk',
+  'Steampunk',
+  'Post-Apocalyptic',
+  'Military Sci-Fi',
+  'Hard Sci-Fi',
+  'Gothic Horror',
+  'Cosmic Horror',
+  'Noir',
+  'Western',
+  'Wuxia',
+  'Slice of Life',
+  'Coming of Age',
+  'Satire',
+  'Magical Realism',
+  'Alternate History',
+  'Crime Fiction',
+  'Spy Fiction',
+  'Political Thriller',
+  'Techno-thriller',
+  'Supernatural',
+  'Mythology',
+  'Fairy Tale Retelling',
+  'LitRPG',
+  'Progression Fantasy',
+  'Portal Fantasy',
+  'Grimdark',
+  'Solarpunk',
+  'Biopunk',
 ] as const;
 
 export type GenreOption = typeof GENRE_OPTIONS[number];
