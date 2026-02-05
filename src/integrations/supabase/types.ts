@@ -14,6 +14,60 @@ export type Database = {
   }
   public: {
     Tables: {
+      canon_state: {
+        Row: {
+          characters_canon: Json
+          created_at: string
+          id: string
+          last_sync_snapshot_id: string | null
+          plot_canon: Json
+          project_id: string
+          themes_canon: Json
+          updated_at: string
+          version: number
+          world_canon: Json
+        }
+        Insert: {
+          characters_canon?: Json
+          created_at?: string
+          id?: string
+          last_sync_snapshot_id?: string | null
+          plot_canon?: Json
+          project_id: string
+          themes_canon?: Json
+          updated_at?: string
+          version?: number
+          world_canon?: Json
+        }
+        Update: {
+          characters_canon?: Json
+          created_at?: string
+          id?: string
+          last_sync_snapshot_id?: string | null
+          plot_canon?: Json
+          project_id?: string
+          themes_canon?: Json
+          updated_at?: string
+          version?: number
+          world_canon?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "canon_state_last_sync_snapshot_id_fkey"
+            columns: ["last_sync_snapshot_id"]
+            isOneToOne: false
+            referencedRelation: "story_snapshots"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "canon_state_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: true
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       chapters: {
         Row: {
           chapter_number: number
@@ -258,26 +312,38 @@ export type Database = {
       }
       profiles: {
         Row: {
+          ai_settings: Json
           avatar_url: string | null
+          bio: string | null
           created_at: string
           display_name: string | null
+          editor_settings: Json
           id: string
+          preferences: Json
           updated_at: string
           user_id: string
         }
         Insert: {
+          ai_settings?: Json
           avatar_url?: string | null
+          bio?: string | null
           created_at?: string
           display_name?: string | null
+          editor_settings?: Json
           id?: string
+          preferences?: Json
           updated_at?: string
           user_id: string
         }
         Update: {
+          ai_settings?: Json
           avatar_url?: string | null
+          bio?: string | null
           created_at?: string
           display_name?: string | null
+          editor_settings?: Json
           id?: string
+          preferences?: Json
           updated_at?: string
           user_id?: string
         }
@@ -497,6 +563,51 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "story_overviews_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      story_snapshots: {
+        Row: {
+          chapter_id: string | null
+          chapter_number: number | null
+          created_at: string
+          id: string
+          project_id: string
+          snapshot_data: Json
+          sync_number: number
+        }
+        Insert: {
+          chapter_id?: string | null
+          chapter_number?: number | null
+          created_at?: string
+          id?: string
+          project_id: string
+          snapshot_data?: Json
+          sync_number?: number
+        }
+        Update: {
+          chapter_id?: string | null
+          chapter_number?: number | null
+          created_at?: string
+          id?: string
+          project_id?: string
+          snapshot_data?: Json
+          sync_number?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "story_snapshots_chapter_id_fkey"
+            columns: ["chapter_id"]
+            isOneToOne: false
+            referencedRelation: "chapters"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "story_snapshots_project_id_fkey"
             columns: ["project_id"]
             isOneToOne: false
             referencedRelation: "projects"
