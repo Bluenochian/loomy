@@ -249,15 +249,15 @@ export default function Welcome() {
         <div className="lg:hidden fixed inset-0 z-50 bg-background/95 backdrop-blur-sm flex items-center justify-center p-6">
           <div className="w-full max-w-sm bg-card rounded-2xl border border-border p-6 animate-scale-in">
             <div className="flex justify-between items-center mb-6">
-              <h2 className="font-display text-xl font-bold">
-                {authMode === 'signup' ? 'Create Account' : 'Sign In'}
-              </h2>
-              <button 
-                onClick={() => setShowAuth(false)}
-                className="text-muted-foreground hover:text-foreground"
-              >
-                ✕
-              </button>
+               <h2 className="font-display text-xl font-bold">
+                 {authMode === 'signup' ? t('welcome.createAccount') : t('welcome.signIn')}
+               </h2>
+               <button 
+                 onClick={() => setShowAuth(false)}
+                 className="text-muted-foreground hover:text-foreground"
+               >
+                 ✕
+               </button>
             </div>
             <AuthForm mode={authMode} onToggleMode={() => setAuthMode(authMode === 'signup' ? 'signin' : 'signup')} />
           </div>

@@ -86,8 +86,8 @@ export default function Projects() {
           <div>
             <div className="flex items-center gap-2 mb-2">
               <ThemedLogo size="md" />
-            </div>
-            <h1 className="font-display text-3xl font-bold">{t('projects.yourStories')}</h1>
+             </div>
+             <h1 className="font-display text-3xl font-bold">{t('projects.yourStories')}</h1>
           </div>
           <div className="flex items-center gap-3">
             <Button variant="ghost" size="sm" onClick={handleSignOut} className="gap-2">

@@ -1,4 +1,5 @@
 import { useStory } from '@/context/StoryContext';
+import { useTranslation } from 'react-i18next';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -11,9 +12,10 @@ import { StoryStatsCharts } from '@/components/charts/StoryStatsCharts';
 import { useAutoTheme } from '@/hooks/useAutoTheme';
 
 export default function StoryOverviewPage() {
-  const { storyOverview, updateStoryOverview } = useStory();
-  const { toast } = useToast();
-  useAutoTheme(); // Auto-apply theme based on genre
+   const { t } = useTranslation();
+   const { storyOverview, updateStoryOverview } = useStory();
+   const { toast } = useToast();
+   useAutoTheme(); // Auto-apply theme based on genre
   const [isSaving, setIsSaving] = useState(false);
   
   const [narrativeIntent, setNarrativeIntent] = useState('');
@@ -47,32 +49,32 @@ export default function StoryOverviewPage() {
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      await updateStoryOverview({
-        narrative_intent: narrativeIntent,
-        stakes,
-        setting_description: settingDescription,
-        time_period: timePeriod,
-        central_themes: themes,
-      });
-      toast({ title: 'Story overview saved' });
-    } catch (error) {
-      toast({ title: 'Error saving', variant: 'destructive' });
+       await updateStoryOverview({
+         narrative_intent: narrativeIntent,
+         stakes,
+         setting_description: settingDescription,
+         time_period: timePeriod,
+         central_themes: themes,
+       });
+       toast({ title: t('common.save') });
+     } catch (error) {
+       toast({ title: t('common.error'), variant: 'destructive' });
     } finally {
       setIsSaving(false);
     }
   };
 
   return (
-    <div className="p-8 max-w-4xl mx-auto animate-fade-in">
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <h1 className="font-display text-3xl font-bold mb-2">Story Overview</h1>
-          <p className="text-muted-foreground">Define the high-level narrative vision</p>
-        </div>
-        <Button onClick={handleSave} disabled={isSaving}>
-          {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-          Save Changes
-        </Button>
+     <div className="p-8 max-w-4xl mx-auto animate-fade-in">
+       <div className="flex items-center justify-between mb-8">
+         <div>
+           <h1 className="font-display text-3xl font-bold mb-2">{t('nav.overview')}</h1>
+           <p className="text-muted-foreground">{t('storyOverview.description')}</p>
+         </div>
+         <Button onClick={handleSave} disabled={isSaving}>
+           {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+           {t('common.save')}
+         </Button>
       </div>
 
       <div className="space-y-8">
