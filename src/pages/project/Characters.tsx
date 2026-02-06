@@ -1,4 +1,5 @@
 import { useStory } from '@/context/StoryContext';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -10,29 +11,30 @@ import { useToast } from '@/hooks/use-toast';
 import { AICharacterGenerator } from '@/components/ai/AICharacterGenerator';
 import type { Character } from '@/types/story';
 export default function CharactersPage() {
-  const {
-    characters,
-    addCharacter,
-    updateCharacter,
-    deleteCharacter
-  } = useStory();
-  const {
-    toast
-  } = useToast();
-  const [selectedCharacter, setSelectedCharacter] = useState<string | null>(null);
-  const [isAdding, setIsAdding] = useState(false);
+   const { t } = useTranslation();
+   const {
+     characters,
+     addCharacter,
+     updateCharacter,
+     deleteCharacter
+   } = useStory();
+   const {
+     toast
+   } = useToast();
+   const [selectedCharacter, setSelectedCharacter] = useState<string | null>(null);
+   const [isAdding, setIsAdding] = useState(false);
   const handleAddCharacter = async () => {
     setIsAdding(true);
     const character = await addCharacter({
       name: 'New Character',
       role: 'supporting'
     });
-    if (character) {
-      setSelectedCharacter(character.id);
-      toast({
-        title: 'Character created'
-      });
-    }
+     if (character) {
+       setSelectedCharacter(character.id);
+       toast({
+         title: t('characters.created')
+       });
+     }
     setIsAdding(false);
   };
   const handleAICharacterGenerated = async (charData: {
@@ -58,11 +60,11 @@ export default function CharactersPage() {
   const handleDeleteCharacter = async (id: string) => {
     await deleteCharacter(id);
     if (selectedCharacter === id) {
-      setSelectedCharacter(null);
-    }
-    toast({
-      title: 'Character deleted'
-    });
+       setSelectedCharacter(null);
+     }
+     toast({
+       title: t('characters.deleted')
+     });
   };
   const selected = characters.find(ch => ch.id === selectedCharacter);
   const getRoleIcon = (role: string) => {
@@ -90,10 +92,10 @@ export default function CharactersPage() {
     }
   };
   return <div className="flex h-[calc(100vh-4rem)] animate-fade-in">
-      {/* Character List */}
-      <div className="w-80 border-r border-border p-4 overflow-y-auto">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="font-display text-lg font-semibold">Characters</h2>
+       {/* Character List */}
+       <div className="w-80 border-r border-border p-4 overflow-y-auto">
+         <div className="flex items-center justify-between mb-4">
+           <h2 className="font-display text-lg font-semibold">{t('characters.title')}</h2>
           <div className="flex items-center gap-2">
             <AICharacterGenerator onCharacterGenerated={handleAICharacterGenerated} />
             <Button variant="outline" size="sm" onClick={handleAddCharacter} disabled={isAdding}>
@@ -117,11 +119,11 @@ export default function CharactersPage() {
               </div>
             </button>)}
 
-          {characters.length === 0 && <div className="text-center py-8">
-              <Users className="h-10 w-10 text-muted-foreground/30 mx-auto mb-3" />
-              <p className="text-sm text-muted-foreground">No characters yet</p>
-              <p className="text-xs text-muted-foreground mt-1">Use AI Generate or add manually</p>
-            </div>}
+           {characters.length === 0 && <div className="text-center py-8">
+               <Users className="h-10 w-10 text-muted-foreground/30 mx-auto mb-3" />
+               <p className="text-sm text-muted-foreground">{t('characters.noCharacters')}</p>
+               <p className="text-xs text-muted-foreground mt-1">{t('characters.useAI')}</p>
+             </div>}
         </div>
       </div>
 
@@ -150,92 +152,92 @@ export default function CharactersPage() {
             </div>
 
             <div className="grid gap-6">
-              <div>
-                <label className="text-sm font-medium text-muted-foreground mb-2 block">
-                  Description
-                </label>
-                <Textarea value={selected.description || ''} onChange={e => updateCharacter(selected.id, {
-              description: e.target.value
-            })} placeholder="Physical appearance, personality, first impressions..." className="min-h-[100px] bg-secondary/30" />
+               <div>
+                 <label className="text-sm font-medium text-muted-foreground mb-2 block">
+                   {t('characters.description')}
+                 </label>
+                 <Textarea value={selected.description || ''} onChange={e => updateCharacter(selected.id, {
+               description: e.target.value
+             })} placeholder={t('characters.descriptionPlaceholder')} className="min-h-[100px] bg-secondary/30" />
               </div>
 
-              <div>
-                <label className="text-sm font-medium text-muted-foreground mb-2 block">
-                  Backstory
-                </label>
-                <Textarea value={selected.backstory || ''} onChange={e => updateCharacter(selected.id, {
-              backstory: e.target.value
-            })} placeholder="Their history, formative experiences, what shaped them..." className="min-h-[120px] bg-secondary/30" />
+               <div>
+                 <label className="text-sm font-medium text-muted-foreground mb-2 block">
+                   {t('characters.backstory')}
+                 </label>
+                 <Textarea value={selected.backstory || ''} onChange={e => updateCharacter(selected.id, {
+               backstory: e.target.value
+             })} placeholder={t('characters.backstoryPlaceholder')} className="min-h-[120px] bg-secondary/30" />
               </div>
 
               <div className="grid md:grid-cols-2 gap-6">
-                <div>
-                  <label className="text-sm font-medium text-muted-foreground mb-2 block">
-                    Motivations
-                  </label>
-                  <Textarea value={selected.motivations?.join('\n') || ''} onChange={e => updateCharacter(selected.id, {
-                motivations: e.target.value.split('\n').filter(m => m.trim())
-              })} placeholder="What drives them? (one per line)" className="min-h-[100px] bg-secondary/30" />
+                 <div>
+                   <label className="text-sm font-medium text-muted-foreground mb-2 block">
+                     {t('characters.motivations')}
+                   </label>
+                   <Textarea value={selected.motivations?.join('\n') || ''} onChange={e => updateCharacter(selected.id, {
+                 motivations: e.target.value.split('\n').filter(m => m.trim())
+               })} placeholder={t('characters.motivationsPlaceholder')} className="min-h-[100px] bg-secondary/30" />
                 </div>
 
-                <div>
-                  <label className="text-sm font-medium text-muted-foreground mb-2 block">
-                    Traits
-                  </label>
-                  <Textarea value={selected.traits?.join('\n') || ''} onChange={e => updateCharacter(selected.id, {
-                traits: e.target.value.split('\n').filter(t => t.trim())
-              })} placeholder="Key personality traits (one per line)" className="min-h-[100px] bg-secondary/30" />
+                 <div>
+                   <label className="text-sm font-medium text-muted-foreground mb-2 block">
+                     {t('characters.traits')}
+                   </label>
+                   <Textarea value={selected.traits?.join('\n') || ''} onChange={e => updateCharacter(selected.id, {
+                 traits: e.target.value.split('\n').filter(t => t.trim())
+               })} placeholder={t('characters.traitsPlaceholder')} className="min-h-[100px] bg-secondary/30" />
                 </div>
               </div>
 
-              {/* Character Arc */}
-              <Card className="p-4">
-                <h3 className="font-semibold mb-4">Character Arc</h3>
+               {/* Character Arc */}
+               <Card className="p-4">
+                 <h3 className="font-semibold mb-4">{t('characters.arc')}</h3>
                 <div className="space-y-4">
-                  <div>
-                    <label className="text-xs text-muted-foreground mb-1 block">Starting State</label>
-                    <Input value={selected.arc?.startingState || ''} onChange={e => updateCharacter(selected.id, {
-                  arc: {
-                    ...selected.arc,
-                    startingState: e.target.value
-                  }
-                })} placeholder="Where do they begin emotionally/mentally?" className="bg-secondary/30" />
+                   <div>
+                     <label className="text-xs text-muted-foreground mb-1 block">{t('characters.arcStarting')}</label>
+                     <Input value={selected.arc?.startingState || ''} onChange={e => updateCharacter(selected.id, {
+                   arc: {
+                     ...selected.arc,
+                     startingState: e.target.value
+                   }
+                 })} placeholder={t('characters.arcStartingPlaceholder')} className="bg-secondary/30" />
                   </div>
-                  <div>
-                    <label className="text-xs text-muted-foreground mb-1 block">Desired Change</label>
-                    <Input value={selected.arc?.desiredChange || ''} onChange={e => updateCharacter(selected.id, {
-                  arc: {
-                    ...selected.arc,
-                    desiredChange: e.target.value
-                  }
-                })} placeholder="What must they learn or become?" className="bg-secondary/30" />
+                   <div>
+                     <label className="text-xs text-muted-foreground mb-1 block">{t('characters.arcDesired')}</label>
+                     <Input value={selected.arc?.desiredChange || ''} onChange={e => updateCharacter(selected.id, {
+                   arc: {
+                     ...selected.arc,
+                     desiredChange: e.target.value
+                   }
+                 })} placeholder={t('characters.arcDesiredPlaceholder')} className="bg-secondary/30" />
                   </div>
-                  <div>
-                    <label className="text-xs text-muted-foreground mb-1 block">Ending State</label>
-                    <Input value={selected.arc?.endingState || ''} onChange={e => updateCharacter(selected.id, {
-                  arc: {
-                    ...selected.arc,
-                    endingState: e.target.value
-                  }
-                })} placeholder="Where do they end up?" className="bg-secondary/30" />
+                   <div>
+                     <label className="text-xs text-muted-foreground mb-1 block">{t('characters.arcEnding')}</label>
+                     <Input value={selected.arc?.endingState || ''} onChange={e => updateCharacter(selected.id, {
+                   arc: {
+                     ...selected.arc,
+                     endingState: e.target.value
+                   }
+                 })} placeholder={t('characters.arcEndingPlaceholder')} className="bg-secondary/30" />
                   </div>
                 </div>
               </Card>
             </div>
           </div> : <div className="flex items-center justify-center h-full">
-            <div className="text-center my-[6px] py-[12px]">
-              <Users className="h-16 w-16 text-muted-foreground/30 mx-auto mb-4" />
-              <h3 className="font-display text-xl font-semibold mb-2">Select a Character</h3>
-              <p className="text-muted-foreground mb-4">
-                Choose a character from the list or create a new one
-              </p>
-              <div className="flex gap-2 justify-center">
-                <AICharacterGenerator onCharacterGenerated={handleAICharacterGenerated} />
-                <Button onClick={handleAddCharacter} disabled={isAdding}>
-                  <Plus className="h-4 w-4" /> Create Manually
-                </Button>
-              </div>
-            </div>
+           <div className="text-center my-[6px] py-[12px]">
+               <Users className="h-16 w-16 text-muted-foreground/30 mx-auto mb-4" />
+               <h3 className="font-display text-xl font-semibold mb-2">{t('characters.selectCharacter')}</h3>
+               <p className="text-muted-foreground mb-4">
+                 {t('characters.selectDescription')}
+               </p>
+               <div className="flex gap-2 justify-center">
+                 <AICharacterGenerator onCharacterGenerated={handleAICharacterGenerated} />
+                 <Button onClick={handleAddCharacter} disabled={isAdding}>
+                   <Plus className="h-4 w-4" /> {t('characters.createManually')}
+                 </Button>
+               </div>
+             </div>
           </div>}
       </div>
     </div>;
