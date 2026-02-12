@@ -12,10 +12,10 @@ import { StoryStatsCharts } from '@/components/charts/StoryStatsCharts';
 import { useAutoTheme } from '@/hooks/useAutoTheme';
 
 export default function StoryOverviewPage() {
-   const { t } = useTranslation();
-   const { storyOverview, updateStoryOverview } = useStory();
-   const { toast } = useToast();
-   useAutoTheme(); // Auto-apply theme based on genre
+  const { t } = useTranslation();
+  const { storyOverview, updateStoryOverview } = useStory();
+  const { toast } = useToast();
+  useAutoTheme();
   const [isSaving, setIsSaving] = useState(false);
   
   const [narrativeIntent, setNarrativeIntent] = useState('');
@@ -49,86 +49,86 @@ export default function StoryOverviewPage() {
   const handleSave = async () => {
     setIsSaving(true);
     try {
-       await updateStoryOverview({
-         narrative_intent: narrativeIntent,
-         stakes,
-         setting_description: settingDescription,
-         time_period: timePeriod,
-         central_themes: themes,
-       });
-       toast({ title: t('common.save') });
-     } catch (error) {
-       toast({ title: t('common.error'), variant: 'destructive' });
+      await updateStoryOverview({
+        narrative_intent: narrativeIntent,
+        stakes,
+        setting_description: settingDescription,
+        time_period: timePeriod,
+        central_themes: themes,
+      });
+      toast({ title: t('common.save') });
+    } catch (error) {
+      toast({ title: t('common.error'), variant: 'destructive' });
     } finally {
       setIsSaving(false);
     }
   };
 
   return (
-     <div className="p-8 max-w-4xl mx-auto animate-fade-in">
-       <div className="flex items-center justify-between mb-8">
-         <div>
-           <h1 className="font-display text-3xl font-bold mb-2">{t('nav.overview')}</h1>
-           <p className="text-muted-foreground">{t('storyOverview.description')}</p>
-         </div>
-         <Button onClick={handleSave} disabled={isSaving}>
-           {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-           {t('common.save')}
-         </Button>
+    <div className="p-8 max-w-4xl mx-auto animate-fade-in">
+      <div className="flex items-center justify-between mb-8">
+        <div>
+          <h1 className="font-display text-3xl font-bold mb-2">{t('nav.overview')}</h1>
+          <p className="text-muted-foreground">{t('storyOverview.description')}</p>
+        </div>
+        <Button onClick={handleSave} disabled={isSaving}>
+          {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+          {t('common.save')}
+        </Button>
       </div>
 
       <div className="space-y-8">
         <div className="space-y-3">
-          <Label className="text-base font-medium">Narrative Intent</Label>
+          <Label className="text-base font-medium">{t('storyOverview.narrativeIntent')}</Label>
           <Textarea
             value={narrativeIntent}
             onChange={(e) => setNarrativeIntent(e.target.value)}
-            placeholder="What is the core purpose of this story? What experience should readers have?"
+            placeholder={t('storyOverview.narrativeIntentPlaceholder')}
             className="min-h-[120px] bg-secondary/30"
           />
         </div>
 
         <div className="space-y-3">
-          <Label className="text-base font-medium">Stakes</Label>
+          <Label className="text-base font-medium">{t('storyOverview.stakes')}</Label>
           <Textarea
             value={stakes}
             onChange={(e) => setStakes(e.target.value)}
-            placeholder="What's at risk? Personal, societal, existential consequences..."
+            placeholder={t('storyOverview.stakesPlaceholder')}
             className="min-h-[100px] bg-secondary/30"
           />
         </div>
 
         <div className="space-y-3">
-          <Label className="text-base font-medium">Setting Description</Label>
+          <Label className="text-base font-medium">{t('storyOverview.settingDescription')}</Label>
           <Textarea
             value={settingDescription}
             onChange={(e) => setSettingDescription(e.target.value)}
-            placeholder="Describe the world where this story takes place..."
+            placeholder={t('storyOverview.settingPlaceholder')}
             className="min-h-[120px] bg-secondary/30"
           />
         </div>
 
         <div className="space-y-3">
-          <Label className="text-base font-medium">Time Period</Label>
+          <Label className="text-base font-medium">{t('storyOverview.timePeriod')}</Label>
           <Input
             value={timePeriod}
             onChange={(e) => setTimePeriod(e.target.value)}
-            placeholder="When does this story take place?"
+            placeholder={t('storyOverview.timePeriodPlaceholder')}
             className="bg-secondary/30"
           />
         </div>
 
         <div className="space-y-3">
-          <Label className="text-base font-medium">Central Themes</Label>
+          <Label className="text-base font-medium">{t('storyOverview.centralThemes')}</Label>
           <div className="flex gap-2">
             <Input
               value={newTheme}
               onChange={(e) => setNewTheme(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addTheme())}
-              placeholder="Add a theme..."
+              placeholder={t('storyOverview.themePlaceholder')}
               className="bg-secondary/30"
             />
-            <Button variant="secondary" onClick={addTheme}>Add</Button>
+            <Button variant="secondary" onClick={addTheme}>{t('common.add')}</Button>
           </div>
           <div className="flex flex-wrap gap-2 mt-3">
             {themes.map((theme, index) => (
@@ -144,11 +144,10 @@ export default function StoryOverviewPage() {
           </div>
         </div>
 
-        {/* Story Statistics Charts */}
         <div className="space-y-3 pt-6 border-t border-border">
           <div className="flex items-center gap-2 mb-4">
             <BarChart3 className="h-5 w-5 text-primary" />
-            <Label className="text-base font-medium">Story Statistics</Label>
+            <Label className="text-base font-medium">{t('storyOverview.storyStatistics')}</Label>
           </div>
           <StoryStatsCharts />
         </div>

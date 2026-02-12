@@ -1,4 +1,5 @@
 import { useStory } from '@/context/StoryContext';
+import { useTranslation } from 'react-i18next';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -10,15 +11,16 @@ import { cn } from '@/lib/utils';
 
 type AIAction = 'continue' | 'rewrite' | 'expand' | 'dialogue' | 'describe';
 
-const AI_ACTIONS = [
-  { value: 'continue', label: 'Continue', icon: Sparkles, description: 'Write the next paragraphs' },
-  { value: 'rewrite', label: 'Rewrite', icon: RefreshCw, description: 'Improve the passage' },
-  { value: 'expand', label: 'Expand', icon: Maximize2, description: 'Add more detail' },
-  { value: 'dialogue', label: 'Dialogue', icon: MessageSquare, description: 'Create a scene' },
-  { value: 'describe', label: 'Describe', icon: Eye, description: 'Vivid descriptions' },
-] as const;
+const AI_ACTION_ICONS = {
+  continue: Sparkles,
+  rewrite: RefreshCw,
+  expand: Maximize2,
+  dialogue: MessageSquare,
+  describe: Eye,
+} as const;
 
 export default function WritingStudioPage() {
+  const { t } = useTranslation();
   const { chapters, updateChapter, currentProject, characters, loreEntries } = useStory();
   const { toast } = useToast();
   
@@ -45,7 +47,7 @@ export default function WritingStudioPage() {
     
     const contentToProcess = selectedText || selectedChapter?.content || '';
     if (!contentToProcess.trim()) {
-      toast({ title: 'Select text or write content first', variant: 'destructive' });
+      toast({ title: t('studio.selectTextFirst'), variant: 'destructive' });
       return;
     }
 
@@ -76,13 +78,10 @@ export default function WritingStudioPage() {
             genre: primaryGenre,
             tone: toneDescription,
             characters: characters.slice(0, 5).map(c => ({
-              name: c.name,
-              role: c.role,
-              traits: c.traits,
+              name: c.name, role: c.role, traits: c.traits,
             })),
             lore: loreEntries.slice(0, 5).map(l => ({
-              title: l.title,
-              content: l.content || '',
+              title: l.title, content: l.content || '',
             })),
             chapterTitle: selectedChapter?.title,
           },
@@ -90,9 +89,7 @@ export default function WritingStudioPage() {
         }),
       });
 
-      if (!resp.ok || !resp.body) {
-        throw new Error('Failed to start AI generation');
-      }
+      if (!resp.ok || !resp.body) throw new Error('Failed to start AI generation');
 
       const reader = resp.body.getReader();
       const decoder = new TextDecoder();
@@ -102,43 +99,27 @@ export default function WritingStudioPage() {
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
-        
         textBuffer += decoder.decode(value, { stream: true });
-        
         let newlineIndex: number;
         while ((newlineIndex = textBuffer.indexOf("\n")) !== -1) {
           let line = textBuffer.slice(0, newlineIndex);
           textBuffer = textBuffer.slice(newlineIndex + 1);
-
           if (line.endsWith("\r")) line = line.slice(0, -1);
           if (line.startsWith(":") || line.trim() === "") continue;
           if (!line.startsWith("data: ")) continue;
-
           const jsonStr = line.slice(6).trim();
           if (jsonStr === "[DONE]") break;
-
           try {
             const parsed = JSON.parse(jsonStr);
             const content = parsed.choices?.[0]?.delta?.content;
-            if (content) {
-              contentSoFar += content;
-              setGeneratedContent(contentSoFar);
-            }
-          } catch {
-            textBuffer = line + "\n" + textBuffer;
-            break;
-          }
+            if (content) { contentSoFar += content; setGeneratedContent(contentSoFar); }
+          } catch { textBuffer = line + "\n" + textBuffer; break; }
         }
       }
-
-      toast({ title: 'Content generated!' });
+      toast({ title: t('studio.contentGenerated') });
     } catch (error) {
       console.error('AI generation error:', error);
-      toast({ 
-        title: 'Generation failed', 
-        description: error instanceof Error ? error.message : 'Please try again',
-        variant: 'destructive' 
-      });
+      toast({ title: t('studio.generationFailed'), description: error instanceof Error ? error.message : t('auth.tryAgain'), variant: 'destructive' });
     } finally {
       setIsGenerating(false);
     }
@@ -146,19 +127,13 @@ export default function WritingStudioPage() {
 
   const insertGeneratedContent = () => {
     if (!selectedChapter || !generatedContent) return;
-    
     const currentContent = selectedChapter.content || '';
     const newContent = currentContent + (currentContent ? '\n\n' : '') + generatedContent;
     const wordCount = newContent.split(/\s+/).filter(Boolean).length;
-    
-    updateChapter(selectedChapter.id, { 
-      content: newContent,
-      word_count: wordCount 
-    });
-    
+    updateChapter(selectedChapter.id, { content: newContent, word_count: wordCount });
     setGeneratedContent('');
     setSelectedText('');
-    toast({ title: 'Content inserted!' });
+    toast({ title: t('studio.contentInserted') });
   };
 
   const copyToClipboard = async () => {
@@ -167,27 +142,28 @@ export default function WritingStudioPage() {
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const AI_ACTIONS: AIAction[] = ['continue', 'rewrite', 'expand', 'dialogue', 'describe'];
+
   return (
     <div className="h-[calc(100vh-4rem)] flex flex-col animate-fade-in">
-      {/* Header */}
       <div className="p-6 border-b border-border">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="font-display text-2xl font-bold flex items-center gap-2">
-              <PenTool className="h-6 w-6 text-primary" /> Writing Studio
+              <PenTool className="h-6 w-6 text-primary" /> {t('studio.title')}
             </h1>
             <p className="text-sm text-muted-foreground mt-1">
-              {totalWords.toLocaleString()} words across {chapters.length} chapters
+              {totalWords.toLocaleString()} {t('studio.wordsAcross')} {chapters.length} {t('nav.chapters').toLowerCase()}
             </p>
           </div>
           <Select value={selectedChapterId || undefined} onValueChange={setSelectedChapterId}>
             <SelectTrigger className="w-64 bg-secondary/50">
-              <SelectValue placeholder="Select chapter" />
+              <SelectValue placeholder={t('studio.selectChapter')} />
             </SelectTrigger>
             <SelectContent>
               {chapters.map(ch => (
                 <SelectItem key={ch.id} value={ch.id}>
-                  Ch. {ch.chapter_number}: {ch.title}
+                  {t('chapters.chapterNumber', { number: ch.chapter_number })}: {ch.title}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -195,9 +171,7 @@ export default function WritingStudioPage() {
         </div>
       </div>
 
-      {/* Main Content */}
       <div className="flex-1 flex overflow-hidden">
-        {/* Editor Panel */}
         <div className="flex-1 p-6 overflow-auto">
           {selectedChapter ? (
             <div className="max-w-3xl mx-auto">
@@ -211,113 +185,88 @@ export default function WritingStudioPage() {
                 }}
                 onMouseUp={handleTextSelection}
                 onKeyUp={handleTextSelection}
-                placeholder="Begin writing your story..."
+                placeholder={t('studio.beginWriting')}
                 className="min-h-[500px] bg-secondary/20 font-display text-lg leading-relaxed resize-none prose-narrative"
               />
               <p className="text-sm text-muted-foreground mt-2">
-                {selectedChapter.word_count?.toLocaleString() || 0} words
+                {selectedChapter.word_count?.toLocaleString() || 0} {t('common.words')}
               </p>
             </div>
           ) : (
             <div className="flex items-center justify-center h-full">
               <div className="text-center">
                 <PenTool className="h-16 w-16 text-muted-foreground/30 mx-auto mb-4" />
-                <p className="text-muted-foreground">Create chapters to start writing</p>
+                <p className="text-muted-foreground">{t('studio.createChapters')}</p>
               </div>
             </div>
           )}
         </div>
 
-        {/* AI Assistant Panel */}
         <div className="w-96 border-l border-border p-6 overflow-auto bg-card/50">
           <h3 className="font-display text-lg font-semibold mb-4 flex items-center gap-2">
-            <Sparkles className="h-5 w-5 text-primary" /> AI Assistant
+            <Sparkles className="h-5 w-5 text-primary" /> {t('studio.aiAssistant')}
           </h3>
 
-          {/* Selected Text Preview */}
           {selectedText && (
             <Card className="p-3 mb-4 bg-secondary/30 border-primary/20">
-              <p className="text-xs text-muted-foreground mb-1">Selected text:</p>
+              <p className="text-xs text-muted-foreground mb-1">{t('studio.selectedText')}</p>
               <p className="text-sm line-clamp-3 italic">"{selectedText}"</p>
             </Card>
           )}
 
-          {/* AI Action Buttons */}
           <div className="grid grid-cols-2 gap-2 mb-4">
-            {AI_ACTIONS.map(action => (
-              <Button
-                key={action.value}
-                variant={aiAction === action.value ? "default" : "outline"}
-                size="sm"
-                onClick={() => setAiAction(action.value)}
-                className={cn(
-                  "flex flex-col items-center gap-1 h-auto py-3",
-                  aiAction === action.value && "glow-subtle"
-                )}
-              >
-                <action.icon className="h-4 w-4" />
-                <span className="text-xs">{action.label}</span>
-              </Button>
-            ))}
+            {AI_ACTIONS.map(action => {
+              const Icon = AI_ACTION_ICONS[action];
+              return (
+                <Button
+                  key={action}
+                  variant={aiAction === action ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setAiAction(action)}
+                  className={cn("flex flex-col items-center gap-1 h-auto py-3", aiAction === action && "glow-subtle")}
+                >
+                  <Icon className="h-4 w-4" />
+                  <span className="text-xs">{t(`studio.aiActions.${action}`)}</span>
+                </Button>
+              );
+            })}
           </div>
 
-          {/* Custom Instructions */}
           <Textarea
             value={customPrompt}
             onChange={(e) => setCustomPrompt(e.target.value)}
-            placeholder="Add specific instructions (optional)..."
+            placeholder={t('studio.instructionsPlaceholder')}
             className="mb-4 bg-secondary/30 text-sm h-20 resize-none"
           />
 
-          {/* Generate Button */}
-          <Button 
-            onClick={generateWithAI} 
-            disabled={isGenerating || !selectedChapter}
-            className="w-full mb-4"
-          >
+          <Button onClick={generateWithAI} disabled={isGenerating || !selectedChapter} className="w-full mb-4">
             {isGenerating ? (
-              <>
-                <Loader2 className="h-4 w-4 animate-spin" />
-                Generating...
-              </>
+              <><Loader2 className="h-4 w-4 animate-spin" /> {t('studio.generating')}</>
             ) : (
-              <>
-                <Sparkles className="h-4 w-4" />
-                Generate with AI
-              </>
+              <><Sparkles className="h-4 w-4" /> {t('studio.generateWithAI')}</>
             )}
           </Button>
 
-          {/* Generated Content */}
           {generatedContent && (
             <Card className="p-4 bg-secondary/30 border-primary/20">
               <div className="flex items-center justify-between mb-2">
-                <p className="text-xs text-muted-foreground">Generated content:</p>
+                <p className="text-xs text-muted-foreground">{t('studio.generatedContent')}</p>
                 <Button variant="ghost" size="sm" onClick={copyToClipboard}>
                   {copied ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
                 </Button>
               </div>
-              <div className="prose-narrative text-sm max-h-64 overflow-auto mb-3">
-                {generatedContent}
-              </div>
-              <Button 
-                onClick={insertGeneratedContent} 
-                size="sm" 
-                className="w-full"
-              >
-                Insert into Chapter
-              </Button>
+              <div className="prose-narrative text-sm max-h-64 overflow-auto mb-3">{generatedContent}</div>
+              <Button onClick={insertGeneratedContent} size="sm" className="w-full">{t('studio.insertIntoChapter')}</Button>
             </Card>
           )}
 
-          {/* Tips */}
           <div className="mt-6 p-4 rounded-lg bg-muted/30">
-            <h4 className="text-sm font-medium mb-2">Tips</h4>
+            <h4 className="text-sm font-medium mb-2">{t('studio.tips')}</h4>
             <ul className="text-xs text-muted-foreground space-y-1">
-              <li>• Select text in the editor to transform it</li>
-              <li>• Use "Continue" to write the next paragraphs</li>
-              <li>• "Expand" adds sensory details and depth</li>
-              <li>• AI respects your characters and lore</li>
+              <li>• {t('studio.tip1')}</li>
+              <li>• {t('studio.tip2')}</li>
+              <li>• {t('studio.tip3')}</li>
+              <li>• {t('studio.tip4')}</li>
             </ul>
           </div>
         </div>
