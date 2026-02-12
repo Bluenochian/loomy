@@ -1,67 +1,62 @@
 import { useStory } from '@/context/StoryContext';
+import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line, CartesianGrid, Legend } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, CartesianGrid } from 'recharts';
 import { BookOpen, Users, FileText, TrendingUp } from 'lucide-react';
 
 const COLORS = ['hsl(var(--primary))', 'hsl(var(--accent))', 'hsl(var(--muted-foreground))', 'hsl(38 85% 55%)', 'hsl(190 80% 50%)'];
 
 export function StoryStatsCharts() {
+  const { t } = useTranslation();
   const { chapters, characters, loreEntries, storyMapNodes } = useStory();
 
-  // Word count by chapter
   const chapterWordData = chapters.map(ch => ({
-    name: `Ch ${ch.chapter_number}`,
+    name: `${t('chapters.chapterNumber', { number: ch.chapter_number }).substring(0, 5)} ${ch.chapter_number}`,
     words: ch.word_count || 0,
   }));
 
-  // Chapter status distribution
   const statusCounts = chapters.reduce((acc, ch) => {
     acc[ch.status] = (acc[ch.status] || 0) + 1;
     return acc;
   }, {} as Record<string, number>);
 
   const statusData = Object.entries(statusCounts).map(([name, value]) => ({
-    name: name.charAt(0).toUpperCase() + name.slice(1),
+    name: t(`chapters.status.${name}`) || name.charAt(0).toUpperCase() + name.slice(1),
     value,
   }));
 
-  // Character roles distribution
   const roleCounts = characters.reduce((acc, char) => {
     acc[char.role] = (acc[char.role] || 0) + 1;
     return acc;
   }, {} as Record<string, number>);
 
   const roleData = Object.entries(roleCounts).map(([name, value]) => ({
-    name: name.charAt(0).toUpperCase() + name.slice(1),
+    name: t(`characters.roles.${name}`) || name.charAt(0).toUpperCase() + name.slice(1),
     value,
   }));
 
-  // Lore entries by category
   const loreCounts = loreEntries.reduce((acc, entry) => {
     acc[entry.category] = (acc[entry.category] || 0) + 1;
     return acc;
   }, {} as Record<string, number>);
 
   const loreData = Object.entries(loreCounts).map(([name, value]) => ({
-    name: name.charAt(0).toUpperCase() + name.slice(1),
+    name: t(`lore.categories.${name}`) || name.charAt(0).toUpperCase() + name.slice(1),
     count: value,
   }));
 
-  // Story map node types
   const nodeCounts = storyMapNodes.reduce((acc, node) => {
     acc[node.node_type] = (acc[node.node_type] || 0) + 1;
     return acc;
   }, {} as Record<string, number>);
 
   const nodeData = Object.entries(nodeCounts).map(([name, value]) => ({
-    name: name.charAt(0).toUpperCase() + name.slice(1),
+    name: t(`storyMap.nodeTypes.${name}`) || name.charAt(0).toUpperCase() + name.slice(1),
     value,
   }));
 
-  // Total stats
   const totalWords = chapters.reduce((sum, ch) => sum + (ch.word_count || 0), 0);
 
-  // Custom tooltip style
   const tooltipStyle = {
     backgroundColor: 'hsl(var(--card))',
     border: '1px solid hsl(var(--border))',
@@ -71,7 +66,6 @@ export function StoryStatsCharts() {
 
   return (
     <div className="space-y-6">
-      {/* Summary Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <Card className="bg-gradient-to-br from-primary/10 to-transparent border-primary/20">
           <CardContent className="p-4">
@@ -81,7 +75,7 @@ export function StoryStatsCharts() {
               </div>
               <div>
                 <p className="text-2xl font-bold">{totalWords.toLocaleString()}</p>
-                <p className="text-xs text-muted-foreground">Total Words</p>
+                <p className="text-xs text-muted-foreground">{t('stats.totalWords')}</p>
               </div>
             </div>
           </CardContent>
@@ -95,7 +89,7 @@ export function StoryStatsCharts() {
               </div>
               <div>
                 <p className="text-2xl font-bold">{chapters.length}</p>
-                <p className="text-xs text-muted-foreground">Chapters</p>
+                <p className="text-xs text-muted-foreground">{t('stats.chapterCount')}</p>
               </div>
             </div>
           </CardContent>
@@ -109,7 +103,7 @@ export function StoryStatsCharts() {
               </div>
               <div>
                 <p className="text-2xl font-bold">{characters.length}</p>
-                <p className="text-xs text-muted-foreground">Characters</p>
+                <p className="text-xs text-muted-foreground">{t('stats.characterCount')}</p>
               </div>
             </div>
           </CardContent>
@@ -123,20 +117,18 @@ export function StoryStatsCharts() {
               </div>
               <div>
                 <p className="text-2xl font-bold">{loreEntries.length}</p>
-                <p className="text-xs text-muted-foreground">Lore Entries</p>
+                <p className="text-xs text-muted-foreground">{t('stats.loreCount')}</p>
               </div>
             </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Charts Grid */}
       <div className="grid md:grid-cols-2 gap-6">
-        {/* Word Count by Chapter */}
         {chapterWordData.length > 0 && (
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-base">Words per Chapter</CardTitle>
+              <CardTitle className="text-base">{t('stats.wordsPerChapter')}</CardTitle>
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={200}>
@@ -152,29 +144,16 @@ export function StoryStatsCharts() {
           </Card>
         )}
 
-        {/* Chapter Status Distribution */}
         {statusData.length > 0 && (
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-base">Chapter Status</CardTitle>
+              <CardTitle className="text-base">{t('stats.chapterStatus')}</CardTitle>
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={200}>
                 <PieChart>
-                  <Pie
-                    data={statusData}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={40}
-                    outerRadius={80}
-                    paddingAngle={5}
-                    dataKey="value"
-                    label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                    labelLine={false}
-                  >
-                    {statusData.map((_, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                    ))}
+                  <Pie data={statusData} cx="50%" cy="50%" innerRadius={40} outerRadius={80} paddingAngle={5} dataKey="value" label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`} labelLine={false}>
+                    {statusData.map((_, index) => (<Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />))}
                   </Pie>
                   <Tooltip contentStyle={tooltipStyle} />
                 </PieChart>
@@ -183,26 +162,16 @@ export function StoryStatsCharts() {
           </Card>
         )}
 
-        {/* Character Roles */}
         {roleData.length > 0 && (
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-base">Character Roles</CardTitle>
+              <CardTitle className="text-base">{t('stats.characterRoles')}</CardTitle>
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={200}>
                 <PieChart>
-                  <Pie
-                    data={roleData}
-                    cx="50%"
-                    cy="50%"
-                    outerRadius={80}
-                    dataKey="value"
-                    label={({ name }) => name}
-                  >
-                    {roleData.map((_, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                    ))}
+                  <Pie data={roleData} cx="50%" cy="50%" outerRadius={80} dataKey="value" label={({ name }) => name}>
+                    {roleData.map((_, index) => (<Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />))}
                   </Pie>
                   <Tooltip contentStyle={tooltipStyle} />
                 </PieChart>
@@ -211,11 +180,10 @@ export function StoryStatsCharts() {
           </Card>
         )}
 
-        {/* Lore Categories */}
         {loreData.length > 0 && (
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-base">Lore by Category</CardTitle>
+              <CardTitle className="text-base">{t('stats.loreByCategory')}</CardTitle>
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={200}>
@@ -232,11 +200,10 @@ export function StoryStatsCharts() {
         )}
       </div>
 
-      {/* Story Map Stats */}
       {nodeData.length > 0 && (
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-base">Story Map Elements</CardTitle>
+            <CardTitle className="text-base">{t('stats.storyMapElements')}</CardTitle>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={150}>

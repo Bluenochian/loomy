@@ -1,5 +1,6 @@
 import { useEffect, useCallback } from 'react';
 import { useParams, useSearchParams, useNavigate, Outlet, useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useStory } from '@/context/StoryContext';
 import { useAuth } from '@/context/AuthContext';
 import { ProjectLayout } from '@/components/layout/ProjectLayout';
@@ -31,6 +32,7 @@ export default function Project() {
   const {
     toast
   } = useToast();
+  const { t } = useTranslation();
 
   // Redirect if not authenticated
   useEffect(() => {
@@ -51,8 +53,8 @@ export default function Project() {
     if (!currentProject || isGenerating) return;
     setIsGenerating(true);
     toast({
-      title: 'Generating your story world...',
-      description: 'This may take a moment. The AI is crafting your narrative foundation.'
+      title: t('dashboard.generatingWorld'),
+      description: t('dashboard.generatingWorldDesc')
     });
     try {
       const response = await supabase.functions.invoke('generate-story', {
@@ -233,8 +235,8 @@ export default function Project() {
         await supabase.from('story_map_nodes').insert(nodesToInsert);
       }
       toast({
-        title: 'Story world created!',
-        description: 'Your narrative foundation is ready. Explore your dashboard.'
+        title: t('dashboard.storyCreated'),
+        description: t('dashboard.storyCreatedDesc')
       });
 
       // Refresh data and clear the generate param
@@ -243,8 +245,8 @@ export default function Project() {
     } catch (error) {
       console.error('Generation error:', error);
       toast({
-        title: 'Generation failed',
-        description: error instanceof Error ? error.message : 'Please try again',
+        title: t('dashboard.generationFailed'),
+        description: error instanceof Error ? error.message : t('auth.tryAgain'),
         variant: 'destructive'
       });
     } finally {
@@ -263,7 +265,7 @@ export default function Project() {
     return <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="flex flex-col items-center gap-4">
           <Loader2 className="h-12 w-12 text-primary animate-spin" />
-          <p className="text-muted-foreground">Loading your story...</p>
+          <p className="text-muted-foreground">{t('dashboard.loadingStory')}</p>
         </div>
       </div>;
   }
@@ -274,10 +276,9 @@ export default function Project() {
             <Sparkles className="h-16 w-16 text-primary animate-pulse" />
             <div className="absolute inset-0 bg-primary/20 rounded-full blur-xl animate-pulse" />
           </div>
-          <h2 className="font-display text-2xl font-bold">Weaving Your Story World</h2>
+          <h2 className="font-display text-2xl font-bold">{t('dashboard.weavingWorld')}</h2>
           <p className="text-muted-foreground">
-            The AI is analyzing your concept and creating characters, lore, 
-            plot structure, and a visual theme that matches your narrative...
+            {t('dashboard.weavingDesc')}
           </p>
           <div className="flex gap-1">
             <span className="w-2 h-2 rounded-full bg-primary animate-bounce" style={{
@@ -303,6 +304,7 @@ export default function Project() {
 
 // Inline Dashboard component for the base route
 function Dashboard() {
+  const { t } = useTranslation();
   const {
     currentProject,
     storyOverview,
@@ -314,52 +316,48 @@ function Dashboard() {
   const wordCount = chapters.reduce((acc, ch) => acc + (ch.word_count || 0), 0);
   const completedChapters = chapters.filter(ch => ch.status === 'complete').length;
   return <div className="p-8 max-w-6xl mx-auto animate-fade-in">
-      {/* Header */}
       <div className="mb-8">
         <h1 className="font-display text-3xl font-bold mb-2">{currentProject.title}</h1>
         <p className="text-muted-foreground">{currentProject.concept}</p>
       </div>
 
-      {/* Stats Grid */}
       <div className="grid gap-4 md:grid-cols-4 mb-8">
         <div className="p-4 rounded-xl bg-card border border-border">
-          <p className="text-sm text-muted-foreground mb-1">Chapters</p>
+          <p className="text-sm text-muted-foreground mb-1">{t('dashboard.chapters')}</p>
           <p className="text-2xl font-bold">{chapters.length}</p>
-          <p className="text-xs text-muted-foreground">{completedChapters} complete</p>
+          <p className="text-xs text-muted-foreground">{completedChapters} {t('dashboard.complete')}</p>
         </div>
         <div className="p-4 rounded-xl bg-card border border-border">
-          <p className="text-sm text-muted-foreground mb-1">Characters</p>
+          <p className="text-sm text-muted-foreground mb-1">{t('dashboard.characters')}</p>
           <p className="text-2xl font-bold">{characters.length}</p>
         </div>
         <div className="p-4 rounded-xl bg-card border border-border">
-          <p className="text-sm text-muted-foreground mb-1">Lore Entries</p>
+          <p className="text-sm text-muted-foreground mb-1">{t('dashboard.loreEntries')}</p>
           <p className="text-2xl font-bold">{loreEntries.length}</p>
         </div>
         <div className="p-4 rounded-xl bg-card border border-border">
-          <p className="text-sm text-muted-foreground mb-1">Word Count</p>
+          <p className="text-sm text-muted-foreground mb-1">{t('dashboard.wordCount')}</p>
           <p className="text-2xl font-bold">{wordCount.toLocaleString()}</p>
         </div>
       </div>
 
-      {/* Story Overview */}
       {storyOverview && <div className="grid gap-6 md:grid-cols-2 mb-8">
           <div className="p-6 rounded-xl bg-card border border-border">
-            <h2 className="font-display text-lg font-semibold mb-3">Narrative Intent</h2>
+            <h2 className="font-display text-lg font-semibold mb-3">{t('dashboard.narrativeIntent')}</h2>
             <p className="text-muted-foreground leading-relaxed">
-              {storyOverview.narrative_intent || 'Not yet defined'}
+              {storyOverview.narrative_intent || t('dashboard.notDefined')}
             </p>
           </div>
           <div className="p-6 rounded-xl bg-card border border-border">
-            <h2 className="font-display text-lg font-semibold mb-3">Stakes</h2>
+            <h2 className="font-display text-lg font-semibold mb-3">{t('dashboard.stakes')}</h2>
             <p className="text-muted-foreground leading-relaxed">
-              {storyOverview.stakes || 'Not yet defined'}
+              {storyOverview.stakes || t('dashboard.notDefined')}
             </p>
           </div>
         </div>}
 
-      {/* Genres */}
       {currentProject.inferred_genres?.primary && <div className="p-6 rounded-xl bg-card border border-border mb-8">
-          <h2 className="font-display text-lg font-semibold mb-3">Inferred Genres</h2>
+          <h2 className="font-display text-lg font-semibold mb-3">{t('dashboard.inferredGenres')}</h2>
           <div className="flex flex-wrap gap-2">
             <span className="px-3 py-1 rounded-full bg-primary/20 text-primary text-sm font-medium">
               {currentProject.inferred_genres.primary}
@@ -370,9 +368,8 @@ function Dashboard() {
           </div>
         </div>}
 
-      {/* Themes */}
       {storyOverview?.central_themes && storyOverview.central_themes.length > 0 && <div className="p-6 rounded-xl bg-card border border-border">
-          <h2 className="font-display text-lg font-semibold mb-3">Central Themes</h2>
+          <h2 className="font-display text-lg font-semibold mb-3">{t('dashboard.centralThemes')}</h2>
           <div className="flex flex-wrap gap-2">
             {storyOverview.central_themes.map((theme, index) => <span key={index} className="px-3 py-1 rounded-full bg-accent/20 text-sm text-secondary-foreground">
                 {theme}
