@@ -5,6 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
 import { useLanguage } from '@/context/LanguageContext';
 import { useSettings } from '@/context/SettingsContext';
+import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
@@ -79,7 +80,8 @@ const THEME_INFLUENCE_OPTIONS = [
 
 export function OnboardingForm() {
   const { user } = useAuth();
-  const { t } = useLanguage();
+  const { t: tLang } = useLanguage();
+  const { t } = useTranslation();
   const { settings } = useSettings();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -105,9 +107,9 @@ export function OnboardingForm() {
   const [isCreating, setIsCreating] = useState(false);
 
   const steps = [
-    { id: 'concept', label: t('onboarding.concept'), icon: Feather },
-    { id: 'style', label: t('onboarding.writingStyle'), icon: Pen },
-    { id: 'settings', label: t('onboarding.settings'), icon: Gauge },
+    { id: 'concept', label: t('onboarding.step1'), icon: Feather },
+    { id: 'style', label: t('onboarding.step2'), icon: Pen },
+    { id: 'settings', label: t('onboarding.step3'), icon: Gauge },
   ];
 
   const toggleArrayItem = (array: string[], setArray: (arr: string[]) => void, item: string) => {
@@ -304,7 +306,7 @@ export function OnboardingForm() {
                     }`}
                     onClick={() => toggleArrayItem(genreInfluences, setGenreInfluences, genre)}
                   >
-                    {genre}
+                    {t(`genres.${genre}`, genre)}
                     {genreInfluences.includes(genre) && <X className="h-3 w-3 ml-1" />}
                   </Badge>
                 ))}
@@ -337,7 +339,7 @@ export function OnboardingForm() {
                     }`}
                     onClick={() => toggleArrayItem(themeInfluences, setThemeInfluences, theme)}
                   >
-                    {theme}
+                    {t(`themeInfluences.${theme}`, theme)}
                     {themeInfluences.includes(theme) && <X className="h-3 w-3 ml-1" />}
                   </Badge>
                 ))}
@@ -375,7 +377,7 @@ export function OnboardingForm() {
                     }`}
                     onClick={() => toggleArrayItem(writingStyles, setWritingStyles, style)}
                   >
-                    {style}
+                    {t(`writingStyles.${style}`, style)}
                     {writingStyles.includes(style) && <X className="h-3 w-3 ml-1" />}
                   </Badge>
                 ))}
@@ -400,7 +402,7 @@ export function OnboardingForm() {
                 <SelectContent>
                   {POV_OPTIONS.map((option) => (
                     <SelectItem key={option.value} value={option.value}>
-                      {option.label}
+                      {t(`povOptions.${option.value}`, option.label)}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -431,7 +433,7 @@ export function OnboardingForm() {
                     onClick={() => setPacing(option.value)}
                   >
                     <span className="mr-2">{option.icon}</span>
-                    {option.label}
+                    {t(`pacingOptions.${option.value}`, option.label)}
                   </Badge>
                 ))}
               </div>
@@ -460,7 +462,7 @@ export function OnboardingForm() {
                 <SelectContent>
                   {AUDIENCE_OPTIONS.map((option) => (
                     <SelectItem key={option.value} value={option.value}>
-                      {option.label}
+                      {t(`audienceOptions.${option.value}`, option.label)}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -536,13 +538,13 @@ export function OnboardingForm() {
                 />
                 <div className="flex justify-between text-sm">
                   <span className={`transition-colors ${toneValue[0] < 0.3 ? 'text-primary font-medium' : 'text-muted-foreground'}`}>
-                    ☀️ Hopeful
+                    ☀️ {t('onboarding.toneHopeful')}
                   </span>
                   <span className={`transition-colors ${toneValue[0] >= 0.3 && toneValue[0] <= 0.7 ? 'text-primary font-medium' : 'text-muted-foreground'}`}>
-                    ⚖️ Balanced
+                    ⚖️ {t('onboarding.toneBalanced')}
                   </span>
                   <span className={`transition-colors ${toneValue[0] > 0.7 ? 'text-primary font-medium' : 'text-muted-foreground'}`}>
-                    🌑 Dark
+                    🌑 {t('onboarding.toneDark')}
                   </span>
                 </div>
               </div>
@@ -574,7 +576,7 @@ export function OnboardingForm() {
                     }`}
                     onClick={() => toggleArrayItem(contentWarnings, setContentWarnings, warning)}
                   >
-                    {warning}
+                    {t(`contentWarningOptions.${warning}`, warning)}
                     {contentWarnings.includes(warning) && <X className="h-3 w-3 ml-1" />}
                   </Badge>
                 ))}
